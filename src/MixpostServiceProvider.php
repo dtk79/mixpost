@@ -11,6 +11,7 @@ use Inovector\Mixpost\Commands\CreateMastodonApp;
 use Inovector\Mixpost\Commands\DeleteOldData;
 use Inovector\Mixpost\Commands\ImportAccountAudience;
 use Inovector\Mixpost\Commands\ImportAccountData;
+use Inovector\Mixpost\Commands\MigrateMediaStorage;
 use Inovector\Mixpost\Commands\ProcessMetrics;
 use Inovector\Mixpost\Commands\PruneTemporaryDirectory;
 use Inovector\Mixpost\Commands\PublishAssetsCommand;
@@ -49,6 +50,7 @@ class MixpostServiceProvider extends PackageServiceProvider
                 RunScheduledPosts::class,
                 ImportAccountAudience::class,
                 ImportAccountData::class,
+                MigrateMediaStorage::class,
                 ProcessMetrics::class,
                 DeleteOldData::class,
                 PruneTemporaryDirectory::class,

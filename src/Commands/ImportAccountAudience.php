@@ -12,7 +12,7 @@ class ImportAccountAudience extends Command
 {
     use AccountsOption;
 
-    public $signature = 'mixpost:import-account-audience {--accounts=}';
+    public $signature = 'mixpost:import-account-audience {--accounts=} {--providers=}';
 
     public $description = 'Import audience(count of followers, fans...etc.) for the social providers';
 

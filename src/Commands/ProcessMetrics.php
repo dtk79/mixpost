@@ -11,7 +11,7 @@ class ProcessMetrics extends Command
 {
     use AccountsOption;
 
-    public $signature = 'mixpost:process-metrics {--accounts=}';
+    public $signature = 'mixpost:process-metrics {--accounts=} {--providers=}';
 
     public $description = 'Process metrics for the social providers';
 

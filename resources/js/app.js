@@ -14,6 +14,19 @@ import {router} from "@inertiajs/vue3";
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Mixpost';
 
+const trackPageView = (url) => {
+    if (typeof window.gtag !== 'function') {
+        return;
+    }
+
+    const pageUrl = new URL(url, window.location.origin);
+
+    window.gtag('event', 'page_view', {
+        page_location: pageUrl.href,
+        page_path: pageUrl.pathname,
+    });
+};
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: name => {
@@ -52,4 +65,6 @@ router.on('navigate', (event) => {
     }
 
     stale = false;
+
+    trackPageView(page.url);
 });

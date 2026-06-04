@@ -12,7 +12,7 @@ class ImportAccountData extends Command
 {
     use AccountsOption;
 
-    public $signature = 'mixpost:import-account-data {--accounts=}';
+    public $signature = 'mixpost:import-account-data {--accounts=} {--providers=}';
 
     public $description = 'Import data from social service providers';
 

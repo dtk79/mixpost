@@ -71,6 +71,12 @@ return [
     'log_channel' => env('MIXPOST_LOG_CHANNEL'),
 
     /*
+     * Google Analytics 4 measurement ID.
+     * Leave blank to disable analytics tracking.
+     */
+    'google_analytics_id' => env('MIXPOST_GOOGLE_ANALYTICS_ID'),
+
+    /*
      * The media component is integrated with third-party services Unsplash.com and Tenor.com
      * Defines the default terms for displaying media resources
      */

@@ -4,7 +4,8 @@
 build
 composer.lock
 coverage
-docs
+docs/*
+!docs/production-runbook.md
 phpunit.xml
 phpstan.neon
 testbench.yaml

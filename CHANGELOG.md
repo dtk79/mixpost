@@ -2,6 +2,14 @@
 
 All notable changes to `mixpost` will be documented in this file.
 
+## Unreleased
+
+**Documentation**
+
+- Reworked README project guidance for installation, configuration, scheduling, commands, and local development.
+- Expanded security reporting guidance.
+- Updated the production runbook with health checks, override workflow, scheduler notes, and media storage migration steps.
+
 ## 2.6.0 - 2026-03-16
 
 **Added**

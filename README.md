@@ -1,86 +1,183 @@
-[<img src="./art/standwithua.png" />](https://supportukrainenow.org)
+[<img src="./art/standwithua.png" alt="Stand with Ukraine" />](https://supportukrainenow.org)
 
 * * *
 
-[<img src="./art/page-cover.png" alt="Cover" />](https://mixpost.app)
+[<img src="./art/page-cover.png" alt="Mixpost cover" />](https://mixpost.app)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/inovector/mixpost.svg?style=flat-square)](https://packagist.org/packages/inovector/mixpost)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/inovector/mixpost/run-tests?label=tests)](https://github.com/inovector/mixpost/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![Tests](https://img.shields.io/github/actions/workflow/status/inovector/mixpost/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/inovector/mixpost/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/inovector/mixpost.svg?style=flat-square)](https://packagist.org/packages/inovector/mixpost)
 
 ## Introduction
 
-Mixpost is a robust and versatile **social media management platform**, designed to streamline **social media operations** and enhance **content marketing strategies**. Our platform empowers brands and businesses to effectively manage their **online presence**, leading them to success in the dynamic digital landscape. Mixpost's mission is to offer a comprehensive and powerful solution, enabling users to elevate their **social media management** and achieve tangible results.
+Mixpost Lite is a self-hosted social media management package for Laravel. It adds a `/mixpost` Inertia/Vue application for connecting social accounts, composing posts, scheduling publishing, managing media, reviewing reports, and maintaining system logs/status.
 
-The platform allows users to craft, organize, and schedule their content for times when their audience is most engaged and active. Mixpost's user-friendly **scheduling system** ensures that content publishing is seamless and efficient. It also facilitates team collaboration by allowing users to assign tasks, manage permissions, and monitor team performance, optimizing team interactions and workflow. Additionally, Mixpost automates post scheduling to ensure maximum audience reach and engagement, significantly boosting interaction and customer engagement.
+This repository contains the Lite edition. Mixpost Pro and Enterprise are commercial editions with additional features and support options.
 
-Trusted by a wide range of users, Mixpost stands out as a proficient and influential tool for social media management and content marketing. It is perfectly suited for enterprises, small to medium businesses, marketing agencies, solopreneurs, and e-commerce stores.
+## Features
 
-**_Highlighting Features of Mixpost_**
+- Social account management for supported providers.
+- Post composer with per-provider versions, media limits, validation, scheduling, and duplication.
+- Calendar and queue-oriented views for scheduled content.
+- Media library with uploads, external media downloads, GIF search, image resizing, and video thumbnail support.
+- Analytics imports, audience imports, and metric processing jobs for providers that expose reporting APIs.
+- System status and system log pages.
+- Profile, password, service, tag, and application settings management.
+- Optional Google Analytics 4 page-view tracking for the Mixpost UI.
 
-**Mixpost** offers a multitude of features, making **social media management** more effective and simpler:
+## Supported Providers
 
-**Streamlined Social Account Management:**
-Bring all your social media accounts together in one place for smarter and more efficient management.
+The Lite codebase currently includes providers for:
 
-**Advanced Analytics:**
-Gain insights into your audience's behavior and preferences. Mixpost provides detailed analytics, for each platform according to the data shared. We do our best to make sure our API integrations are up to date, to provide seamless analytics experience accross all social media platforms.
+- X/Twitter
+- Facebook Pages
+- Mastodon
 
-**Post Versions and Conditions:**
-Tailor your content for each social network and automate follow-up comments on high-performing posts, enhancing engagement and reach.
+Configuration also includes media and validation limits for Facebook Groups, and the scheduler has cost-aware provider groups used by the wider Mixpost runtime. Provider availability still depends on the edition, configured services, and the APIs available to your application.
 
-**Efficient Media Library:**
-Quickly access and reuse media files like images, GIFs, and videos, and integrate with stock image sources for a diverse range of content.
+## Requirements
 
-**Team Collaboration and Workspaces:**
-Foster team collaboration with dedicated workspaces. Discuss ideas, manage tasks, and monitor performance, all from a centralized platform.
+- PHP 8.2 or newer
+- Laravel 10.47, 11, or 12
+- Redis, required by Laravel Horizon and the test suite
+- A supported database for Laravel; CI runs against MySQL
+- Node.js 20 for building frontend assets
+- FFmpeg and FFprobe when video thumbnails should be generated
 
-**Queue and Calendar Management:**
-Build a natural content posting schedule and visualize your strategy with an easy-to-use calendar.
+Composer package requirements also include the `fileinfo` PHP extension.
 
-**Customizable Post Templates:**
-Boost efficiency with reusable post templates, perfect for maintaining consistency across your social media channels.
+## Installation
 
-**Dynamic Variables and Hashtag Groups:**
-Insert dynamic text and organize your hashtags strategically for increased post effectiveness.
-And many more features that make Mixpost a standout choice for managing social media and content marketing. Discover all the features in detail at Mixpost Features.
+The full installation guide is maintained at [docs.mixpost.app/lite](https://docs.mixpost.app/lite/).
 
-It is the ideal social media management software for bloggers, artisans, entrepreneurs, and marketing teams looking to optimize internal costs.
+For a Laravel application that already meets the requirements, the package entry point is:
 
-**[Unlock the full potential of Mixpost with Mixpost Pro/Enterprise](https://mixpost.app/pricing)**
+```bash
+composer require inovector/mixpost
+php artisan mixpost:install
+```
 
-Join our community:
+The installer publishes Mixpost assets, publishes migrations, optionally runs migrations, and reports the Mixpost UI URL. By default the UI is available at:
+
+```text
+{APP_URL}/mixpost
+```
+
+## Configuration
+
+Publish and review the package config before production use:
+
+```bash
+php artisan vendor:publish --tag=mixpost-config
+```
+
+Important environment variables:
+
+```dotenv
+MIXPOST_AUTH_GUARD=web
+MIXPOST_DISK=public
+MIXPOST_CACHE_PREFIX=mixpost
+MIXPOST_LOG_CHANNEL=
+MIXPOST_GOOGLE_ANALYTICS_ID=
+FFMPEG_PATH=/usr/bin/ffmpeg
+FFPROBE_PATH=/usr/bin/ffprobe
+```
+
+`MIXPOST_GOOGLE_ANALYTICS_ID` is optional. Leave it empty to disable analytics tracking in the Mixpost UI.
+
+Access to Mixpost is controlled by Laravel's `viewMixpost` gate. The package defines an allow-all default gate, so host applications should override that gate when Mixpost access needs to be restricted.
+
+## Scheduling And Queues
+
+Mixpost publishes and imports through Artisan commands and queued jobs. Add Mixpost's schedule registration from your Laravel console kernel or scheduling bootstrap:
+
+```php
+\Inovector\Mixpost\Schedule::register($schedule);
+```
+
+The schedule runs post publishing every minute, imports provider data and audience metrics on recurring intervals, processes metrics, deletes old provider data daily, and prunes the temporary media directory hourly.
+
+Run a queue worker or Horizon in production so account imports, publishing, media work, and notifications can be processed.
+
+## Artisan Commands
+
+| Command | Purpose |
+| --- | --- |
+| `mixpost:publish-assets {--force=}` | Publish compiled Mixpost assets to the host application's public directory. |
+| `mixpost:run-scheduled-posts` | Scan due scheduled posts and dispatch publishing. |
+| `mixpost:import-account-data {--accounts=} {--providers=}` | Import provider data such as posts or insights. |
+| `mixpost:import-account-audience {--accounts=} {--providers=}` | Import audience counts such as followers or fans. |
+| `mixpost:process-metrics {--accounts=} {--providers=}` | Process imported metrics for reporting. |
+| `mixpost:delete-old-data` | Delete old data imported from social service providers. |
+| `mixpost:prune-temporary-directory {--hours=2}` | Remove old temporary media files. |
+| `mixpost:migrate-media-storage {--from=} {--to=} {--before=} {--delete-source} {--dry-run}` | Migrate media records and files between Laravel filesystem disks. |
+| `mixpost:create-mastodon-app {server}` | Create a Mastodon application for a server. |
+| `mixpost:clear-settings-cache` | Clear cached Mixpost settings. |
+| `mixpost:clear-services-cache` | Clear cached social service configuration. |
+
+`--accounts` and `--providers` accept comma-separated filters.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+composer install
+npm ci
+```
+
+Run tests:
+
+```bash
+composer test
+```
+
+Run static analysis and formatting:
+
+```bash
+composer analyse
+composer format
+```
+
+Build frontend assets:
+
+```bash
+npm run build
+```
+
+During frontend work you can run Vite with:
+
+```bash
+npm run dev
+```
+
+CI tests PHP 8.2 and 8.3 against Laravel 10, 11, and 12.
+
+## Changelog
+
+Please see [Releases](../../releases) and [CHANGELOG.md](CHANGELOG.md) for recent changes.
+
+## Contributing
+
+This repository contains the Lite edition of Mixpost, related to the commercial [Mixpost](https://mixpost.app/) product. Please open an issue before starting feature work so the scope can be discussed first. Pull requests for optimizations and bug fixes are welcome.
+
+When contributing:
+
+- Keep Lite edition features distinct from Mixpost Pro and Enterprise features.
+- Use clear commit messages and pull request descriptions.
+- Follow the [PSR-12 Coding Standard](https://www.php-fig.org/psr/psr-12/).
+- Imitate the existing Mixpost code style and test changes that alter behavior.
+
+## Security Vulnerabilities
+
+Please review [our security policy](SECURITY.md) for how to report security vulnerabilities.
+
+## Community
 
 - [Discord](https://mixpost.app/discord)
 - [Facebook Private Group](https://www.facebook.com/groups/getmixpost)
 
-[<img src="./art/demo.png" />](https://mixpost.app)
-
-## Installation
-
-Read our [documentation](https://docs.mixpost.app/lite/) on how to get started.
-
-## Changelog
-
-Please see [Releases](../../releases) for more information what has changed recently.
-
-## Contributing
-
-By participating in this project, you agree to the following terms 👇
-
-This repository contains the Lite version of Mixpost Pro, a [commercial product](https://mixpost.app/) product. We’re committed to providing the community with the best free social media management solution. Please read the information below carefully.
-
-- If you’d like to add a feature, please open an issue first to discuss it before you begin coding. It’s essential that Lite version features remain distinct from those in Mixpost Pro.
-- Pull requests (PRs) for optimizations and bug fixes are always welcome.
-- Make sure your commit messages and pull request descriptions are clear and informative. PRs with empty descriptions may be rejected.
-- When contributing code to Mixpost, you must follow
-  the [PSR-12 Coding Standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-12-extended-coding-style-guide.md).
-
-The golden rule is: Imitate the existing Mixpost code.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+[<img src="./art/demo.png" alt="Mixpost demo" />](https://mixpost.app)
 
 ## Credits
 

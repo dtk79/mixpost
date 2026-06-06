@@ -5,6 +5,7 @@ build
 composer.lock
 coverage
 docs/*
+!docs/mixpost-instance-alterations.md
 !docs/production-runbook.md
 phpunit.xml
 phpstan.neon

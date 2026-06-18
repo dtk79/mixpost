@@ -54,6 +54,7 @@ The compose stack bind-mounts several local files into the Mixpost container as 
 Track durable override intent, acceptance checks, and upstream-removal criteria in [Mixpost Instance Alterations](mixpost-instance-alterations.md). Review that register before every Mixpost image update.
 
 - `/root/mixpost/Schedule.php`
+- `/root/mixpost/MigrateStorage.php`
 - `/root/mixpost/TrustProxies.php`
 - `/root/mixpost/ManagesTwitterJobs.php`
 - `/root/mixpost/ManagesBlueskyJobs.php`
@@ -264,18 +265,18 @@ ssh mixpost-hetzner 'docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/i
 
 ## Media Storage Migration
 
-The Lite repository includes `mixpost:migrate-media-storage` for moving Mixpost media files between configured Laravel filesystem disks. In production, run a dry run first and confirm both disks are correctly configured in the container environment.
+Production Pro Team uses `mixpost:migrate-storage` for moving Mixpost media files between configured Laravel filesystem disks. The mounted `/root/mixpost/MigrateStorage.php` override avoids S3 prefix listing and copies media paths from the database manifest instead.
 
 Dry run:
 
 ```bash
-ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:migrate-media-storage --from=public --to=s3 --dry-run"'
+ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:migrate-storage public s3 --dry-run"'
 ```
 
 Migrate files and keep the source copy:
 
 ```bash
-ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:migrate-media-storage --from=public --to=s3"'
+ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:migrate-storage public s3"'
 ```
 
 Only use `--delete-source` after validating the target disk and recent media URLs.

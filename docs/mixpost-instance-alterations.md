@@ -41,6 +41,36 @@ ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart 
 
 ## Alteration Log
 
+### 2026-06-18 - S3 Storage Migration Without Prefix Listing
+
+Status: active.
+
+Files:
+
+- `/root/mixpost/MigrateStorage.php`
+
+Local source mirror:
+
+- `ops/production-overrides/MigrateStorage.php`
+
+Reason:
+
+The Pro `mixpost:migrate-storage` command listed S3 prefixes during connection checks and workspace migration. Infra reported `ducati-mixpost: S3 prefix listing timed out`.
+
+Target behavior:
+
+- Migration copies media files from database paths instead of S3 prefix listings.
+- S3 connection checks use a single object existence probe instead of listing directories.
+
+Acceptance checks:
+
+- `php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php` passes inside the app container.
+- `php artisan mixpost:migrate-storage public s3 --dry-run` starts without S3 prefix listing timeouts.
+
+Remove/revisit when:
+
+- Mixpost upstream migrates storage from database media paths without S3 listings.
+
 ### 2026-06-12 - Low-Cost Post Analytics Every 30 Minutes
 
 Status: active.

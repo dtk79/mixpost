@@ -48,10 +48,12 @@ Status: active.
 Files:
 
 - `/root/mixpost/MigrateStorage.php`
+- `/root/mixpost/AppMigrateStorageCommand.php`
 
 Local source mirror:
 
 - `ops/production-overrides/MigrateStorage.php`
+- `ops/production-overrides/AppMigrateStorageCommand.php`
 
 Reason:
 
@@ -61,6 +63,7 @@ Target behavior:
 
 - Migration copies media files from database paths instead of S3 prefix listings.
 - S3 connection checks use a single object existence probe instead of listing directories.
+- The app command wrapper registers the Pro migration command through Laravel's existing app command loader.
 
 Acceptance checks:
 

@@ -55,6 +55,7 @@ Track durable override intent, acceptance checks, and upstream-removal criteria 
 
 - `/root/mixpost/Schedule.php`
 - `/root/mixpost/MigrateStorage.php`
+- `/root/mixpost/AppMigrateStorageCommand.php`
 - `/root/mixpost/TrustProxies.php`
 - `/root/mixpost/ManagesTwitterJobs.php`
 - `/root/mixpost/ManagesBlueskyJobs.php`

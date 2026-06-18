@@ -129,6 +129,26 @@ The Lite scheduler in this repository registers:
 
 Production Pro Team may add providers or overrides. When API costs change, inspect the mounted schedule and provider job traits before changing intervals.
 
+Production also mounts a custom Pro Team scheduler override at `/root/mixpost/Schedule.php`, mirrored locally at `ops/production-overrides/Schedule.php`. As of 2026-06-12, that override adds a dedicated low-cost post analytics callback every 30 minutes:
+
+- Instagram and Instagram standalone accounts dispatch stories, total-value insights, media/post insights, and audience jobs.
+- Facebook Page accounts import page posts and then chain post-insight imports.
+- YouTube accounts import channel videos and video statistics.
+- The generic `medium` provider-job bucket remains every 3 hours so other providers are not accelerated.
+- Twitter/X post analytics remain on the separate daily/monthly cost-controlled cadence.
+
+Verify the production schedule after changing the override:
+
+```bash
+ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan schedule:list | grep low-cost-post-analytics-30min"'
+```
+
+Expected schedule row:
+
+```text
+*/30 * * * *  <workspace> - mixpost:low-cost-post-analytics-30min
+```
+
 Useful manual commands:
 
 ```bash

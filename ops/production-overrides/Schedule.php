@@ -12,6 +12,13 @@ use Inovector\Mixpost\Jobs\WorkspaceArtisanJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\WebhookDelivery;
 use Inovector\Mixpost\Models\Workspace;
+use Inovector\Mixpost\SocialProviders\Google\Jobs\ImportYoutubeVideosJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportFacebookPagePostsJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportFacebookPostInsightsJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportInstagramAudienceJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportInstagramInsightsTotalValueJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportInstagramMediaJob;
+use Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportInstagramStoriesJob;
 use Inovector\Mixpost\SocialProviders\Twitter\Jobs\ImportTwitterPostsJob;
 use Inovector\Mixpost\Support\MediaFilesystem;
 
@@ -74,6 +81,7 @@ class Schedule
 
                 self::scheduleTwitterPostAnalytics($schedule, $workspace, true, 'daily');
                 self::scheduleTwitterPostAnalytics($schedule, $workspace, false, 'monthly');
+                self::scheduleLowCostPostAnalytics($schedule, $workspace);
 
                 if ($customCommands) {
                     $customCommands($workspace);
@@ -116,5 +124,42 @@ class Schedule
             ->whereNotNull('published_at')
             ->where('published_at', '>=', now('UTC')->subDays(14))
             ->exists();
+    }
+
+    private static function scheduleLowCostPostAnalytics($schedule, Workspace $workspace): void
+    {
+        $schedule
+            ->call(function () use ($workspace): void {
+                $workspace->execute(function (): void {
+                    Account::query()
+                        ->whereIn('provider', ['instagram', 'instagram_standalone'])
+                        ->get()
+                        ->filter(fn (Account $account): bool => $account->isAuthorized() && $account->isServiceActive())
+                        ->each(function (Account $account): void {
+                            ImportInstagramStoriesJob::dispatch($account);
+                            ImportInstagramInsightsTotalValueJob::dispatch($account);
+                            ImportInstagramMediaJob::dispatch($account);
+                            ImportInstagramAudienceJob::dispatch($account);
+                        });
+
+                    Account::query()
+                        ->where('provider', 'facebook_page')
+                        ->get()
+                        ->filter(fn (Account $account): bool => $account->isAuthorized() && $account->isServiceActive())
+                        ->each(function (Account $account): void {
+                            ImportFacebookPagePostsJob::withChain([
+                                new ImportFacebookPostInsightsJob($account),
+                            ])->dispatch($account);
+                        });
+
+                    Account::query()
+                        ->where('provider', 'youtube')
+                        ->get()
+                        ->filter(fn (Account $account): bool => $account->isAuthorized() && $account->isServiceActive())
+                        ->each(fn (Account $account): mixed => ImportYoutubeVideosJob::dispatch($account));
+                });
+            })
+            ->name("$workspace->name - mixpost:low-cost-post-analytics-30min")
+            ->everyThirtyMinutes();
     }
 }

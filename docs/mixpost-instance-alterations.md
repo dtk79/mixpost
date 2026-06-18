@@ -41,6 +41,46 @@ ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart 
 
 ## Alteration Log
 
+### 2026-06-12 - Low-Cost Post Analytics Every 30 Minutes
+
+Status: active.
+
+Files:
+
+- `/root/mixpost/Schedule.php`
+
+Local source mirror:
+
+- `ops/production-overrides/Schedule.php`
+
+Reason:
+
+Facebook, Instagram, and YouTube API reads do not have the same direct per-request cost pressure as X/Twitter, and same-day post counters can diverge noticeably from native app views when Mixpost only imports post analytics every several hours or daily.
+
+Target behavior:
+
+- Instagram content/post analytics refresh every 30 minutes using the same jobs that previously ran in the medium-priority bucket: stories, total-value insights, media/post insights, and audience.
+- Facebook page post analytics refresh every 30 minutes by importing page posts and then post insights in a chain.
+- YouTube post analytics refresh every 30 minutes by importing channel videos and video statistics.
+- Existing daily Meta jobs remain in place for broader account, demographic, historical, and competitor data.
+
+Implementation notes:
+
+- `Schedule::scheduleLowCostPostAnalytics()` dispatches authorized and active `instagram`, `instagram_standalone`, `facebook_page`, and `youtube` accounts every 30 minutes.
+- The generic `medium` account-job bucket remains every 3 hours so other providers are not accelerated unintentionally.
+- X/Twitter post analytics remain on the custom cost-controlled cadence.
+
+Acceptance checks:
+
+- `php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php` passes inside the app container.
+- `php artisan schedule:list` shows `<workspace> - mixpost:low-cost-post-analytics-30min` with `*/30 * * * *`.
+
+Remove/revisit when:
+
+- Meta API rate limits become a production issue.
+- Mixpost upstream adds provider-specific scheduler controls.
+- Product requirements need a different freshness/cost balance.
+
 ### 2026-06-05 - Twitter/X Post Analytics Disabled
 
 Status: active.

@@ -26,6 +26,7 @@ class PublishAssetsCommand extends Command
         File::deleteDirectory(public_path('vendor/mixpost'));
         File::copyDirectory(__DIR__.'/../../resources/dist/vendor', public_path('vendor'));
         File::copy(__DIR__.'/../../resources/img/favicon.ico', public_path('vendor/mixpost/favicon.ico'));
+        File::copy(__DIR__.'/../../resources/img/peachy-posting.png', public_path('vendor/mixpost/peachy-posting.png'));
 
         $this->info('Assets was published to [public/vendor/mixpost]');
 

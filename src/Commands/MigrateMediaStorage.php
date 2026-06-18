@@ -111,7 +111,7 @@ class MigrateMediaStorage extends Command
         $source = Storage::disk($fromDisk);
         $target = Storage::disk($toDisk);
 
-        if (! $source->exists($path)) {
+        if (! $source->fileExists($path)) {
             throw new \RuntimeException("Source file [$path] does not exist on disk [$fromDisk].");
         }
 

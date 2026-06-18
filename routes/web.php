@@ -33,6 +33,10 @@ use Inovector\Mixpost\Http\Controllers\UpdateAuthUserPasswordController;
 use Inovector\Mixpost\Http\Middleware\Auth as MixpostAuthMiddleware;
 use Inovector\Mixpost\Http\Middleware\HandleInertiaRequests;
 
+Route::middleware('web')->get('/', function () {
+    return view('mixpost::home');
+})->name('mixpost.home');
+
 Route::middleware([
     'web',
     MixpostAuthMiddleware::class,

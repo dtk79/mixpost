@@ -8,13 +8,14 @@ The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. 
 
 Before upgrading Mixpost:
 
-1. Review this file and `/root/mixpost/docker-compose.yml`.
-2. Pull the new image without replacing host overrides.
-3. Compare every mounted override against the same file in the new image.
-4. Remove an override if upstream now includes the behavior we need.
-5. Rebase the override if upstream changed method signatures, imports, models, queue behavior, or response shapes.
-6. Lint mounted PHP files inside the container.
-7. Restart Mixpost and verify the acceptance checks listed below.
+1. Follow [Mixpost Update Playbook](mixpost-update-playbook.md).
+2. Review this file and `/root/mixpost/docker-compose.yml`.
+3. Pull the new image without replacing host overrides.
+4. Compare every mounted override against the same file in the new image.
+5. Remove an override if upstream now includes the behavior we need.
+6. Rebase the override if upstream changed method signatures, imports, models, queue behavior, or response shapes.
+7. Lint mounted PHP files inside the container.
+8. Restart Mixpost and verify the acceptance checks listed below.
 
 Useful commands:
 
@@ -26,20 +27,319 @@ ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart 
 
 ## Mounted Override Inventory
 
+This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, verified 2026-08-01 for Pro Team 6.3.0. Every row is a read-only bind mount and therefore is automatically reapplied when the app container is recreated; the review requirement is to ensure it still matches the new image.
+
 | Host file | Container target | Purpose | Review trigger |
 | --- | --- | --- | --- |
 | `/root/mixpost/Schedule.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php` | Production scheduler customization. | Any upstream scheduler changes. |
 | `/root/mixpost/TrustProxies.php` | `/var/www/html/app/Http/Middleware/TrustProxies.php` | Reverse proxy trust behavior for production networking. | Laravel or proxy stack changes. |
 | `/root/mixpost/ManagesTwitterJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php` | Twitter/X analytics cost mitigation. | X API pricing/quota changes or upstream job changes. |
+| `/root/mixpost/ManagesTwitterResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php` | Twitter/X publish timing logs and social-video derivative upload preference. | Upstream Twitter resource changes or when timing logs are no longer needed. |
 | `/root/mixpost/ManagesBlueskyJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesBlueskyJobs.php` | Bluesky job cadence customization. | Upstream Bluesky job changes. |
+| `/root/mixpost/BlueskyUsesUploads.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php` | Prefer an available provider-safe MP4 when it is smaller than the source or the source is not MP4. | Upstream Bluesky upload/video-service changes or provider video limits. |
 | `/root/mixpost/ManagesInstagramJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramJobs.php` | Instagram job cadence/custom import sequencing. | Upstream Instagram job changes. |
 | `/root/mixpost/InstagramAnalytics.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/InstagramAnalytics.php` | Instagram short-range total-value fallback. | Upstream Instagram analytics changes. |
-| `/root/mixpost/ManagesInstagramResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php` | Instagram media import can request basic media without embedded insights and includes same-day media. | Upstream Instagram resource/API changes. |
+| `/root/mixpost/ManagesInstagramResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php` | Instagram media import fallback plus social-video derivative preference for Reel publishing. | Upstream Instagram resource/API changes. |
 | `/root/mixpost/ImportInstagramMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php` | Instagram media import falls back to basic media and skips unavailable per-media insights. | Upstream Instagram media import changes. |
+| `/root/mixpost/BuildChatSystemPrompt.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php` | Allows lawful consenting-adult brand copy while preserving core harm refusals. | Upstream AI prompt-builder changes or provider policy changes. |
+| `/root/mixpost/ImportTwitterPostsJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php` | Store permitted X post-insight metrics while tolerating unavailable historical non-public metrics. | Upstream X import/metric contract changes. |
+| `/root/mixpost/MigrateStorage.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php` | Storage migration without S3 prefix listings. | Upstream storage-migration changes. |
+| `/root/mixpost/AppMigrateStorageCommand.php` | `/var/www/html/app/Console/Commands/MigrateStorage.php` | Registers the production storage-migration command. | Laravel command-discovery or upstream registration changes. |
 | `/root/mixpost/app.blade.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php` | Preserve Google Analytics shell injection. | Upstream layout or analytics support changes. |
+| `/root/mixpost/web.php` | `/var/www/html/routes/web.php` | Peachy public-site route customization. | Laravel route changes. |
+| `/root/mixpost/home.blade.php` | `/var/www/html/resources/views/home.blade.php` | Peachy public landing page. | App layout/view changes. |
+| `/root/mixpost/peachy-posting.png` | `/var/www/html/public/vendor/mixpost/peachy-posting.png` | Landing-page image asset. | Asset path or landing-page changes. |
 | `/root/mixpost/uploads.ini` | PHP CLI/FPM config paths | Upload size/runtime config. | PHP image or upload policy changes. |
+| `/root/mixpost/peachy-start.sh` | `/usr/local/bin/peachy-start.sh` | Pre-create Laravel's log for `www-data` before root-run startup Artisan commands. | Image entrypoint, startup sequence, or log channel changes. |
+| `/root/mixpost/MediaUploadFile.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after normal uploads. | Any upstream upload request or deferred-conversion changes. |
+| `/root/mixpost/ChunkedUploadComplete.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after chunked uploads. | Any upstream chunk completion or deferred-conversion changes. |
+| `/root/mixpost/MediaSocialVideoConversion.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php` | Produce the 1080px/30fps/H.264/AAC derivative used by Instagram, X, and oversized/non-MP4 Bluesky uploads. | Provider video requirements or upstream conversion changes. |
+| `/root/mixpost/OptimizeSocialVideoMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php` | Run social-video conversion on the media queue after upstream processing settles. | Queue, media-processing, or conversion lifecycle changes. |
 
 ## Alteration Log
+
+### 2026-08-01 - Queue Routing, Reverb, and Bluesky Video Recovery
+
+Status: active production configuration and override.
+
+Two runtime configuration mismatches made completed uploads appear stuck and stranded unnamed Laravel jobs:
+
+- `REVERB_SCHEME=https` was paired with `REVERB_PORT=80`, so server-side broadcast requests reached the plain HTTP router and returned `404 page not found`. Production now uses `REVERB_PORT=443`.
+- Laravel's Redis default queue was `default`, while Horizon listened on `mixpost-default`. Production now sets `REDIS_QUEUE=mixpost-default`.
+
+The failed Trailer Trash Boys post also used a 217.9 MB MP4 without a provider-safe derivative. Bluesky rejected the original as `PayloadTooLarge`, and X exceeded its five-minute publish-job timeout. After backfilling a 92.3 MB `social_video` derivative, `BlueskyUsesUploads.php` was mounted so Bluesky selects an available optimized MP4 only when it is smaller than the source or the source is not already MP4. Smaller MP4 originals remain unchanged.
+
+Recovery and verification:
+
+- Post `1502` published only to its failed X and Bluesky accounts; both provider rows contain IDs and no errors.
+- Bluesky returned `at://did:plc:uk2ud4bhvue3b4vrktyuoq3x/app.bsky.feed.post/3mrzwbdyeoi2m` with a video embed.
+- X returned post ID `2083596559044796890`; timing logs show the optimized 92.3 MB MP4 upload, successful media processing, and tweet creation HTTP `201`.
+- Direct Reverb broadcast succeeded, Horizon was running, the active queues were empty, and the public root returned HTTP `200` after the app-only recreation.
+
+Required runtime values:
+
+```text
+REVERB_HOST=mixpost.peachyhq.com
+REVERB_PORT=443
+REVERB_SCHEME=https
+REDIS_QUEUE=mixpost-default
+```
+
+### 2026-07-31 - Restart-Safe Laravel Log Ownership
+
+Status: active production entrypoint wrapper.
+
+After the Mixpost app container was recreated, a root-run Artisan command created `storage/logs/laravel.log` as `root:root 644`. PHP-FPM runs as `www-data`, so both normal and chunked media uploads returned HTTP 500 when Laravel could not append to the log. The wrapper now pre-creates the log as `www-data:www-data 664` before handing control to the image's root startup sequence.
+
+Operational rule: run later Artisan diagnostics with `docker exec -u www-data` or `docker compose exec --user www-data` unless the command explicitly requires root.
+
+Acceptance checks:
+
+- `docker inspect mixpost-mixpost-1` reports `/usr/local/bin/peachy-start.sh` as the entrypoint and a read-only mount from `/root/mixpost/peachy-start.sh`.
+- `storage/logs/laravel.log` is `www-data:www-data 664` after a forced container recreation.
+- A write probe run as `www-data` succeeds.
+- Normal and chunked upload endpoints no longer return HTTP 500 because logging is unwritable.
+
+### 2026-07-28 - AI Caption Adult Brand Copy
+
+Status: active production override.
+
+Affected file:
+
+- `ops/production-overrides/BuildChatSystemPrompt.php`
+
+Reason:
+
+The upstream global AI system prompt refused all sexually explicit material, which blocked Peachy from drafting promotional captions for lawful consenting-adult creators even when the brand voice and target social copy were acceptable for the business.
+
+Target behavior:
+
+- Permit lawful promotional copy for consenting-adult brands and creators.
+- Continue refusing minors, non-consensual sexual content, exploitation, abuse, threats, hate, scams, spam, self-harm, violence, and illegal activity.
+- Keep provider-level policy decisions intact; the override only removes Mixpost's broader app-level refusal.
+
+Verification:
+
+- `php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php` passes inside the app container.
+- `https://mixpost.peachyhq.com/mixpost/login` returns `200` after restart.
+
+### 2026-07-31 - Restore Automatic Social-Video Derivatives
+
+Status: active production override.
+
+The Pro Team 6.2.2 converter only remuxes or transcodes non-MP4 upload formats. It does not resize or reduce already-H.264 MP4 files, so it did not replace the provider-safe `social_video` derivative. Removing the automatic derivative mounts left the retained Instagram/X publisher overrides without a producer. A 2160x3840, approximately 38 Mbps MP4 then failed Instagram processing with error `2207082`; the same optimized derivative used by the earlier recovery published successfully.
+
+The 6.2.2 normal and chunked upload request sources are retained with two additions: preserve `deferVideoConversion()` and dispatch `OptimizeSocialVideoMediaJob` for videos. The optimization job runs on the media queue after upstream processing, waits while a media record is still processing, and creates the 1080px/30fps/H.264/AAC `social_video` derivative used by Instagram and X.
+
+Incident recovery and verification:
+
+- Post `1248` / media `768` published to Instagram as `17901109683333791` (`Dbdy-Tmk_2c`) and to X as `2083244523757424743` after generating a 39.7 MB derivative from the 186.7 MB original.
+- The nine remaining scheduled Rich Merritt Instagram videos through 2026-08-18 were backfilled; the future Instagram schedule had no video media left without a `social_video` conversion.
+- All four mounted PHP files passed `php -l`, both new classes autoloaded, Horizon reported running, and the public login returned HTTP 200 after the app container restart.
+
+### 2026-07-28 - Pro Team 6.2.2 Upstream Adoption
+
+Status: partially superseded upstream.
+
+Mixpost now owns deferred video processing, upload progress/statuses, format handling, and the Facebook Page request-size/Reels logic. The Facebook Page and upload-resilience overrides remain superseded. The automatic provider-safe derivative was restored on 2026-07-31 because upstream format conversion does not resize or reduce MP4 uploads. `ManagesTwitterResources.php` and `ManagesInstagramResources.php` remain mounted for provider-specific X timing/derivative preference and the Instagram large-Reel guard.
+
+### 2026-07-27 - Social Video Derivatives for X and Instagram
+
+Affected files:
+
+- `ops/production-overrides/ManagesInstagramResources.php`
+- `ops/production-overrides/ManagesTwitterResources.php`
+
+Reason:
+
+Large high-bitrate vertical videos caused Instagram Reel upload rejection and X/Twitter chunked upload worker timeouts. The successful manual recovery path was to transcode to a smaller MP4 before provider upload.
+
+Target behavior:
+
+- Instagram Reel publishing and X/Twitter video uploads prefer `social_video` when present.
+- Existing manually created `instagram_reel` derivatives remain a fallback.
+
+Production deployment:
+
+- Pro Team 6.2.2 owns the initial deferred media processing; the request overrides preserve that flow and enqueue the provider-safe derivative afterward.
+- `MediaSocialVideoConversion.php` and `OptimizeSocialVideoMediaJob.php` provide the conversion and media-queue job.
+
+Verification:
+
+- All mounted PHP files linted successfully inside `mixpost-mixpost-1`.
+- `https://mixpost.peachyhq.com/mixpost/login` returned `200`.
+- Horizon reported running.
+- New job and conversion classes autoloaded in the production app.
+
+### 2026-07-27 - Upload Resilience Client Bundle
+
+Status: superseded upstream in Pro Team 6.2.2.
+
+Files:
+
+- `/root/mixpost/production-image/Dockerfile`
+- `/root/mixpost/production-image/upload-resilience.patch`
+- `/root/mixpost/docker-compose.yml`
+
+Local source mirror:
+
+- `ops/production-image/`
+
+Reason:
+
+Interrupted browser uploads have no Axios `response` object. The upstream client dereferenced that object in global error handling, replacing the transfer error with a JavaScript exception. Oversized videos are intentionally rejected at 500 MB, but the rejection did not state the selected file size.
+
+Target behavior:
+
+- Preserve the 500 MB total-video policy; the 10 MB chunk transport remains below the 70 MB Nginx and 100 MB Traefik request limits.
+- Retry connection and server failures only; do not retry validation failures.
+- Show an actionable connection-interrupted error instead of a JavaScript exception.
+- Include the selected size in the 500 MB validation response.
+- Log successful chunk receipt with upload UUID, chunk index, and byte count, without file names, URLs, or credentials.
+
+Acceptance checks:
+
+- `docker build` from the scrubbed installed-app archive succeeds only when both patches apply cleanly.
+- The rendered Mixpost bundle contains `error.response?.status`.
+- The patched PHP controller and request pass `php -l` inside the running container.
+- A successful test upload produces `mixpost.chunked_upload.chunk_stored` log entries.
+
+Remove/revisit when:
+
+- Mixpost upstream ships null-safe upload error handling, targeted retry behavior, and sufficient chunk telemetry.
+- The product raises or otherwise changes the 500 MB video policy; update application, PHP, Nginx, and Traefik request limits together.
+
+### 2026-07-24 - Removed stale custom client asset mounts
+
+Status: removed from production Compose.
+
+Files:
+
+- `/root/mixpost/docker-compose.yml`
+
+Reason:
+
+The post-login blank screen recurred when the host-mounted Mixpost manifest pointed at old hashed client assets that no longer existed in the current Pro Team image. The custom `peachy-login-anchor` client bundles were no longer referenced by the working packaged manifest.
+
+Target behavior:
+
+- Let the Mixpost image publish and serve its own `public/vendor/mixpost/manifest.json`.
+- Keep the Peachy landing-page image mount, but do not bind-mount Mixpost's hashed client manifest or old login chunks.
+
+Acceptance checks:
+
+- `docker compose config` passes.
+- `docker inspect mixpost-mixpost-1` shows no mounts for `manifest-peachy-login-anchor2.json`, `app-0SGRLsbB`, `app-peachy-login-anchor2.js`, `Login-peachy-anchor2.js`, or `Minimal-peachy-anchor2.js`.
+- `/mixpost/login` references the packaged `app-D-o01RHt.js` and `app-jaJ1phLR.css`.
+- The current app entrypoint asset scan reports `missing=0`.
+
+Restore/revisit when:
+
+- A future, intentionally maintained custom Mixpost login bundle is rebuilt against the current vendor manifest and has its own automated asset check.
+
+### 2026-07-20 - Facebook Page Follower Refresh
+
+Status: recorded for next scheduler rebase.
+
+Files:
+
+- `/root/mixpost/Schedule.php`
+
+Local source mirror:
+
+- `ops/production-overrides/Schedule.php`
+
+Reason:
+
+The Rich Merritt Facebook Page dashboard showed `594` followers while the public Facebook page and Meta Graph API returned `881` for the same Page ID (`971545159386094`). Mixpost's dashboard reads the latest row from `mixpost_audience`; the manual `ImportFacebookPageFollowersJob` refreshed the current-day row from `594` to `881`.
+
+Target behavior:
+
+- Keep Facebook Page post analytics on the low-cost 30-minute scheduler.
+- Also dispatch `ImportFacebookPageFollowersJob` for authorized active `facebook_page` accounts, or otherwise verify the Pro daily follower job is running reliably after updates.
+- Do not backfill historical follower rows by rerunning the current-count job for old dates; the endpoint returns the current total and would corrupt history.
+
+Acceptance checks:
+
+- `php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php` passes inside the app container.
+- `php artisan schedule:list` still shows `<workspace> - mixpost:low-cost-post-analytics-30min`.
+- A synchronous `ImportFacebookPageFollowersJob` for account `84` updates today's `mixpost_audience.total` to the current Meta `followers_count`.
+
+Remove/revisit when:
+
+- Mixpost upstream exposes a reliable frequent Facebook Page follower import.
+- Product decides daily follower snapshots are sufficient for Facebook Pages.
+
+### 2026-07-20 - Facebook Page Insights Request Batching
+
+Status: superseded upstream in Pro Team 6.2.2.
+
+Files:
+
+- `/root/mixpost/FacebookPageFetchPosts.php`
+
+Local source mirror:
+
+- `ops/production-overrides/FacebookPageFetchPosts.php`
+
+Reason:
+
+Mixpost requested 100 Facebook Page posts together with nested attachments and lifetime insights. Meta rejected the request with `Please reduce the amount of data you're asking for`, leaving Reporting with stale Page-view totals even though the queue job appeared to finish.
+
+Target behavior:
+
+- Request 25 posts per Graph API page while preserving Mixpost's existing pagination.
+- Also request the first page of `/{page_id}/video_reels`, normalize reels into Mixpost's imported-post shape, and merge by provider post ID so reels appear once even if `/posts` later includes them.
+- Refresh lifetime `post_media_view` values without changing the metric Reporting consumes.
+
+Acceptance checks:
+
+- The mounted PHP file passes `php -l` inside the Mixpost container.
+- A synchronous Facebook Page post import completes without the response-size error.
+- The affected reel's `post_media_view` value refreshes in Mixpost, newly discovered Page reels import into `mixpost_imported_posts`, and those rows reach Reporting on the next sync.
+
+Remove/revisit when:
+
+- Mixpost upstream reduces or splits the Facebook Page fields request.
+- Meta changes the Page insights response limits or metric contract.
+
+### 2026-07-05 - Twitter/X Publish Timing Logs
+
+Status: active.
+
+Files:
+
+- `/root/mixpost/ManagesTwitterResources.php`
+
+Local source mirror:
+
+- `ops/production-overrides/ManagesTwitterResources.php`
+
+Reason:
+
+A Rich Merritt X video publish timed out in the queue worker before Mixpost saved a provider post ID or API error. A manual retry later succeeded, but the existing logs did not show whether the delay was S3 temp download, X chunked upload, X media processing, or tweet creation.
+
+Target behavior:
+
+- Log `mixpost.twitter_publish_timing` entries for X media download, media upload, media processing, and tweet creation.
+- Keep log payloads free of post text, tokens, URLs, and file paths.
+- Include only account ID, media ID, media bytes, MIME type, phase, elapsed seconds, X processing state, and tweet-create HTTP code.
+
+Enablement notes:
+
+- Mount `/root/mixpost/ManagesTwitterResources.php` to `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php`.
+- Lint the mounted file inside the container before restart.
+- Restart the Mixpost app container for the mount to take effect.
+
+Acceptance checks:
+
+- `php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php` passes inside the app container.
+- The next X media publish writes `mixpost.twitter_publish_timing` log entries.
+
+Remove/revisit when:
+
+- The X media publish bottleneck is understood.
+- Mixpost upstream adds provider-publish timing or job timeout observability.
 
 ### 2026-06-18 - S3 Storage Migration Without Prefix Listing
 

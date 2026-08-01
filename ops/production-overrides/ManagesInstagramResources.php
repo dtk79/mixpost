@@ -166,11 +166,17 @@ trait ManagesInstagramResources
             return $this->response(SocialProviderResponseStatus::ERROR, ['reel_only_video_allowed']);
         }
 
+        $videoUrl = $this->instagramReelVideoUrl($mediaItem);
+
+        if (! $videoUrl) {
+            return $this->response(SocialProviderResponseStatus::ERROR, ['social_video_optimization_pending']);
+        }
+
         $data = [
             'access_token' => $this->getAccessToken()['access_token'],
             'caption' => $text,
             'media_type' => 'REELS',
-            'video_url' => $mediaItem->getUrl(),
+            'video_url' => $videoUrl,
             'alt_text' => $mediaItem->alt_text,
         ];
 
@@ -187,6 +193,23 @@ trait ManagesInstagramResources
         }
 
         return $this->publishContainer($response->id);
+    }
+
+    private function instagramReelVideoUrl(Media $mediaItem): ?string
+    {
+        if ($url = $mediaItem->getConversionUrl('social_video')) {
+            return $url;
+        }
+
+        if ($url = $mediaItem->getConversionUrl('instagram_reel')) {
+            return $url;
+        }
+
+        if ($mediaItem->size > 300 * 1024 * 1024) {
+            return null;
+        }
+
+        return $mediaItem->getUrl();
     }
 
     public function publishCarouselPost(string $text, Collection $media): array|SocialProviderResponse

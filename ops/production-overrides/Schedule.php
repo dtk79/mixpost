@@ -24,6 +24,10 @@ use Inovector\Mixpost\Support\MediaFilesystem;
 
 class Schedule
 {
+    private const ACTIVE_TWITTER_PROVIDER_IDS = [
+        '2044891192681508864', // Daddy Patrick / @pbpicks1
+    ];
+
     public static function register($schedule, ?Builder $query = null, ?Closure $customCommands = null): void
     {
         $schedule->command('model:prune', [
@@ -111,6 +115,10 @@ class Schedule
 
     private static function isActiveTwitterAccount(Account $account): bool
     {
+        if (in_array((string) $account->provider_id, self::ACTIVE_TWITTER_PROVIDER_IDS, true)) {
+            return true;
+        }
+
         $recentPostCount = $account->posts()
             ->whereNotNull('published_at')
             ->where('published_at', '>=', now('UTC')->subDays(30))

@@ -14,7 +14,7 @@ axios.interceptors.response.use(response => response, async error => {
         return Promise.reject(error)
     }
 
-    const status = error.response.status;
+    const status = error.response?.status;
 
     if (status === 419) {
         // Refresh session token
@@ -32,7 +32,7 @@ axios.interceptors.response.use(response => response, async error => {
 
         if (!isLoginResponse) {
             // Return a new request using the original request's configuration
-            return axios(error.response.config)
+            return axios(error.config)
         }
     }
 

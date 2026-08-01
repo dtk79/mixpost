@@ -4,6 +4,8 @@ This repo is the public Mixpost Lite codebase, but the production instance runs 
 
 Use this runbook for operational context only. Production-specific bind mounts and image versions may differ from this Lite repository.
 
+For image updates, follow [Mixpost Update Playbook](mixpost-update-playbook.md).
+
 ## Production Host
 
 - SSH alias: `mixpost-hetzner`
@@ -12,8 +14,8 @@ Use this runbook for operational context only. Production-specific bind mounts a
 - Compose file: `/root/mixpost/docker-compose.yml`
 - Main app container: `mixpost-mixpost-1`
 - Production image: `inovector/mixpost-pro-team:latest`
-- Observed package version: `inovector/mixpost-pro-team 5.4.3`
-- Observed image digest: `sha256:3adae2742a0b255b766b27edc89e990c4bf42d0deb93ab21a775ca63ae876f02`
+- Upstream base: `inovector/mixpost-pro-team@sha256:b519206ccc9baae1d1778dc58cbfed5637757287e5443651a6ea018ca3b75759`
+- Observed package version: `inovector/mixpost-pro-team 6.3.0`
 
 ## Fast Health Checks
 
@@ -53,18 +55,41 @@ The compose stack bind-mounts several local files into the Mixpost container as 
 
 Track durable override intent, acceptance checks, and upstream-removal criteria in [Mixpost Instance Alterations](mixpost-instance-alterations.md). Review that register before every Mixpost image update.
 
+The prior custom upload-resilience image was retired in Pro Team 6.2.2 because its upload handling is now upstream. Keep its source only as a rollback reference.
+
 - `/root/mixpost/Schedule.php`
 - `/root/mixpost/MigrateStorage.php`
 - `/root/mixpost/AppMigrateStorageCommand.php`
 - `/root/mixpost/TrustProxies.php`
 - `/root/mixpost/ManagesTwitterJobs.php`
+- `/root/mixpost/ManagesTwitterResources.php`
+- `/root/mixpost/ImportTwitterPostsJob.php`
 - `/root/mixpost/ManagesBlueskyJobs.php`
+- `/root/mixpost/BlueskyUsesUploads.php`
 - `/root/mixpost/ManagesInstagramJobs.php`
 - `/root/mixpost/InstagramAnalytics.php`
 - `/root/mixpost/ManagesInstagramResources.php`
 - `/root/mixpost/ImportInstagramMediaJob.php`
+- `/root/mixpost/BuildChatSystemPrompt.php`
+- `/root/mixpost/MediaUploadFile.php`
+- `/root/mixpost/ChunkedUploadComplete.php`
+- `/root/mixpost/MediaSocialVideoConversion.php`
+- `/root/mixpost/OptimizeSocialVideoMediaJob.php`
 - `/root/mixpost/uploads.ini`
+- `/root/mixpost/peachy-start.sh`
 - `/root/mixpost/app.blade.php` if Google Analytics needs to be preserved across Docker image updates
+- `/root/mixpost/web.php`, `/root/mixpost/home.blade.php`, and `/root/mixpost/peachy-posting.png` for the Peachy landing page
+
+Required queue and broadcast routing values in `/root/mixpost/.env`:
+
+```text
+REVERB_HOST=mixpost.peachyhq.com
+REVERB_PORT=443
+REVERB_SCHEME=https
+REDIS_QUEUE=mixpost-default
+```
+
+Do not pair `REVERB_SCHEME=https` with port `80`; server-side broadcasts will reach the plain HTTP router and return `404 page not found`. Without `REDIS_QUEUE=mixpost-default`, unnamed Laravel jobs go to `default` while Horizon listens on `mixpost-default`.
 
 Before editing an override, copy a timestamped backup:
 
@@ -157,6 +182,18 @@ Useful manual commands:
 ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:run-scheduled-posts"'
 ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:import-account-audience --providers=twitter"'
 ssh mixpost-hetzner 'docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan mixpost:process-metrics --providers=twitter"'
+```
+
+Manual Facebook Page follower refresh for Rich Merritt account `84` in workspace `24`:
+
+```bash
+ssh mixpost-hetzner 'cd /root/mixpost && docker compose exec -T mixpost php artisan tinker --execute='\''$workspace = Inovector\Mixpost\Models\Workspace::find(24); $workspace->execute(function () { $account = Inovector\Mixpost\Models\Account::find(84); (new Inovector\Mixpost\SocialProviders\Meta\Jobs\ImportFacebookPageFollowersJob($account))->handle(); });'\'''
+```
+
+Verify the stored follower row:
+
+```bash
+ssh mixpost-hetzner 'cd /root/mixpost && docker compose exec -T mysql sh -lc '\''mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "SELECT account_id, date, total FROM mixpost_audience WHERE account_id = 84 ORDER BY date DESC LIMIT 5;"'\'''
 ```
 
 ## X API Cost Mitigation

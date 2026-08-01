@@ -1,0 +1,9 @@
+diff --git a/usr/local/bin/start.sh b/usr/local/bin/start.sh
+index 0272bea..c2678ac 100755
+--- a/usr/local/bin/start.sh
++++ b/usr/local/bin/start.sh
+@@ -139 +139,3 @@
+-if [[ -d "$DIR" && -r "$DIR" ]]; then
++if [ "$SKIP_DOWNLOAD" = "true" ]; then
++  info "Using baked Mixpost application..."
++elif [[ -d "$DIR" && -r "$DIR" ]]; then

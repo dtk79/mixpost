@@ -1,0 +1,82 @@
+diff --git a/resources/js/Composables/useChunkedUpload.js b/resources/js/Composables/useChunkedUpload.js
+index 41851c3..dfc1944 100644
+--- a/resources/js/Composables/useChunkedUpload.js
++++ b/resources/js/Composables/useChunkedUpload.js
+@@ -5,2 +5,11 @@
+ const CHUNK_SIZE = 10 * 1024 * 1024 // 10MB default
+ const MAX_RETRIES = 3
++
++const uploadErrorMessage = error => {
++  if (!error.response) {
++    return 'Connection interrupted while uploading. Check your connection and retry.'
++  }
++
++  return error.response.data?.message || error.message || 'Upload failed'
++}
++
+@@ -71 +80,2 @@
+-      if (retries < MAX_RETRIES && !isAborted.value) {
++      const retryable = !err.response || err.response.status >= 500
++      if (retryable && retries < MAX_RETRIES && !isAborted.value) {
+@@ -148 +158 @@
+-        error.value = err.response?.data?.message || err.message || 'Upload failed'
++        error.value = uploadErrorMessage(err)
+@@ -185 +195 @@
+-      error.value = err.response?.data?.message || err.message || 'Upload failed'
++      error.value = uploadErrorMessage(err)
+diff --git a/resources/js/Composables/useNotifications.js b/resources/js/Composables/useNotifications.js
+index 5fbb4e2..435a6a9 100644
+--- a/resources/js/Composables/useNotifications.js
++++ b/resources/js/Composables/useNotifications.js
+@@ -11 +11,8 @@
+-      if (message.response.status === 422) {
++      const response = message.response
++
++      if (!response) {
++        emitter.emit('notify', { variant, message: message.message, button })
++        return
++      }
++
++      if (response.status === 422) {
+@@ -14 +21 @@
+-          message: convertLaravelErrorsToString(message.response.data.errors),
++          message: convertLaravelErrorsToString(response.data.errors),
+@@ -19 +26 @@
+-      if (message.response.status === 500) {
++      if (response.status === 500) {
+diff --git a/resources/js/bootstrap.js b/resources/js/bootstrap.js
+index e81c8ce..974c0a5 100644
+--- a/resources/js/bootstrap.js
++++ b/resources/js/bootstrap.js
+@@ -22 +22 @@
+-    const status = error.response.status
++    const status = error.response?.status
+@@ -40 +40 @@
+-        return axios(error.response.config)
++        return axios(error.config)
+diff --git a/src/Http/Base/Controllers/Workspace/MediaChunkedUploadController.php b/src/Http/Base/Controllers/Workspace/MediaChunkedUploadController.php
+index 018697a..29c281c 100644
+--- a/src/Http/Base/Controllers/Workspace/MediaChunkedUploadController.php
++++ b/src/Http/Base/Controllers/Workspace/MediaChunkedUploadController.php
+@@ -5 +5,2 @@
+ use Illuminate\Http\JsonResponse;
++use Illuminate\Support\Facades\Log;
+@@ -22 +23,9 @@
+-        return response()->json($request->handle());
++        $response = $request->handle();
++
++        Log::info('mixpost.chunked_upload.chunk_stored', [
++            'upload_uuid' => $request->route('uploadUuid'),
++            'chunk_index' => (int) $request->input('chunk_index'),
++            'chunk_bytes' => $request->file('chunk')?->getSize(),
++        ]);
++
++        return response()->json($response);
+
+diff --git a/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php b/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php
+index a3b8a47..3f853f9 100644
+--- a/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php
++++ b/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php
+@@ -34 +34 @@ class ChunkedUploadInitiate extends FormRequest
+-                    $fail(__('mixpost::rules.file_max_size', ['type' => File::type($mimeType), 'max' => FileSize::bytesToMb($max)]));
++                    $fail(__('mixpost::rules.file_max_size', ['type' => File::type($mimeType), 'max' => FileSize::bytesToMb($max)]).' Selected file size: '.round(FileSize::bytesToMb($value), 1).'MB.');

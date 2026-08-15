@@ -7,9 +7,7 @@ coverage
 .codex-analysis/
 .playwright-cli/
 docs/*
-!docs/mixpost-instance-alterations.md
-!docs/mixpost-update-playbook.md
-!docs/production-runbook.md
+!docs/*.md
 phpunit.xml
 phpstan.neon
 testbench.yaml

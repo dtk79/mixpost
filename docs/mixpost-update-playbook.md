@@ -82,6 +82,10 @@ docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-
 docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php
 docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php
 docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php
+docker exec -e PEACHY_POST_VERSION_CONTENT_PATH=/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php -i mixpost-mixpost-1 php < ops/production-overrides/tests/PeachyPostVersionContentTest.php
 
 docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && composer show inovector/mixpost-pro-team --no-interaction | sed -n '1,8p'"
 docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan about --only=environment"

@@ -27,7 +27,7 @@ ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart 
 
 ## Mounted Override Inventory
 
-This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, verified 2026-08-01 for Pro Team 6.3.0. Every row is a read-only bind mount and therefore is automatically reapplied when the app container is recreated; the review requirement is to ensure it still matches the new image.
+This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, verified 2026-08-29 for Pro Team 6.3.1. Every row is a read-only bind mount and therefore is automatically reapplied when the app container is recreated; the review requirement is to ensure it still matches the new image.
 
 | Host file | Container target | Purpose | Review trigger |
 | --- | --- | --- | --- |
@@ -51,12 +51,30 @@ This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, ver
 | `/root/mixpost/peachy-posting.png` | `/var/www/html/public/vendor/mixpost/peachy-posting.png` | Landing-page image asset. | Asset path or landing-page changes. |
 | `/root/mixpost/uploads.ini` | PHP CLI/FPM config paths | Upload size/runtime config. | PHP image or upload policy changes. |
 | `/root/mixpost/peachy-start.sh` | `/usr/local/bin/peachy-start.sh` | Pre-create Laravel's log for `www-data` before root-run startup Artisan commands. | Image entrypoint, startup sequence, or log channel changes. |
+| `/root/mixpost/PeachyPostVersionContent.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php` | Remove empty additional comments/thread items while preserving the required first item and valid text, media, links, or thumbnails. | Upstream post-content normalization or validation changes. |
+| `/root/mixpost/PostFormRequest.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php` | Normalize empty additional content before editor, API, or MCP post versions are persisted. | Upstream post form validation or version input mapping changes. |
+| `/root/mixpost/AccountPublishPost.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php` | Prevent previously persisted empty additional items from reaching social providers. | Upstream publishing flow, content types, events, or response handling changes. |
 | `/root/mixpost/MediaUploadFile.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after normal uploads. | Any upstream upload request or deferred-conversion changes. |
 | `/root/mixpost/ChunkedUploadComplete.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after chunked uploads. | Any upstream chunk completion or deferred-conversion changes. |
 | `/root/mixpost/MediaSocialVideoConversion.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php` | Produce the 1080px/30fps/H.264/AAC derivative used by Instagram, X, and oversized/non-MP4 Bluesky uploads. | Provider video requirements or upstream conversion changes. |
 | `/root/mixpost/OptimizeSocialVideoMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php` | Run social-video conversion on the media queue after upstream processing settles. | Queue, media-processing, or conversion lifecycle changes. |
 
 ## Alteration Log
+
+### 2026-08-29 - Empty Thread Item Normalization
+
+Status: active production override.
+
+Mixpost's thread editor creates a blank content item when **Add post** is clicked and autosaves the entire content array without removing empty additional items. The server accepts nullable bodies and empty media arrays, then the publisher sends every saved item. X rejects the empty reply after publishing the preceding thread items, while Bluesky accepts and publishes an unintended blank reply.
+
+`PeachyPostVersionContent.php` defines the shared normalization rule. `PostFormRequest.php` applies it before content from the editor, API, or MCP is persisted. `AccountPublishPost.php` applies the same rule at publish time so historical drafts containing empty additional items are safe. The first content item is always preserved; additional items containing visible text, media, a URL, or video-thumbnail data are also preserved.
+
+Acceptance checks:
+
+- The shared normalization tests pass for blank HTML, Unicode whitespace, interior/trailing blanks, URL-only, media-only, and thumbnail-only content.
+- All three mounted PHP files pass `php -l` inside the production container.
+- A read-only production probe confirms empty additional items are removed while valid replies remain ordered.
+- The app-only container recreation preserves all three read-only mounts, Horizon remains running, and the public login route returns HTTP 200.
 
 ### 2026-08-01 - Queue Routing, Reverb, and Bluesky Video Recovery
 

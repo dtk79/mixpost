@@ -122,3 +122,7 @@ Use the timestamped backup from `backups/update-$stamp` to restore host-mounted 
 cp backups/update-YYYYMMDD-HHMMSS/* .
 docker compose up -d --force-recreate mixpost
 ```
+
+## Imported-thumbnail regression gate
+
+Preserve and compare the four thumbnail-related overrides and run the repeat-import regression test described in [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) after every Pro image update.

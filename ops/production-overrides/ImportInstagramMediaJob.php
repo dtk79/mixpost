@@ -4,6 +4,7 @@ namespace Inovector\Mixpost\SocialProviders\Meta\Jobs;
 
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Inovector\Mixpost\Concerns\Job\OnAnalyticsQueue;
 use Inovector\Mixpost\Facades\WorkspaceManager;
 use Inovector\Mixpost\Jobs\DownloadImportedPostThumbnailJob;
@@ -72,7 +73,12 @@ class ImportInstagramMediaJob extends SocialProviderJob
             ];
         });
 
-        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], ['text', 'url', 'thumbnail', 'content_type', 'data']);
+        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
+            'text', 'url',
+            // Keep the cached path atomically, even if a download completes during this import.
+            'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
+            'content_type', 'data',
+        ]);
     }
 
     protected function dispatchThumbnailDownload(array $items): void

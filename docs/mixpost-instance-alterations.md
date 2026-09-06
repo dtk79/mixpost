@@ -578,3 +578,7 @@ Review/future patch candidates:
 
 - Facebook Reel publishing should save canonical page-post IDs, or `GetPostAnalytics` should normalize Facebook post IDs before querying insights.
 - Facebook and YouTube post import jobs may need a fresher cadence or targeted post-import dispatch after successful publishing if same-day analytics are expected in the UI.
+
+## Imported-thumbnail reuse and storage cleanup
+
+See [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) for the four read-only importer/downloader overrides, regression checks, cleanup manifests, and temporary-upload retention policy.

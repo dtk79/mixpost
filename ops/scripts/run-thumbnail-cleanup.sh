@@ -4,6 +4,10 @@ set -eu
 full_run=${1:?Full manifest run name is required}
 tail_run=${2:?Tail cleanup run name is required}
 concurrency=${3:-64}
+# Limit parallel batches after observed truncated S3 responses at higher concurrency.
+if [ "$concurrency" -gt 32 ]; then
+    concurrency=32
+fi
 engine=/var/www/html/storage/app/peachy-storage-cleanup/cleanup-imported-thumbnails.php
 root=/var/www/html/storage/app/peachy-storage-cleanup
 

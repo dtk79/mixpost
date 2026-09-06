@@ -57,11 +57,21 @@ The full manifest contains 3,136,248 unreferenced versions / 859.182 GB, includi
 
 The long purge runs in a separate `mixpost-thumbnail-cleanup` container, using the exact app image and a private, read-only application runtime snapshot at `/root/mixpost/storage-cleanup-runtime`. It has its own 1 GiB memory limit and one CPU limit, uses `mixpost_default` to reach the database, and shares only the existing storage volume for manifests/receipts. It does not consume the app container's 2 GiB memory allocation. The runtime snapshot contains cached configuration and must remain private; remove it only after the maintenance container is finished and verification has been archived.
 
-`ops/scripts/run-thumbnail-cleanup.sh` runs deletion, full verification, a second grace-period cleanup (`thumbnail-tail-20260906`), and final verification. It stops on any failed step. The marker `FULL_THUMBNAIL_CLEANUP_COMPLETE` is emitted only after all stages succeed. With 128 concurrent requests, the job leaves headroom below Hetzner's [256 concurrent sessions per source IP](https://docs.hetzner.com/storage/object-storage/overview/#limits); confirm current provider limits and other workloads before changing concurrency. The pilot's 77-second duration establishes that this is a long-running operation, not an instantaneous deletion.
+`ops/scripts/run-thumbnail-cleanup.sh` runs deletion, full verification, a second grace-period cleanup (`thumbnail-tail-20260906`), and final verification. It stops on any failed step. The marker `FULL_THUMBNAIL_CLEANUP_COMPLETE` is emitted only after all stages succeed. The initial run used 128 concurrent requests, below Hetzner's [256 concurrent sessions per source IP](https://docs.hetzner.com/storage/object-storage/overview/#limits). After transient truncated S3 responses, the same immutable manifests were resumed and the runner was capped at 32 concurrent batches. Confirm current provider limits and other workloads before changing concurrency. The pilot's 77-second duration establishes that this is a long-running operation, not an instantaneous deletion.
 
 Monitor with `docker logs --tail=10 mixpost-thumbnail-cleanup` and inspect `deletion-summary.json` / `verification.json` under each run. The absence of receipts while initial batches are in flight is not completion. If stopped or failed, inspect the error receipts and resume the same run rather than regenerate an already-used manifest. `flock` prevents simultaneous cleanup processes for a run. Verification checks original protected ETags/sizes/version IDs, all current database references, and any unexpected old objects remaining in the prefix.
 
 The earlier historical-media cleanup removed 887 versions / 32.749 GB and verified all 2,246 current files in the scanned non-imported prefixes unchanged.
+
+### Verified completion
+
+The maintenance runner exited successfully at `2026-09-06T10:55:09Z` with `FULL_THUMBNAIL_CLEANUP_COMPLETE`. All 3,149 batch receipts across the pilot, main purge, and tail cleanup were successful: **3,138,554 thumbnail versions / 859,779,955,727 bytes (859.780 GB) removed**. Combined with the earlier historical-media cleanup, total removed storage was **892.529 GB**.
+
+The final complete prefix scan contained exactly **1,539 referenced thumbnail files / 413,868,771 bytes (413.869 MB)**, with no unexpected old objects. At `2026-09-06T10:56:53Z`, fresh S3 HEAD requests verified all 1,539 current references and confirmed all 1,533 original protected files retained their ETags, sizes, and version IDs. Both phase verification files had empty missing-reference, changed-baseline, and unexpected-object lists.
+
+The four production override hashes still matched the maintained source mirrors and all four mounts remained read-only. Horizon was running, login returned HTTP 200, log permissions were correct, and the seven-day temporary-upload lifecycle rule remained enabled. No reference migration was needed.
+
+Final evidence is saved locally under `/Users/Dan/.codex/visualizations/2026/09/06/01a0757f-7660-73f0-86a2-2ee75ca5dd71/mixpost-storage-remediation/`, including `completion-report.md`, `final-live-verification.json`, both phase verification files, deployment hash verification, and the completion log. Production manifests, receipts, and transient-error audit copies are retained in the storage volume. After verification was archived, the finished maintenance container and private runtime snapshot were removed.
 
 ## Temporary-upload retention
 

@@ -46,7 +46,7 @@ This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, ver
 | `/root/mixpost/MigrateStorage.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php` | Storage migration without S3 prefix listings. | Upstream storage-migration changes. |
 | `/root/mixpost/AppMigrateStorageCommand.php` | `/var/www/html/app/Console/Commands/MigrateStorage.php` | Registers the production storage-migration command. | Laravel command-discovery or upstream registration changes. |
 | `/root/mixpost/app.blade.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php` | Preserve Google Analytics shell injection. | Upstream layout or analytics support changes. |
-| `/root/mixpost/web.php` | `/var/www/html/routes/web.php` | Peachy public-site route customization. | Laravel route changes. |
+| `/root/mixpost/web.php` | `/var/www/html/routes/web.php` | Peachy public-site routes, mirrored at `ops/production-overrides/web.php`, including the lightweight `/api/health` response. | Laravel route changes or health-response contract changes. |
 | `/root/mixpost/home.blade.php` | `/var/www/html/resources/views/home.blade.php` | Peachy public landing page. | App layout/view changes. |
 | `/root/mixpost/peachy-posting.png` | `/var/www/html/public/vendor/mixpost/peachy-posting.png` | Landing-page image asset. | Asset path or landing-page changes. |
 | `/root/mixpost/uploads.ini` | PHP CLI/FPM config paths | Upload size/runtime config. | PHP image or upload policy changes. |
@@ -60,6 +60,33 @@ This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, ver
 | `/root/mixpost/OptimizeSocialVideoMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php` | Run social-video conversion on the media queue after upstream processing settles. | Queue, media-processing, or conversion lifecycle changes. |
 
 ## Alteration Log
+
+### 2026-09-12 - Lightweight Production Health Route
+
+Status: versioned production override, pending deployment.
+
+The production container replaces Laravel's application route file with the
+read-only host file `/root/mixpost/web.php`. Package route changes therefore do
+not reach the running instance. `ops/production-overrides/web.php` is now the
+source-controlled mirror for that mounted file and preserves the Peachy landing
+page while adding a view-free `GET /api/health` response:
+
+```json
+{"ok":true,"service":"mixpost"}
+```
+
+The response sets `Cache-Control: no-store` and performs no database, Redis,
+filesystem, template, or social-provider work. After an authorized deployment,
+copy this mirror to `/root/mixpost/web.php`, recreate only the Mixpost app
+container, and verify both the health JSON and the existing public landing page.
+
+Acceptance checks:
+
+- `php -l ops/production-overrides/web.php` passes.
+- `GET https://mixpost.peachyhq.com/api/health` returns HTTP 200 with the exact JSON above.
+- `Cache-Control` includes `no-store`.
+- `GET https://mixpost.peachyhq.com/` still returns the existing Peachy landing page.
+- `/root/mixpost/web.php` and `ops/production-overrides/web.php` have identical checksums.
 
 ### 2026-08-29 - Empty Thread Item Normalization
 

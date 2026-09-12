@@ -34,6 +34,15 @@ use Inovector\Mixpost\Http\Controllers\UpdateAuthUserPasswordController;
 use Inovector\Mixpost\Http\Middleware\Auth as MixpostAuthMiddleware;
 use Inovector\Mixpost\Http\Middleware\HandleInertiaRequests;
 
+Route::get('api/health', function () {
+    return response()
+        ->json([
+            'ok' => true,
+            'service' => 'mixpost',
+        ])
+        ->header('Cache-Control', 'no-store');
+})->name('mixpost.health');
+
 Route::middleware('web')->group(function () {
     Route::get('/', function () {
         return view('mixpost::home');

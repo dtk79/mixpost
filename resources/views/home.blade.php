@@ -123,6 +123,25 @@
             padding: 0 18px;
             color: #24222a;
             background: #ffd2c4;
+            cursor: pointer;
+        }
+
+        .form-feedback {
+            margin-top: 12px;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        .form-feedback.success {
+            color: #24613b;
+        }
+
+        .form-feedback.error {
+            color: #9d2d27;
+        }
+
+        input[aria-invalid="true"] {
+            border-color: #c73d35;
         }
 
         footer {
@@ -195,11 +214,28 @@
             <a class="login" href="https://mixpost.peachyhq.com/mixpost/login">Log in</a>
         </div>
 
-        {{-- ponytail: mailto form, replace with a POST endpoint when account requests need tracking. --}}
-        <form action="mailto:dan@peachyhq.com?subject=Peachy%20Posting%20account%20request" method="post" enctype="text/plain">
-            <input type="email" name="email" autocomplete="email" placeholder="you@peachyhq.com" required>
+        <form action="{{ route('mixpost.account-request', [], false) }}" method="post">
+            @csrf
+            <input
+                type="email"
+                name="email"
+                value="{{ old('email') }}"
+                autocomplete="email"
+                placeholder="you@peachyhq.com"
+                aria-label="Work email"
+                @if($errors->has('email')) aria-invalid="true" aria-describedby="account-request-error" @endif
+                required
+            >
             <button type="submit">Request account</button>
         </form>
+
+        @if(session('account_request_sent'))
+            <p class="form-feedback success" role="status">Request sent. We’ll contact you at your work email.</p>
+        @elseif(session('account_request_error'))
+            <p class="form-feedback error" role="alert">{{ session('account_request_error') }}</p>
+        @elseif($errors->has('email'))
+            <p id="account-request-error" class="form-feedback error" role="alert">{{ $errors->first('email') }}</p>
+        @endif
 
         <footer>
             <a href="https://mixpost.peachyhq.com/pages/terms">Terms of Service</a>

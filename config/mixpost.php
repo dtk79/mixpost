@@ -17,6 +17,11 @@ return [
     'redirect_unauthorized_users_to_route' => 'login',
 
     /*
+     * Account requests submitted from the public Peachy Posting homepage are sent here.
+     */
+    'account_request_email' => env('MIXPOST_ACCOUNT_REQUEST_EMAIL', 'dan@peachyhq.com'),
+
+    /*
      * The disk on which to store added files.
      * Choose one or more of the disks you've configured in config/filesystems.php.
      */

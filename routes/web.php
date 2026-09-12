@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Inovector\Mixpost\Http\Controllers\AccountEntitiesController;
+use Inovector\Mixpost\Http\Controllers\AccountRequestController;
 use Inovector\Mixpost\Http\Controllers\AccountsController;
 use Inovector\Mixpost\Http\Controllers\AddAccountController;
 use Inovector\Mixpost\Http\Controllers\AuthenticatedController;
@@ -33,9 +34,15 @@ use Inovector\Mixpost\Http\Controllers\UpdateAuthUserPasswordController;
 use Inovector\Mixpost\Http\Middleware\Auth as MixpostAuthMiddleware;
 use Inovector\Mixpost\Http\Middleware\HandleInertiaRequests;
 
-Route::middleware('web')->get('/', function () {
-    return view('mixpost::home');
-})->name('mixpost.home');
+Route::middleware('web')->group(function () {
+    Route::get('/', function () {
+        return view('mixpost::home');
+    })->name('mixpost.home');
+
+    Route::post('account-request', AccountRequestController::class)
+        ->middleware('throttle:3,1')
+        ->name('mixpost.account-request');
+});
 
 Route::middleware([
     'web',

@@ -4,53 +4,60 @@
 
 - **App id:** `mixpost`  ·  **Repo:** `dtk79/mixpost`  ·  **Branch:** `main`
 - **Runtime:** Docker Compose · docker-compose.yml @ /root/mixpost · mixpost
-- **Production path:** `/root/mixpost`  ·  **Deploy model:** `deferred`
+- **Production path:** `/root/mixpost`  ·  **Deploy model:** `mixpost-image`
 - **Health:** https://mixpost.peachyhq.com/api/health
 
 ## Summary
 
-- Mixpost runs a vendor Docker image with read-only host overrides, so production updates must follow its app-specific playbook.
-- Follow `docs/mixpost-update-playbook.md` for production updates and rollback.
-- The Infra DevOps screen observes repository and health state but cannot start this deployment.
+- Mixpost deploys with the guarded Mixpost image updater, not a production Git checkout.
+- The updater snapshots every read-only bind mount, pulls and resolves the vendor image, and recreates only Mixpost.
+- MySQL, Redis, and volumes stay running; runtime verification must pass before the image is recorded as deployed.
 
 ## Deploy steps
 
-1. **Inspect local state on main**
-
-   ```sh
-   git -C /Users/Dan/Repos/mixpost status --short && git -C /Users/Dan/Repos/mixpost branch --show-current
-   ```
-
-2. **Run the app's pre-deploy checks**
+1. **Complete the vendor-image compatibility review**
 
    ```sh
    composer test
+   # Review docs/mixpost-update-playbook.md before pulling a new Pro Team image.
+   # This action preserves host overrides; it does not copy GitHub files onto the host.
    ```
 
-3. **Review the production update procedure**
+2. **Deploy from the Infra DevOps screen**
 
    ```sh
-   # Follow docs/mixpost-update-playbook.md; it is authoritative for this app.
+   # Select Mixpost → Deploy Mixpost image
+   # Confirm the app name; the guarded updater runs detached on the Infra host.
    ```
 
-4. **Ship only through the app-specific procedure**
+3. **Observe the guarded phases**
 
    ```sh
-   # Infra intentionally provides no Deploy now action for this deferred app.
+   # Preflight → backup overrides → pull image → recreate Mixpost only → verify
+   # The dashboard progress bar and deploy log retain the result.
+   ```
+
+4. **Use the exact previous image for rollback**
+
+   ```sh
+   # Select Rollback image when a previous verified image is available.
+   # Reference: docs/mixpost-update-playbook.md
    ```
 
 ## Verify
 
 - Health: `curl -fsS https://mixpost.peachyhq.com/api/health` returns 200
-- Complete the verification checklist in `docs/mixpost-update-playbook.md`
-- DevOps screen shows Manual and does not claim a Git-to-production SHA match
+- Running container image ID matches the image resolved immediately after pull
+- Read-only bind mount set is unchanged and every mounted PHP file passes syntax validation
+- MySQL and Redis container IDs are unchanged; Horizon, scheduler, asset manifest, and login checks pass
+- Release state records the current immutable image ID, previous image ID, and override backup path
 
 ## Rollback
 
-Follow the rollback procedure in `docs/mixpost-update-playbook.md`; the Infra dashboard does not perform it.
+Infra DevOps screen → Mixpost → Rollback image. The deployer retags the previous immutable image, recreates only Mixpost, repeats the full verification gate, and preserves the current image as the next recovery target.
 
 ## From the Infra DevOps screen
 
-- **Deploy now:** `Not available; follow docs/mixpost-update-playbook.md.`
-- **Rollback:** `Not available; follow docs/mixpost-update-playbook.md.`
+- **Deploy now:** `POST /api/devops/mixpost/deploy  (deploy-mixpost.sh mixpost --force)`
+- **Rollback:** `POST /api/devops/mixpost/production/rollback  (deploy-mixpost.sh mixpost --rollback)`
 

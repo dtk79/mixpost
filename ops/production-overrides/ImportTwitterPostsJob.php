@@ -76,7 +76,11 @@ class ImportTwitterPostsJob extends SocialProviderJob
     private function resolveText($item): string
     {
         if (! isset($item->article)) {
-            return $item->text ?? '';
+            // A long-form post's full body lives in `note_tweet.text`; `text` is the 280-char
+            // truncation ending in a t.co link. Prefer the full body, fall back to the truncation.
+            $noteText = trim((string) ($item->note_tweet->text ?? ''));
+
+            return $noteText !== '' ? $noteText : ($item->text ?? '');
         }
 
         $text = trim(implode("\n\n", array_filter([

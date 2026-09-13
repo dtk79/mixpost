@@ -254,8 +254,12 @@ trait ManagesResources
 
     public function getUserTweetTimeline(string $userId, string $paginationToken = ''): SocialProviderResponse
     {
+        // `note_tweet` carries the FULL text of a long-form post (> 280 chars). Without it the API
+        // returns only the truncated `text` ending in a t.co link, so anything named below the fold
+        // (a sponsor credit, a hashtag) was never imported. Measured 2026-09-13 on
+        // x.com/i/status/2098031785880007024: 303 chars stored of a post several times that length.
         $params = [
-            'tweet.fields' => 'article,public_metrics,non_public_metrics,created_at,in_reply_to_user_id,attachments',
+            'tweet.fields' => 'article,note_tweet,public_metrics,non_public_metrics,created_at,in_reply_to_user_id,attachments',
             'expansions' => 'article.cover_media,article.media_entities,attachments.media_keys',
             'media.fields' => 'type,url,preview_image_url',
             'exclude' => 'retweets,replies',

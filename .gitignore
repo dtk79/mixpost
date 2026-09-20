@@ -9,6 +9,7 @@ coverage
 docs/*
 !docs/mixpost-instance-alterations.md
 !docs/mixpost-update-playbook.md
+!docs/post-failure-notifications.md
 !docs/production-runbook.md
 phpunit.xml
 phpstan.neon

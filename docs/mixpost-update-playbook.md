@@ -4,6 +4,10 @@ Use this when updating the production Mixpost Pro Team Docker image on `mixpost-
 
 Production runs from `/root/mixpost/docker-compose.yml` and keeps Peachy-specific files as read-only bind mounts. Do not delete those files and do not run `docker compose down -v`.
 
+For routine upgrades and versioned customization changes, use the Mixpost Deploy action in the Infra dashboard. Its dedicated deployer fetches the committed `ops/production-overrides/deployment-manifest.json`, backs up current files and Compose configuration, writes a generated read-only overlay, pulls the vendor image, recreates only Mixpost, and verifies the complete mount set. It does not replace or restart MySQL or Redis.
+
+The manual commands below are the recovery and review path. Running them alone does not sync newly committed managed overrides.
+
 ## Preflight
 
 ```bash
@@ -86,6 +90,10 @@ docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-
 docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php
 docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php
 docker exec -e PEACHY_POST_VERSION_CONTENT_PATH=/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php -i mixpost-mixpost-1 php < ops/production-overrides/tests/PeachyPostVersionContentTest.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php
+docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php
+docker exec -e POST_FAILURE_EXPLANATION_PATH=/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php -i mixpost-mixpost-1 php < ops/production-overrides/tests/PostFailureExplanationTest.php
 
 docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && composer show inovector/mixpost-pro-team --no-interaction | sed -n '1,8p'"
 docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan about --only=environment"
@@ -120,7 +128,9 @@ If any referenced asset returns `404`, inspect the current image and Compose mou
 
 ## Rollback
 
-Use the timestamped backup from `backups/update-$stamp` to restore host-mounted overrides. If the new image itself is bad, pin the previous image digest in `docker-compose.yml`, then recreate only the app container.
+Dashboard deployments record their backup under `/root/mixpost/backups/dashboard-deploys` and roll back the prior image plus managed override files together. Use the dashboard rollback action for that release whenever possible.
+
+For a manual recovery, use the timestamped backup from `backups/update-$stamp` to restore host-mounted overrides. If the new image itself is bad, pin the previous image digest in `docker-compose.yml`, then recreate only the app container.
 
 ```bash
 cp backups/update-YYYYMMDD-HHMMSS/* .

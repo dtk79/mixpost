@@ -10,7 +10,7 @@
 ## Summary
 
 - Mixpost deploys with the guarded Mixpost image updater, not a production Git checkout.
-- The updater snapshots every read-only bind mount, pulls and resolves the vendor image, and recreates only Mixpost.
+- The updater fetches the committed override manifest, snapshots every read-only bind mount, installs managed overrides, pulls the vendor image, and recreates only Mixpost.
 - MySQL, Redis, and volumes stay running; runtime verification must pass before the image is recorded as deployed.
 
 ## Deploy steps
@@ -20,7 +20,7 @@
    ```sh
    composer test
    # Review docs/mixpost-update-playbook.md before pulling a new Pro Team image.
-   # This action preserves host overrides; it does not copy GitHub files onto the host.
+   # The dashboard deploy fetches and installs only overrides declared in the committed manifest.
    ```
 
 2. **Deploy from the Infra DevOps screen**
@@ -33,14 +33,15 @@
 3. **Observe the guarded phases**
 
    ```sh
-   # Preflight → backup overrides → pull image → recreate Mixpost only → verify
-   # The dashboard progress bar and deploy log retain the result.
+   # Preflight → fetch manifest → backup overrides → install managed overrides → pull image → recreate Mixpost only → verify
+   # The dashboard progress bar and deploy log retain the image and override commit.
    ```
 
-4. **Use the exact previous image for rollback**
+4. **Use the exact previous release for rollback**
 
    ```sh
-   # Select Rollback image when a previous verified image is available.
+   # Select Rollback image when a previous verified release is available.
+   # The rollback restores the previous image and managed override files together.
    # Reference: docs/mixpost-update-playbook.md
    ```
 
@@ -48,13 +49,13 @@
 
 - Health: `curl -fsS https://mixpost.peachyhq.com/api/health` returns 200
 - Running container image ID matches the image resolved immediately after pull
-- Read-only bind mount set is unchanged and every mounted PHP file passes syntax validation
+- Read-only bind mounts match the preserved set plus the committed manifest; every mounted PHP file passes syntax validation
 - MySQL and Redis container IDs are unchanged; Horizon, scheduler, asset manifest, and login checks pass
-- Release state records the current immutable image ID, previous image ID, and override backup path
+- Release state records the current immutable image ID, previous image ID, exact override commit, and override backup path
 
 ## Rollback
 
-Infra DevOps screen → Mixpost → Rollback image. The deployer retags the previous immutable image, recreates only Mixpost, repeats the full verification gate, and preserves the current image as the next recovery target.
+Infra DevOps screen → Mixpost → Rollback image. The deployer restores the previous managed override files, retags the previous immutable image, recreates only Mixpost, repeats the full verification gate, and preserves the displaced release as the next recovery target.
 
 ## From the Infra DevOps screen
 

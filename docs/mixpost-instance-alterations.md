@@ -9,7 +9,7 @@ The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. 
 Before upgrading Mixpost:
 
 1. Follow [Mixpost Update Playbook](mixpost-update-playbook.md).
-2. Review this file and `/root/mixpost/docker-compose.yml`.
+2. Review this file, `ops/production-overrides/deployment-manifest.json`, and the production Compose files.
 3. Pull the new image without replacing host overrides.
 4. Compare every mounted override against the same file in the new image.
 5. Remove an override if upstream now includes the behavior we need.
@@ -25,9 +25,9 @@ ssh mixpost-hetzner 'docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/i
 ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart mixpost'
 ```
 
-## Mounted Override Inventory
+## Production Override Inventory
 
-This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, verified 2026-08-29 for Pro Team 6.3.1. Every row is a read-only bind mount and therefore is automatically reapplied when the app container is recreated; the review requirement is to ensure it still matches the new image.
+This inventory combines the existing `/root/mixpost/docker-compose.yml` mounts, verified 2026-08-29 for Pro Team 6.3.1, with versioned additions in `ops/production-overrides/deployment-manifest.json`. Manifest additions become active on the next authorized Infra dashboard deployment. Every active row is a read-only bind mount and is automatically reapplied when the app container is recreated; the review requirement is to ensure it still matches the new image.
 
 | Host file | Container target | Purpose | Review trigger |
 | --- | --- | --- | --- |
@@ -54,12 +54,33 @@ This is the authoritative inventory from `/root/mixpost/docker-compose.yml`, ver
 | `/root/mixpost/PeachyPostVersionContent.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php` | Remove empty additional comments/thread items while preserving the required first item and valid text, media, links, or thumbnails. | Upstream post-content normalization or validation changes. |
 | `/root/mixpost/PostFormRequest.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php` | Normalize empty additional content before editor, API, or MCP post versions are persisted. | Upstream post form validation or version input mapping changes. |
 | `/root/mixpost/AccountPublishPost.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php` | Prevent previously persisted empty additional items from reaching social providers. | Upstream publishing flow, content types, events, or response handling changes. |
+| `/root/mixpost/PostFailureExplanation.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php` | Convert stored provider failures into concise, token-redacted email explanations. | Upstream error response shapes or notification content changes. |
+| `/root/mixpost/PostPublishingFailedNotification.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php` | Send one queued failure email to `socials@ducatix.com` with per-account explanations and a direct post link. | Upstream notification, queue-workspace, mail-theme, or post-route changes. |
+| `/root/mixpost/PublishPost.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php` | Mark provider and terminal batch failures correctly, then enqueue one aggregate failure notification. | Upstream publish batching, status transitions, or failed-job callback ordering changes. |
 | `/root/mixpost/MediaUploadFile.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after normal uploads. | Any upstream upload request or deferred-conversion changes. |
 | `/root/mixpost/ChunkedUploadComplete.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php` | Preserve upstream deferred processing and enqueue provider-safe video optimization after chunked uploads. | Any upstream chunk completion or deferred-conversion changes. |
 | `/root/mixpost/MediaSocialVideoConversion.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php` | Produce the 1080px/30fps/H.264/AAC derivative used by Instagram, X, and oversized/non-MP4 Bluesky uploads. | Provider video requirements or upstream conversion changes. |
 | `/root/mixpost/OptimizeSocialVideoMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php` | Run social-video conversion on the media queue after upstream processing settles. | Queue, media-processing, or conversion lifecycle changes. |
 
 ## Alteration Log
+
+### 2026-09-19 - Failed Post Email Notifications
+
+Status: versioned production overrides, ready for an authorized Infra dashboard deployment.
+
+`PublishPost.php` now treats both stored provider errors and Laravel batch failures as failed posts, then queues one email to `socials@ducatix.com` after the complete batch. `PostPublishingFailedNotification.php` aggregates every failed account and links to the exact post/workspace. `PostFailureExplanation.php` turns known machine errors into actionable language, retains useful provider messages and codes, caps output, and redacts token-like values.
+
+The three files are declared in `ops/production-overrides/deployment-manifest.json`. The Infra dashboard's Mixpost deployer uses that manifest to back up, install, mount read-only, verify, and jointly roll back managed overrides and the vendor image. Existing manual mounts remain outside the managed set and are preserved.
+
+Acceptance checks:
+
+- The explanation test covers disabled services, expired connections, provider error objects, secret redaction, and the safe fallback.
+- All three PHP files pass syntax validation using the production container's PHP runtime.
+- A read-only production fixture renders a message whose subject identifies the post and whose action URL contains the correct workspace and post UUID.
+- The dashboard deployment backs up the current Compose and override state, installs the exact default-branch manifest, recreates only Mixpost, verifies all binds are read-only, lints every mounted PHP file, and preserves the MySQL and Redis container IDs.
+- A failed deployment restores both the prior image and prior managed override files.
+
+Full design and verification details: [Post Failure Email Notifications](post-failure-notifications.md).
 
 ### 2026-09-12 - Lightweight Production Health Route
 

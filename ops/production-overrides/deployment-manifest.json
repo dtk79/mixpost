@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "overrides": [
+    {
+      "source": "ops/production-overrides/PostFailureExplanation.php",
+      "host": "PostFailureExplanation.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php"
+    },
+    {
+      "source": "ops/production-overrides/PostPublishingFailedNotification.php",
+      "host": "PostPublishingFailedNotification.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php"
+    },
+    {
+      "source": "ops/production-overrides/PublishPost.php",
+      "host": "PublishPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php"
+    }
+  ]
+}

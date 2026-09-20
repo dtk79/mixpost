@@ -123,14 +123,32 @@ trait ManagesResources
                 }
             }
 
+            $mediaId = $result->media_id_string
+                ?? (isset($result->media_id) ? (string) $result->media_id : null);
+
+            if (! $mediaId) {
+                $uploadErrors = $this->twitterMediaUploadErrors($result);
+
+                Log::warning('mixpost.twitter_media_upload_failed', [
+                    'account_id' => $this->values['account_id'] ?? null,
+                    'media_id' => $item->id ?? null,
+                    'http_code' => $this->connection->getLastHttpCode(),
+                    'errors' => $uploadErrors,
+                ]);
+
+                array_push($errors, ...$uploadErrors);
+
+                continue;
+            }
+
             if ($item->alt_text) {
                 $this->connection->mediaMetadataCreate(
-                    media_id: $result->media_id_string,
+                    media_id: $mediaId,
                     alt_text: $item->alt_text
                 );
             }
 
-            $ids[] = $result->media_id_string;
+            $ids[] = $mediaId;
         }
 
         return [
@@ -159,6 +177,39 @@ trait ManagesResources
         ]);
 
         return $uploadItem;
+    }
+
+    private function twitterMediaUploadErrors(mixed $result): array
+    {
+        $errors = [];
+
+        foreach ((array) data_get($result, 'errors', []) as $error) {
+            $message = trim((string) (data_get($error, 'message') ?? data_get($error, 'detail') ?? ''));
+
+            if ($message === '') {
+                continue;
+            }
+
+            $code = data_get($error, 'code');
+            $errors[] = $code === null
+                ? "X media upload error: $message"
+                : "X media upload error $code: $message";
+        }
+
+        if ($errors) {
+            return $errors;
+        }
+
+        $title = trim((string) data_get($result, 'title', ''));
+        $detail = trim((string) data_get($result, 'detail', ''));
+
+        if ($title !== '' || $detail !== '') {
+            return ['X media upload error: '.trim("$title: $detail", ': ')];
+        }
+
+        $message = trim((string) (data_get($result, 'message') ?? data_get($result, 'error') ?? ''));
+
+        return [$message === '' ? 'media_upload_missing_id' : "X media upload error: $message"];
     }
 
     protected function storePostWithApiV1(string $text, array $mediaResult, array $params): SocialProviderResponse

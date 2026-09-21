@@ -12,6 +12,10 @@ use Inovector\Mixpost\Support\SocialProviderResponse;
 
 trait ManagesResources
 {
+    private const TWITTER_CHUNK_SIZE_BYTES = 4 * 1024 * 1024;
+
+    private const TWITTER_CHUNKED_UPLOAD_MAX_ATTEMPTS = 3;
+
     public function getAccount(): SocialProviderResponse
     {
         $response = $this->connection->get('users/me', ['user.fields' => 'profile_image_url,created_at,verified,verified_type']);
@@ -76,17 +80,15 @@ trait ManagesResources
                     $uploadItem->downloadToTemp();
                 $this->logPublishTiming('media_download', $uploadItem, $downloadStartedAt);
 
-                $uploadStartedAt = microtime(true);
-                $result = $this->connection->upload('media/upload', [
-                    'media' => $mediaFilePath['fullPath'] ?? $mediaFilePath,
-                    'media_type' => $uploadItem->mime_type,
-                    'media_category' => $uploadItem->isImageGif() ? 'tweet_gif' : 'tweet_video',
-                    'total_bytes' => $uploadItem->size,
-                ], ['chunkedUpload' => true]);
-                $this->logPublishTiming('media_upload', $uploadItem, $uploadStartedAt);
-
-                if (isset($mediaFilePath['temporaryDirectory'])) {
-                    $mediaFilePath['temporaryDirectory']->delete();
+                try {
+                    $result = $this->uploadTwitterChunkedMedia(
+                        $uploadItem,
+                        $mediaFilePath['fullPath'] ?? $mediaFilePath,
+                    );
+                } finally {
+                    if (isset($mediaFilePath['temporaryDirectory'])) {
+                        $mediaFilePath['temporaryDirectory']->delete();
+                    }
                 }
             }
 
@@ -155,6 +157,56 @@ trait ManagesResources
             'ids' => $ids,
             'errors' => $errors,
         ];
+    }
+
+    protected function uploadTwitterChunkedMedia(Media $uploadItem, string $mediaPath): mixed
+    {
+        // The provider supports chunks up to 5 MB. The library default is only
+        // 250 KB, which turned a 46 MB video into 185 separate requests.
+        $this->connection->setChunkSize(self::TWITTER_CHUNK_SIZE_BYTES);
+
+        for ($attempt = 1; $attempt <= self::TWITTER_CHUNKED_UPLOAD_MAX_ATTEMPTS; $attempt++) {
+            $uploadStartedAt = microtime(true);
+            $result = $this->connection->upload('media/upload', [
+                'media' => $mediaPath,
+                'media_type' => $uploadItem->mime_type,
+                'media_category' => $uploadItem->isImageGif() ? 'tweet_gif' : 'tweet_video',
+                'total_bytes' => $uploadItem->size,
+            ], ['chunkedUpload' => true]);
+            $httpCode = $this->connection->getLastHttpCode();
+
+            $this->logPublishTiming('media_upload', $uploadItem, $uploadStartedAt, [
+                'attempt' => $attempt,
+                'http_code' => $httpCode,
+            ]);
+
+            if (! $this->twitterChunkedUploadShouldRetry($result, $httpCode)
+                || $attempt === self::TWITTER_CHUNKED_UPLOAD_MAX_ATTEMPTS) {
+                return $result;
+            }
+
+            Log::warning('mixpost.twitter_media_upload_retry', [
+                'account_id' => $this->values['account_id'] ?? null,
+                'media_id' => $uploadItem->id ?? null,
+                'attempt' => $attempt,
+                'next_attempt' => $attempt + 1,
+                'http_code' => $httpCode,
+                'errors' => $this->twitterMediaUploadErrors($result),
+            ]);
+
+            sleep($attempt);
+        }
+
+        return null;
+    }
+
+    protected function twitterChunkedUploadShouldRetry(mixed $result, int $httpCode): bool
+    {
+        $message = strtolower(implode(' ', $this->twitterMediaUploadErrors($result)));
+
+        return str_contains($message, 'segments do not add up to provided total file size')
+            || $httpCode === 0
+            || $httpCode >= 500;
     }
 
     protected function twitterMediaItemForUpload(Media $mediaItem): Media

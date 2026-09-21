@@ -2,6 +2,11 @@
   "schemaVersion": 1,
   "overrides": [
     {
+      "source": "ops/production-overrides/ManagesTwitterResources.php",
+      "host": "ManagesTwitterResources.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php"
+    },
+    {
       "source": "ops/production-overrides/PostFailureExplanation.php",
       "host": "PostFailureExplanation.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php"

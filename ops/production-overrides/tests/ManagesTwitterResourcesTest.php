@@ -10,6 +10,11 @@ $provider = new class {
     {
         return $this->twitterMediaUploadErrors($result);
     }
+
+    public function shouldRetryChunkedUpload(mixed $result, int $httpCode): bool
+    {
+        return $this->twitterChunkedUploadShouldRetry($result, $httpCode);
+    }
 };
 
 function checkTwitterResourceCondition(bool $condition, string $message): void
@@ -45,4 +50,23 @@ checkTwitterResourceCondition(
     'Unknown response shapes must keep the existing diagnostic fallback'
 );
 
-echo "Twitter media upload diagnostic tests passed (4 cases)\n";
+checkTwitterResourceCondition(
+    $provider->shouldRetryChunkedUpload((object) [
+        'errors' => [(object) ['message' => 'Segments do not add up to provided total file size.']],
+    ], 400),
+    'Incomplete chunk sessions must be retried'
+);
+
+checkTwitterResourceCondition(
+    $provider->shouldRetryChunkedUpload((object) ['message' => 'Temporary provider failure'], 503),
+    'Transient provider failures must be retried'
+);
+
+checkTwitterResourceCondition(
+    ! $provider->shouldRetryChunkedUpload((object) [
+        'errors' => [(object) ['message' => 'Unsupported media type']],
+    ], 400),
+    'Permanent provider errors must not be retried'
+);
+
+echo "Twitter media upload diagnostic and retry tests passed (7 cases)\n";

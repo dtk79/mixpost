@@ -15,6 +15,14 @@ $provider = new class {
     {
         return $this->twitterChunkedUploadShouldRetry($result, $httpCode);
     }
+
+    public function timelineParams(
+        string $paginationToken = '',
+        ?string $startTime = null,
+        ?string $endTime = null
+    ): array {
+        return $this->twitterTimelineParams($paginationToken, $startTime, $endTime);
+    }
 };
 
 function checkTwitterResourceCondition(bool $condition, string $message): void
@@ -69,4 +77,33 @@ checkTwitterResourceCondition(
     'Permanent provider errors must not be retried'
 );
 
-echo "Twitter media upload diagnostic and retry tests passed (7 cases)\n";
+$windowedParams = $provider->timelineParams(
+    'next-page',
+    '2026-08-22T00:00:00Z',
+    '2026-09-14T00:00:00Z'
+);
+
+checkTwitterResourceCondition(
+    $windowedParams['pagination_token'] === 'next-page'
+        && $windowedParams['start_time'] === '2026-08-22T00:00:00Z'
+        && $windowedParams['end_time'] === '2026-09-14T00:00:00Z'
+        && str_contains($windowedParams['tweet.fields'], 'note_tweet'),
+    'X timeline pagination must retain the scheduled age window'
+);
+
+$recentParams = $provider->timelineParams('', '2026-09-14T00:00:00Z');
+checkTwitterResourceCondition(
+    $recentParams['start_time'] === '2026-09-14T00:00:00Z'
+        && ! isset($recentParams['end_time'])
+        && ! isset($recentParams['pagination_token']),
+    'The recent-post window must remain open-ended without empty parameters'
+);
+
+$historicalParams = $provider->timelineParams('', null, '2026-06-23T00:00:00Z');
+checkTwitterResourceCondition(
+    $historicalParams['end_time'] === '2026-06-23T00:00:00Z'
+        && ! isset($historicalParams['start_time']),
+    'The older-than-90-days window must remain bounded above with no lower cutoff'
+);
+
+echo "Twitter resource tests passed (10 cases)\n";

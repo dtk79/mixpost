@@ -30,7 +30,9 @@ class ImportTwitterPostsJob extends SocialProviderJob
 
         return $provider->getUserTweetTimeline(
             $this->account->provider_id,
-            $this->options['pagination_next_token'] ?? ''
+            $this->options['pagination_next_token'] ?? '',
+            $this->options['timeline_start_time'] ?? null,
+            $this->options['timeline_end_time'] ?? null
         );
     }
 
@@ -51,7 +53,8 @@ class ImportTwitterPostsJob extends SocialProviderJob
         $meta = $context['meta'] ?? null;
 
         if ($meta && isset($meta->next_token)) {
-            $this->dispatchOrAddToBatch((new self($this->account, ['pagination_next_token' => $meta->next_token]))->delay(60));
+            $options = array_merge($this->options, ['pagination_next_token' => $meta->next_token]);
+            $this->dispatchOrAddToBatch((new self($this->account, $options))->delay(60));
         }
     }
 
@@ -76,7 +79,9 @@ class ImportTwitterPostsJob extends SocialProviderJob
     private function resolveText($item): string
     {
         if (! isset($item->article)) {
-            return $item->text ?? '';
+            $noteText = trim((string) ($item->note_tweet->text ?? ''));
+
+            return $noteText !== '' ? $noteText : ($item->text ?? '');
         }
 
         $text = trim(implode("\n\n", array_filter([

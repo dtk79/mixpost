@@ -355,19 +355,14 @@ trait ManagesResources
         });
     }
 
-    public function getUserTweetTimeline(string $userId, string $paginationToken = ''): SocialProviderResponse
+    public function getUserTweetTimeline(
+        string $userId,
+        string $paginationToken = '',
+        ?string $startTime = null,
+        ?string $endTime = null
+    ): SocialProviderResponse
     {
-        $params = [
-            'tweet.fields' => 'article,public_metrics,non_public_metrics,created_at,in_reply_to_user_id,attachments',
-            'expansions' => 'article.cover_media,article.media_entities,attachments.media_keys',
-            'media.fields' => 'type,url,preview_image_url',
-            'exclude' => 'retweets,replies',
-            'max_results' => 100,
-        ];
-
-        if ($paginationToken) {
-            $params['pagination_token'] = $paginationToken;
-        }
+        $params = $this->twitterTimelineParams($paginationToken, $startTime, $endTime);
 
         $response = $this->connection->get("users/$userId/tweets", $params);
         $this->removeUnavailableHistoricalMetricErrors($response, $userId);
@@ -379,6 +374,36 @@ trait ManagesResources
                 'meta' => $response->meta ?? null,
             ];
         });
+    }
+
+    protected function twitterTimelineParams(
+        string $paginationToken = '',
+        ?string $startTime = null,
+        ?string $endTime = null
+    ): array {
+        // `note_tweet` carries the full body of a long-form post. The ordinary `text` field is
+        // truncated at 280 characters and ends in a t.co link.
+        $params = [
+            'tweet.fields' => 'article,note_tweet,public_metrics,non_public_metrics,created_at,in_reply_to_user_id,attachments',
+            'expansions' => 'article.cover_media,article.media_entities,attachments.media_keys',
+            'media.fields' => 'type,url,preview_image_url',
+            'exclude' => 'retweets,replies',
+            'max_results' => 100,
+        ];
+
+        if ($paginationToken) {
+            $params['pagination_token'] = $paginationToken;
+        }
+
+        if ($startTime) {
+            $params['start_time'] = $startTime;
+        }
+
+        if ($endTime) {
+            $params['end_time'] = $endTime;
+        }
+
+        return $params;
     }
 
     // Recent search for engagement directed at the account: replies to it (`to:`, caught regardless of

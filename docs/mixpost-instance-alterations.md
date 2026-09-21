@@ -34,7 +34,7 @@ This inventory combines the existing `/root/mixpost/docker-compose.yml` mounts, 
 | `/root/mixpost/Schedule.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php` | Production scheduler customization. | Any upstream scheduler changes. |
 | `/root/mixpost/TrustProxies.php` | `/var/www/html/app/Http/Middleware/TrustProxies.php` | Reverse proxy trust behavior for production networking. | Laravel or proxy stack changes. |
 | `/root/mixpost/ManagesTwitterJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php` | Twitter/X analytics cost mitigation. | X API pricing/quota changes or upstream job changes. |
-| `/root/mixpost/ManagesTwitterResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php` | Twitter/X publish timing logs and social-video derivative upload preference. | Upstream Twitter resource changes or when timing logs are no longer needed. |
+| `/root/mixpost/ManagesTwitterResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php` | Twitter/X publish handling, full `note_tweet` text, and bounded timeline age windows. | Upstream Twitter resource changes or X API pricing changes. |
 | `/root/mixpost/ManagesBlueskyJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesBlueskyJobs.php` | Bluesky job cadence customization. | Upstream Bluesky job changes. |
 | `/root/mixpost/BlueskyUsesUploads.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php` | Prefer an available provider-safe MP4 when it is smaller than the source or the source is not MP4. | Upstream Bluesky upload/video-service changes or provider video limits. |
 | `/root/mixpost/ManagesInstagramJobs.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramJobs.php` | Instagram job cadence/custom import sequencing. | Upstream Instagram job changes. |
@@ -42,7 +42,7 @@ This inventory combines the existing `/root/mixpost/docker-compose.yml` mounts, 
 | `/root/mixpost/ManagesInstagramResources.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php` | Instagram media import fallback plus social-video derivative preference for Reel publishing. | Upstream Instagram resource/API changes. |
 | `/root/mixpost/ImportInstagramMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php` | Instagram media import falls back to basic media and skips unavailable per-media insights. | Upstream Instagram media import changes. |
 | `/root/mixpost/BuildChatSystemPrompt.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php` | Allows lawful consenting-adult brand copy while preserving core harm refusals. | Upstream AI prompt-builder changes or provider policy changes. |
-| `/root/mixpost/ImportTwitterPostsJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php` | Store permitted X post-insight metrics while tolerating unavailable historical non-public metrics. | Upstream X import/metric contract changes. |
+| `/root/mixpost/ImportTwitterPostsJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php` | Store X post insights, prefer full `note_tweet` text, and preserve age-window bounds across pagination. | Upstream X import/metric contract changes. |
 | `/root/mixpost/MigrateStorage.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php` | Storage migration without S3 prefix listings. | Upstream storage-migration changes. |
 | `/root/mixpost/AppMigrateStorageCommand.php` | `/var/www/html/app/Console/Commands/MigrateStorage.php` | Registers the production storage-migration command. | Laravel command-discovery or upstream registration changes. |
 | `/root/mixpost/app.blade.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php` | Preserve Google Analytics shell injection. | Upstream layout or analytics support changes. |
@@ -63,6 +63,28 @@ This inventory combines the existing `/root/mixpost/docker-compose.yml` mounts, 
 | `/root/mixpost/OptimizeSocialVideoMediaJob.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php` | Run social-video conversion on the media queue after upstream processing settles. | Queue, media-processing, or conversion lifecycle changes. |
 
 ## Alteration Log
+
+### 2026-09-21 - Age-Tiered X Post Analytics
+
+Status: versioned production overrides, not yet deployed.
+
+The previous custom scheduler paged through each active X account's complete available timeline every day. X bills each returned post resource, so the unbounded pagination repeatedly purchased old, settled metrics.
+
+The replacement cadence applies to every authorized, active X account:
+
+- Posts up to 7 days old refresh daily.
+- Posts 8–30 days old refresh every 2 days.
+- Posts 30–90 days old refresh weekly.
+- Posts older than 90 days refresh every 30 days.
+
+`Schedule.php` dispatches a separate bounded timeline window for each tier. `ManagesTwitterResources.php` sends those bounds as X `start_time` and `end_time` parameters, while `ImportTwitterPostsJob.php` carries the same bounds to every pagination page. Follower analytics and publishing cadence are unchanged.
+
+Acceptance checks:
+
+- All three mounted PHP files pass syntax validation.
+- Timeline parameter tests cover bounded pagination, the open-ended recent window, and the older-than-90-days window.
+- `php artisan schedule:list` shows four named X analytics events at the daily, every-2-days, weekly, and every-30-days gates.
+- A read-only X usage check after deployment confirms that daily post resources no longer include the complete account history.
 
 ### 2026-09-19 - Failed Post Email Notifications
 
@@ -482,7 +504,7 @@ Remove/revisit when:
 
 ### 2026-06-05 - Twitter/X Post Analytics Disabled
 
-Status: active.
+Status: active for the provider job lists; the 2026-09-21 age-tiered scheduler now owns post analytics.
 
 Files:
 

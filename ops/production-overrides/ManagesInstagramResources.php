@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inovector\Mixpost\Enums\SocialProviderResponseStatus;
 use Inovector\Mixpost\Models\Media;
 use Inovector\Mixpost\SocialProviders\Meta\InstagramInsights\InstagramFetchDemographics;
@@ -185,7 +186,7 @@ trait ManagesInstagramResources
         }
 
         $response = $this->buildResponse(
-            $this->http()::post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data)
+            $this->http()::timeout(60)->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data)
         );
 
         if ($response->hasError()) {
@@ -292,19 +293,28 @@ trait ManagesInstagramResources
 
     public function publishContainer(string|int $itemContainerId): array|SocialProviderResponse
     {
-        $responseContainer = null;
-
-        do {
+        // Stay within the publishing worker's timeout. Never publish an unknown
+        // or still-processing container, and never recreate it on uncertainty.
+        $deadline = microtime(true) + 360;
+        for ($check = 0; $check < 12; $check++) {
             $responseContainer = $this->getContainer($itemContainerId);
-
-            $inProgress = $responseContainer->status_code === 'IN_PROGRESS';
-
-            // If it is in progress, we will wait 1 minute until the next check.
-            if ($inProgress) {
-                // TODO: sleep seconds depend by file size
-                sleep(60);
+            if ($responseContainer->status_code !== 'IN_PROGRESS') {
+                break;
             }
-        } while ($inProgress === true);
+
+            if ($check < 11 && microtime(true) + 30 < $deadline) {
+                $this->waitForInstagramContainerPoll();
+            } else {
+                break;
+            }
+        }
+
+        Log::info('mixpost.instagram_container_result', [
+            'account_id' => $this->values['provider_id'],
+            'container_id' => (string) $itemContainerId,
+            'status_code' => $responseContainer->status_code,
+            'status' => $responseContainer->status,
+        ]);
 
         if (! $responseContainer->status_code) {
             return $this->response(SocialProviderResponseStatus::ERROR, $responseContainer->context());
@@ -312,7 +322,12 @@ trait ManagesInstagramResources
 
         // Check specific endpoint status
         if ($responseContainer->status_code === 'ERROR') {
-            return $this->response(SocialProviderResponseStatus::ERROR, [$responseContainer->status]);
+            return $this->response(SocialProviderResponseStatus::ERROR, [
+                'errors' => [$responseContainer->status],
+                'phase' => 'instagram_container_processing',
+                'container_id' => (string) $itemContainerId,
+                'container_status' => 'ERROR',
+            ]);
         }
 
         if ($responseContainer->status_code === 'EXPIRED') {
@@ -323,7 +338,15 @@ trait ManagesInstagramResources
             return $this->response(SocialProviderResponseStatus::ERROR, ['media_already_published']);
         }
 
-        $response = $this->http()::withToken($this->getAccessToken()['access_token'])
+        if ($responseContainer->status_code !== 'FINISHED') {
+            return $this->response(SocialProviderResponseStatus::ERROR, [
+                'errors' => ['Instagram has not confirmed that the upload is ready. Review the container before retrying.'],
+                'container_id' => (string) $itemContainerId,
+                'container_status' => $responseContainer->status_code,
+            ]);
+        }
+
+        $response = $this->http()::timeout(60)->withToken($this->getAccessToken()['access_token'])
             ->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media_publish", [
                 'creation_id' => $itemContainerId,
             ]);
@@ -331,9 +354,14 @@ trait ManagesInstagramResources
         return $this->buildResponse($response);
     }
 
+    protected function waitForInstagramContainerPoll(): void
+    {
+        sleep(30);
+    }
+
     public function getContainer($containerId): SocialProviderResponse
     {
-        $response = Http::get("{$this->resolveApiDomain()}/$containerId", [
+        $response = Http::timeout(30)->get("{$this->resolveApiDomain()}/$containerId", [
             'access_token' => $this->getAccessToken()['access_token'],
             'fields' => 'status,status_code',
         ]);

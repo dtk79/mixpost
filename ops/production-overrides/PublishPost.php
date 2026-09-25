@@ -5,6 +5,7 @@ namespace Inovector\Mixpost\Actions\Post;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 use Inovector\Mixpost\Jobs\AccountPublishPostJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\Post;
@@ -40,6 +41,10 @@ class PublishPost
                                 (new PostPublishingFailedNotification($post, $batch->hasFailures()))
                                     ->delay(now()->addSeconds(10))
                             );
+                        Log::info('mixpost.publish_failure_notification_queued', [
+                            'post_id' => $post->id,
+                            'batch_id' => $batch->id,
+                        ]);
                     } catch (Throwable $exception) {
                         report($exception);
                     }

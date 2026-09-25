@@ -4,6 +4,8 @@ namespace Inovector\Mixpost\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -13,7 +15,7 @@ use Inovector\Mixpost\Concerns\Job\OnMediaQueue;
 use Inovector\Mixpost\MediaConversions\MediaSocialVideoConversion;
 use Inovector\Mixpost\Models\Media;
 
-class OptimizeSocialVideoMediaJob implements ShouldQueue
+class OptimizeSocialVideoMediaJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     use OnMediaQueue;
@@ -25,6 +27,18 @@ class OptimizeSocialVideoMediaJob implements ShouldQueue
     public function __construct(public int|string $mediaId)
     {
         $this->onQueue($this->viaQueue());
+    }
+
+    public int $uniqueFor = 3600;
+
+    public function uniqueId(): string
+    {
+        return (string) $this->mediaId;
+    }
+
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping('social-video:'.$this->mediaId))->releaseAfter(30)->expireAfter(1900)];
     }
 
     public function handle(): void

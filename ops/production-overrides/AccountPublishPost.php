@@ -7,6 +7,7 @@ use Inovector\Mixpost\Enums\SocialProviderContentType;
 use Inovector\Mixpost\Enums\SocialProviderResponseStatus;
 use Inovector\Mixpost\Events\Post\PostPublished;
 use Inovector\Mixpost\Events\Post\PostPublishedFailed;
+use Inovector\Mixpost\Jobs\OptimizeSocialVideoMediaJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\Post;
 use Inovector\Mixpost\Support\PeachyPostVersionContent;
@@ -16,6 +17,26 @@ use Inovector\Mixpost\Support\SocialProviderResponse;
 class AccountPublishPost
 {
     use UsesSocialProviderManager;
+
+    public function prepareSocialVideos(Account $account, Post $post): bool
+    {
+        if (! in_array($account->provider, ['instagram', 'instagram_standalone', 'twitter', 'threads', 'bluesky'], true)) {
+            return true;
+        }
+
+        $parser = new PostContentParser($account, $post);
+        $ids = collect($parser->getVersionContent())->pluck('media')->flatten()->unique()->values()->all();
+        $ready = true;
+
+        foreach ($parser->formatMedia($ids) as $media) {
+            if ($media->isVideo() && ! $media->getConversion('social_video')) {
+                OptimizeSocialVideoMediaJob::dispatch($media->id);
+                $ready = false;
+            }
+        }
+
+        return $ready;
+    }
 
     public function __invoke(Account $account, Post $post): SocialProviderResponse
     {
@@ -31,6 +52,11 @@ class AccountPublishPost
             $post->insertErrors($account, $errors);
 
             return new SocialProviderResponse(SocialProviderResponseStatus::ERROR, $errors);
+        }
+
+        // Direct invocations must obey the same preflight as queued publishing.
+        if (! $this->prepareSocialVideos($account, $post)) {
+            return new SocialProviderResponse(SocialProviderResponseStatus::ERROR, ['social_video_optimization_pending']);
         }
 
         $providerConnection = $this->connectProvider($account);

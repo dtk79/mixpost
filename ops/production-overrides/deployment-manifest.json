@@ -45,6 +45,16 @@
       "source": "ops/production-overrides/ManagesInstagramResources.php",
       "host": "ManagesInstagramResources.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeProvider.php",
+      "host": "YoutubeProvider.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Google/YoutubeProvider.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceReport.php",
+      "host": "YoutubeAudienceReport.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceReport.php"
     }
   ]
 }

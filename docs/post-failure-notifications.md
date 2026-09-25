@@ -1,8 +1,10 @@
 # Post Failure Email Notifications
 
-Status: versioned production overrides, ready for deployment from the Infra dashboard after its managed-override deployer is current.
+Status: active in production; runtime mounts and checksums verified at repair commit `1854fa1` on September 25, 2026. A real queued failure alert was accepted by the mail relay. Inbox receipt is separately unconfirmed.
 
 When a publishing batch finishes with one or more failed destinations, Mixpost sends one email to `socials@ducatix.com`. The email lists every failed social account, gives a sanitized explanation from the stored provider response, and links directly to the failed post in its workspace.
+
+This applies to every provider, not only Instagram. The shared batch finalizer checks destination errors and failed publishing jobs without a provider filter. Regression verification against the running package covered all 14 registered provider types: X, Facebook Pages, Instagram, standalone Instagram, Threads, Mastodon, Pixelfed, YouTube, Google Business Profile, Pinterest, LinkedIn profiles and pages, TikTok, and Bluesky. It also covered mixed successful/failed destinations, multiple failures in one email, expired connections, disabled services, and exhausted jobs without a normal provider response. These checks use fake notifications and do not send test emails or publish content.
 
 The notification is triggered only after the full publishing batch finishes. This avoids duplicate emails when several destinations fail and covers failures recorded by provider responses, disabled services, expired account connections, video-preparation timeouts, and exhausted publishing jobs. Laravel invokes a batch's final callback before the exhausted job's `failed()` hook stores its fallback explanation, so the notification waits ten seconds before rendering. It also treats the batch's own failed-job count as a failed post instead of incorrectly marking an exception-only batch as published. Dispatching the email is isolated from post status handling, so a mail-queue problem cannot prevent the post from being marked failed.
 
@@ -21,7 +23,7 @@ php ops/production-overrides/tests/PostFailureExplanationTest.php
 php -l ops/production-overrides/PostFailureExplanation.php
 php -l ops/production-overrides/PostPublishingFailedNotification.php
 php -l ops/production-overrides/PublishPost.php
-node -e 'const m=require("./ops/production-overrides/deployment-manifest.json"); if(m.schemaVersion!==1 || m.overrides.length!==3) process.exit(1)'
+node -e 'const m=require("./ops/production-overrides/deployment-manifest.json"); const names=new Set(m.overrides.map(x=>x.host)); if(m.schemaVersion!==1 || !["PublishPost.php","PostPublishingFailedNotification.php","PostFailureExplanation.php"].every(x=>names.has(x))) process.exit(1)'
 ```
 
 After an authorized dashboard deployment, confirm exactly one email reaches `socials@ducatix.com` from a controlled failed publishing attempt, the subject identifies the post, every failed destination has a useful sanitized explanation, and the button opens the correct Mixpost workspace and post. Do not retry a real failed destination solely to test the email.

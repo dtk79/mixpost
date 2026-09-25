@@ -55,3 +55,47 @@ $n=new PostPublishingFailedNotification($p);$mail=$n->toMail(new Illuminate\Noti
 checkNotification(str_contains(implode(' ',$mail->introLines),'2207082'),'Email retains useful provider explanation');
 checkNotification(str_contains($mail->actionUrl,'fixture-workspace') && str_contains($mail->actionUrl,'fixture-post'),'Email links to exact workspace and post');
 echo "PASS: batch completion, partial failure, exhausted jobs, successful silence, recipient, delay, workspace queue, explanation, exact post link\n";
+
+// Discover every provider supported by the installed package, not just Instagram
+// or the accounts connected today. Exercise the real shared batch finalizer.
+$providers=array_keys(Inovector\Mixpost\Facades\SocialProviderManager::providers());
+checkNotification(count($providers)>0,'Provider registry must not be empty');
+foreach($providers as $provider){
+    Bus::fake();Notification::fake();
+    $p=new NotificationPostFixture;$p->id=999999;$p->uuid='fixture-post';$p->errorsPresent=true;
+    $p->setRelation('workspace',(new Workspace)->forceFill(['uuid'=>'fixture-workspace']));
+    $failed=(new Account)->forceFill(['id'=>1,'provider'=>$provider,'name'=>'Failed destination','username'=>'failed']);
+    $failed->setRelation('pivot',new Illuminate\Database\Eloquent\Relations\Pivot(['errors'=>['provider_failure_fixture'],'provider_post_id'=>null]));
+    $success=(new Account)->forceFill(['id'=>2,'provider'=>$provider,'name'=>'Successful destination','username'=>'successful']);
+    $success->setRelation('pivot',new Illuminate\Database\Eloquent\Relations\Pivot(['errors'=>null,'provider_post_id'=>'already-published']));
+    $p->setRelation('accounts',collect([$failed,$success]));
+    (new Inovector\Mixpost\Actions\Post\PublishPost)($p);
+    $pending=Bus::getFacadeRoot()->batched(fn($b)=>true)->first();
+    $pending->options['finally'][0](new BatchFake('fixture-batch','test',2,0,0,[],[],Carbon\CarbonImmutable::now()));
+    $sent=collect(Notification::getFacadeRoot()->sentNotifications())->flatten(3)->filter(fn($row)=>is_array($row)&&isset($row['notification']));
+    checkNotification($sent->count()===1 && $p->state==='failed', $provider.': any failed destination must trigger one alert');
+    $entry=$sent->first();
+    checkNotification($entry['notifiable']->routes['mail']==='socials@ducatix.com',$provider.': configured recipient');
+    $mail=$entry['notification']->toMail($entry['notifiable']);$body=implode(' ',$mail->introLines);
+    checkNotification(str_contains($body,$failed->providerName()) && str_contains($body,'Failed destination') && str_contains($body,'Provider failure fixture'),$provider.': alert must identify platform/account/reason');
+    checkNotification(!str_contains($body,'Successful destination'),$provider.': successful destinations must not be labeled failed');
+}
+// Multiple failed platforms are consolidated into one mail, with each failure listed.
+Bus::fake();Notification::fake();
+$p=new NotificationPostFixture;$p->id=999999;$p->uuid='fixture-post';$p->errorsPresent=true;
+$p->setRelation('workspace',(new Workspace)->forceFill(['uuid'=>'fixture-workspace']));
+$accounts=[];
+foreach($providers as $i=>$provider){
+    $a=(new Account)->forceFill(['id'=>$i+1,'provider'=>$provider,'name'=>'Failure destination '.$i]);
+    $a->setRelation('pivot',new Illuminate\Database\Eloquent\Relations\Pivot(['errors'=>[$i%2 ? 'access_token_expired':'service_disabled']]));
+    $accounts[]=$a;
+}
+$p->setRelation('accounts',collect($accounts));
+(new Inovector\Mixpost\Actions\Post\PublishPost)($p);
+$pending=Bus::getFacadeRoot()->batched(fn($b)=>true)->first();
+$pending->options['finally'][0](new BatchFake('fixture-batch','test',count($accounts),0,0,[],[],Carbon\CarbonImmutable::now()));
+$sent=collect(Notification::getFacadeRoot()->sentNotifications())->flatten(3)->filter(fn($row)=>is_array($row)&&isset($row['notification']));
+checkNotification($sent->count()===1,'Multiple platform failures produce one consolidated alert');
+$entry=$sent->first();$body=implode(' ',$entry['notification']->toMail($entry['notifiable'])->introLines);
+foreach($accounts as $a)checkNotification(str_contains($body,$a->name),'Every failed account must appear');
+echo 'PASS: all '.count($providers).' registered providers: '.implode(', ',$providers)."; mixed success/failure; multiple failures; expired connections; disabled services\n";

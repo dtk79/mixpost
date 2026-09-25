@@ -20,6 +20,31 @@
       "source": "ops/production-overrides/PublishPost.php",
       "host": "PublishPost.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php"
+    },
+    {
+      "source": "ops/production-overrides/AccountPublishPost.php",
+      "host": "AccountPublishPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php"
+    },
+    {
+      "source": "ops/production-overrides/AccountPublishPostJob.php",
+      "host": "AccountPublishPostJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php"
+    },
+    {
+      "source": "ops/production-overrides/OptimizeSocialVideoMediaJob.php",
+      "host": "OptimizeSocialVideoMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php"
+    },
+    {
+      "source": "ops/production-overrides/MediaSocialVideoConversion.php",
+      "host": "MediaSocialVideoConversion.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php"
+    },
+    {
+      "source": "ops/production-overrides/ManagesInstagramResources.php",
+      "host": "ManagesInstagramResources.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php"
     }
   ]
 }

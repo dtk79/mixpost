@@ -20,6 +20,16 @@
       "source": "ops/production-overrides/PublishPost.php",
       "host": "PublishPost.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeProvider.php",
+      "host": "YoutubeProvider.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Google/YoutubeProvider.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceReport.php",
+      "host": "YoutubeAudienceReport.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceReport.php"
     }
   ]
 }

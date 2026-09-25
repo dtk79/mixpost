@@ -1,0 +1,19 @@
+{
+    "schemaVersion": 1,
+    "provider": "youtube",
+    "accountId": 97,
+    "workspaceId": 25,
+    "channelId": "UCG35kFqmv3Ka8MbXZqTKAMw",
+    "audienceType": "viewers",
+    "subscription": "all",
+    "period": {
+        "start": "2026-09-01",
+        "end": "2026-09-25",
+        "timeZone": "America\/Los_Angeles"
+    },
+    "fetchedAt": "2026-09-25T20:06:10+00:00",
+    "dataThrough": null,
+    "reports": [],
+    "status": "authorization_required",
+    "requiredScope": "https:\/\/www.googleapis.com\/auth\/yt-analytics.readonly"
+}

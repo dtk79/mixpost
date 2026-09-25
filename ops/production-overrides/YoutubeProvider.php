@@ -8,6 +8,7 @@ use Inovector\Mixpost\Concerns\OAuth\RefreshesAccessToken;
 use Inovector\Mixpost\Contracts\AccountResource;
 use Inovector\Mixpost\Contracts\SocialProviderPostOptions;
 use Inovector\Mixpost\Services\GoogleService;
+use Inovector\Mixpost\Jobs\DispatchYoutubeAudienceSnapshotsJob;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesOAuth;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesYoutubeAccountDeletion;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesYoutubeJobs;
@@ -24,10 +25,17 @@ class YoutubeProvider extends SocialProvider
 
     use ManagesOAuth;
     use ManagesYoutubeAccountDeletion;
-    use ManagesYoutubeJobs;
+    use ManagesYoutubeJobs {
+        lowPriorityJobs as protected upstreamLowPriorityJobs;
+    }
     use ManagesYoutubeResources;
     use RefreshesAccessToken;
     use UsesResponseBuilder;
+
+    public static function lowPriorityJobs(): array
+    {
+        return [...self::upstreamLowPriorityJobs(), DispatchYoutubeAudienceSnapshotsJob::class];
+    }
 
     public static function name(): string
     {

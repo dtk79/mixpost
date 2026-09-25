@@ -55,6 +55,31 @@
       "source": "ops/production-overrides/YoutubeAudienceReport.php",
       "host": "YoutubeAudienceReport.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceReport.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceSnapshot.php",
+      "host": "YoutubeAudienceSnapshot.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceSnapshot.php"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceCollector.php",
+      "host": "YoutubeAudienceCollector.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceCollector.php"
+    },
+    {
+      "source": "ops/production-overrides/CollectYoutubeAudienceJob.php",
+      "host": "CollectYoutubeAudienceJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/CollectYoutubeAudienceJob.php"
+    },
+    {
+      "source": "ops/production-overrides/2026_09_25_210000_create_youtube_audience_reports.php",
+      "host": "2026_09_25_210000_create_youtube_audience_reports.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/database/migrations/2026_09_25_210000_create_youtube_audience_reports.php"
+    },
+    {
+      "source": "ops/production-overrides/DispatchYoutubeAudienceSnapshotsJob.php",
+      "host": "DispatchYoutubeAudienceSnapshotsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DispatchYoutubeAudienceSnapshotsJob.php"
     }
   ]
 }

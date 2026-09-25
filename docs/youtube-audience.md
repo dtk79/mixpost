@@ -1,5 +1,7 @@
 # YouTube viewer demographics acquisition
 
+This document records the initial read-only collector and OAuth work. See [persistence and activation](youtube-audience-persistence.md) for the subsequent stored-report/scheduling implementation and the now-working live analytics verification. The September 25 missing-scope probe below is historical.
+
 This is a prepared collector and OAuth change, not an active production feed. No background job or provider collection runs when an Annex page is opened.
 
 ## Verified September 25, 2026

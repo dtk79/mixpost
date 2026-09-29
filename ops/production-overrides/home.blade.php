@@ -100,6 +100,13 @@
             box-shadow: 0 12px 24px rgb(255 90 79 / 22%);
         }
 
+        .password-login {
+            color: #24222a;
+            background: #fff;
+            border: 1px solid #ead9d5;
+            box-shadow: none;
+        }
+
         form {
             display: flex;
             flex-wrap: wrap;
@@ -189,10 +196,11 @@
 
     <section class="content" aria-labelledby="title">
         <h1 id="title">Peachy Posting</h1>
-        <p>Manage social posting for Peachy accounts. Log in if you already have access, or request an account with your work email.</p>
+        <p>Manage social posting for Peachy accounts. Sign in if you already have access, or request an account with your work email.</p>
 
         <div class="actions">
-            <a class="login" href="https://mixpost.peachyhq.com/mixpost/login">Log in</a>
+            <a class="login" href="{{ route('mixpost.sso.redirect') }}">Sign in with Google</a>
+            <a class="login password-login" href="{{ route('mixpost.login') }}">Log in with password</a>
         </div>
 
         {{-- ponytail: mailto form, replace with a POST endpoint when account requests need tracking. --}}

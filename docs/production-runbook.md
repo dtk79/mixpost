@@ -6,6 +6,8 @@ Use this runbook for operational context only. Production-specific bind mounts a
 
 For image updates, follow [Mixpost Update Playbook](mixpost-update-playbook.md).
 
+For connecting Instagram accounts (standalone OAuth), Meta app identities, and webhook wiring, follow the [Instagram Standalone OAuth Runbook](instagram-standalone-oauth.md).
+
 ## Production Host
 
 - SSH alias: `mixpost-hetzner`

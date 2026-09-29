@@ -146,6 +146,32 @@ Acceptance checks:
 - A read-only production probe confirms empty additional items are removed while valid replies remain ordered.
 - The app-only container recreation preserves all three read-only mounts, Horizon remains running, and the public login route returns HTTP 200.
 
+### 2026-08-14 - Instagram Standalone OAuth Consolidated onto Peachy MixPost - IG
+
+Status: active production configuration (no file overrides). Full reference: [Instagram Standalone OAuth Runbook](instagram-standalone-oauth.md).
+
+Reason:
+
+The Mixpost Instagram service form held Instagram App ID `2401015500399944` (Peachy Posting-IG, nested in dev-mode Meta app `1680199579801664`). Publishing worked for role accounts, but Engagement webhooks could never be delivered: the parent app was unpublished and had no webhook callback or verify token configured, while Mixpost's Enable Webhooks switch pointed at it. A parallel, better-configured Instagram app (Peachy MixPost - IG, `1224023842978103`, nested in live and business-verified Meta app `25227226140295903`) existed with its own account authorizations but was unused. The mismatch went unnoticed because long-lived Instagram tokens refresh without client credentials, so existing accounts kept working regardless of the form value.
+
+What changed:
+
+- Added `https://mixpost.peachyhq.com/mixpost/callback/instagram_standalone` to Peachy MixPost - IG's Business login redirect URLs (only the bare domain was listed).
+- Added standalone accounts as Instagram Testers on Peachy MixPost; verified webhook callback URL and verify token.
+- Switched the Mixpost Instagram service form to App ID `1224023842978103` with the matching Instagram app secret.
+- Reconnected `dtastical`; `thedriftersseries` reconnect pending as of 2026-08-14.
+
+Acceptance checks:
+
+- New standalone OAuth completes against `1224023842978103`.
+- Reconnected accounts show Webhook Subscription On in the portal's Generate access tokens list.
+- Test publish succeeds; test comment arrives in the Engagement inbox.
+
+Remove/revisit when:
+
+- All accounts are reconnected: remove accounts from Peachy Posting-IG and deactivate both Peachy Posting Meta apps (`1680199579801664`, `1475154360824857`).
+- App Review is pursued for Advanced Access (see runbook for the stuck-submission caveat).
+
 ### 2026-08-01 - Queue Routing, Reverb, and Bluesky Video Recovery
 
 Status: active production configuration and override.
@@ -640,3 +666,7 @@ Review/future patch candidates:
 
 - Facebook Reel publishing should save canonical page-post IDs, or `GetPostAnalytics` should normalize Facebook post IDs before querying insights.
 - Facebook and YouTube post import jobs may need a fresher cadence or targeted post-import dispatch after successful publishing if same-day analytics are expected in the UI.
+
+## Imported-thumbnail reuse and storage cleanup
+
+See [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) for the four read-only importer/downloader overrides, regression checks, cleanup manifests, and temporary-upload retention policy.

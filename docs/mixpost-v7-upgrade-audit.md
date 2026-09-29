@@ -87,4 +87,20 @@ Isolated rehearsal completed: all 17 upstream upgrade migrations and the custom 
 
 A new database-transaction regression proves blank-item validation compatibility, immediate checkpoint persistence, partial-thread retry without duplicate first publication, account settlement, pending upload persistence and checkpoint resume. Fixture database writes were rolled back.
 
-Production cutover and runtime evidence are recorded below when complete.
+Production cutover completed 2026-09-29 at approximately 18:13 UTC (11:13 Pacific), after the last running Instagram import drained naturally. No publishing jobs were active. Migrations ran in an inert container before web, cron and workers started.
+
+- Live Pro **7.0.1**, source `e4cfc6333a34f3d9fe08e47f81ab672a6a65a3fd`.
+- Customization source commit `8fc353165ef513899ba0c305364de9a61e2e3b63`.
+- Composer lock SHA-256 `0b6daf14cf9ea05fbafad2717a2ecad8cc6644f28a56a5f0656104d76b5f5ab8`.
+- Frozen image `peachy/mixpost-pro:7.0.1-8fc3531`, ID `sha256:771c3726ae88975d604d78d3e55c86bfa35790adc7d1038d84ff57d9701d97d4`.
+- Vendor base `inovector/mixpost-pro-team@sha256:0076027bb9e2a0425568e17965bc8c90758de585efc4769e1457ce91de41df06`.
+- All **47 read-only mounts** present (44 application plus startup and two PHP INI mounts); application hashes matched the reviewed manifest and PHP lint passed inside production.
+- All 17 upstream and the YouTube report migrations passed. Stable-field fingerprints matched exactly across users (14), workspaces (10), accounts (27), posts (920), destinations (1,541) and media (1,135). This verifies selected stable columns, not a byte-identical database: the intended new schema/data migrations also ran.
+- MySQL and Redis container IDs unchanged. Horizon, cron, Nginx, PHP-FPM and Reverb running. Native v7 scheduling and custom analytics cadences registered.
+- Public home, `/mixpost/login`, and `/api/health` return HTTP 200. All 14 provider classes load and packaged asset checks report zero missing files.
+- Authenticated Chrome verification: new Home dashboard with existing scheduled content and Peachy branding; existing social accounts; new media library with existing content, 31 loaded images and zero broken images. No browser warnings/errors during these checks.
+- Exact final checkpoint: `/root/mixpost/backups/v7-cutover-20260929-180652` (database, Compose, overrides, migration log, before/after fingerprints, runtime probe).
+- Prior frozen release: `peachy/mixpost-pro:6.3.1-pre-v7-20260929`, ID `sha256:9b3a793eebc35d9fa7291b220b141b8e5ad7ea4ce8ef7e89a1ee1a8e3038c1ef`. This is an export of the actual old runtime, not the v7 overrides. Both frozen images are also archived in `/root/mixpost/backups/v7-audit-20260929/frozen-releases.tar.gz` so an image prune need not destroy rollback capability.
+- Host release record: `/root/mixpost/frozen-release.json`. Legacy Infra deployment state is historical and its generic updater is intentionally blocked by the frozen image reference.
+
+Provider publishing and email verification used fakes. No unsolicited live publication or test email was sent. The first naturally scheduled publication after cutover remains a separate live-provider check.

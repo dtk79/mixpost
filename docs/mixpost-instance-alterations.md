@@ -8,6 +8,8 @@ The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. 
 
 The [v7 audit](mixpost-v7-upgrade-audit.md) and `ops/production-overrides/deployment-manifest.json` supersede the historical mount table below. Use the [current upgrade playbook](mixpost-update-playbook.md), including frozen application images and database-aware rollback. Entries below retain incident history and may describe prior activation states.
 
+Google sign-in is an active database-backed configuration with no bind mount. Its settings and post-upgrade checks are recorded in the [Google SSO runbook](google-sso.md).
+
 ## Historical Upgrade Review Checklist
 
 Before upgrading Mixpost:

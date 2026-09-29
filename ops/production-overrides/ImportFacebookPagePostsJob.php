@@ -48,9 +48,11 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
     {
         $items = $response->data;
 
-        $this->importPosts($items);
+        $downloadedThumbnails = ImportedPost::downloadedThumbnails($this->account->id, Arr::pluck($items, 'id'));
+
+        $this->importPosts($items, $downloadedThumbnails);
         $this->importPostInsights($items);
-        $this->dispatchThumbnailDownload($items);
+        $this->dispatchThumbnailDownload($items, $downloadedThumbnails);
         $this->dispatchPerPostInsights($items);
 
         if (! Arr::get($response->context(), 'paging.next')) {
@@ -88,19 +90,19 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
         $this->dispatchOrAddToBatch((new self($this->account, $options))->delay(30));
     }
 
-    private function importPosts(array $items): void
+    private function importPosts(array $items, array $downloadedThumbnails): void
     {
         $workspaceId = WorkspaceManager::current()->id;
         $accountId = $this->account->id;
 
-        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId) {
+        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId, $downloadedThumbnails) {
             return [
                 'workspace_id' => $workspaceId,
                 'account_id' => $accountId,
                 'provider_post_id' => $item['id'],
                 'text' => $item['message'] ?? $item['story'] ?? '',
                 'url' => $item['permalink_url'] ?? '',
-                'thumbnail' => $item['full_picture'] ?? null,
+                'thumbnail' => $downloadedThumbnails[$item['id']] ?? $item['full_picture'] ?? null,
                 'content_type' => $item['status_type'] ?? '',
                 'data' => json_encode([
                     'is_popular' => $item['is_popular'] ?? false,
@@ -113,7 +115,7 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
-            'content_type', 'data',
+            'content_type', 'data', 'created_at',
         ]);
     }
 
@@ -204,11 +206,15 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
         }
     }
 
-    private function dispatchThumbnailDownload(array $items): void
+    private function dispatchThumbnailDownload(array $items, array $downloadedThumbnails): void
     {
         $thumbnails = [];
 
         foreach ($items as $item) {
+            if (isset($downloadedThumbnails[$item['id']])) {
+                continue;
+            }
+
             $url = $item['full_picture'] ?? '';
 
             if ($url) {

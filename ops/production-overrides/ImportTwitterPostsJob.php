@@ -31,6 +31,7 @@ class ImportTwitterPostsJob extends SocialProviderJob
         return $provider->getUserTweetTimeline(
             $this->account->provider_id,
             $this->options['pagination_next_token'] ?? '',
+            ! ($this->options['public_metrics_only'] ?? false),
             $this->options['timeline_start_time'] ?? null,
             $this->options['timeline_end_time'] ?? null
         );
@@ -53,9 +54,24 @@ class ImportTwitterPostsJob extends SocialProviderJob
         $meta = $context['meta'] ?? null;
 
         if ($meta && isset($meta->next_token)) {
-            $options = array_merge($this->options, ['pagination_next_token' => $meta->next_token]);
+            $options = array_merge($this->options, [
+                'pagination_next_token' => $meta->next_token,
+                'public_metrics_only' => $this->reachedPublicMetricsOnly($items),
+            ]);
             $this->dispatchOrAddToBatch((new self($this->account, $options))->delay(60));
         }
+    }
+
+    // The timeline is newest first, so once a page ends past the 30-day window every later page does too.
+    private function reachedPublicMetricsOnly(array $items): bool
+    {
+        if ($this->options['public_metrics_only'] ?? false) {
+            return true;
+        }
+
+        $oldest = end($items)->created_at ?? null;
+
+        return $oldest && Carbon::parse($oldest, 'UTC')->lt(Carbon::now('UTC')->subDays(30));
     }
 
     private function buildMediaMap($includes): array

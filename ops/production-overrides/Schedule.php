@@ -8,6 +8,7 @@ use Inovector\Mixpost\Commands\Workspace\CheckAndRefreshAccountTokenCommand;
 use Inovector\Mixpost\Commands\Workspace\PruneTrashedPostsCommand;
 use Inovector\Mixpost\Commands\Workspace\RunAccountProviderJobsCommand;
 use Inovector\Mixpost\Commands\Workspace\RunScheduledPostsCommand;
+use Inovector\Mixpost\Commands\Workspace\TunePostingSchedulesCommand;
 use Inovector\Mixpost\Jobs\WorkspaceArtisanJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\WebhookDelivery;
@@ -58,6 +59,13 @@ class Schedule
                     ->job(new WorkspaceArtisanJob($workspace, PruneTrashedPostsCommand::class))
                     ->name("$workspace->name - mixpost:prune-trashed-posts")
                     ->daily();
+
+                // Weekly, not daily: the scores barely move from one day to the next, and a queue
+                // whose slots shift every morning is one nobody can plan around.
+                $schedule
+                    ->job(new WorkspaceArtisanJob($workspace, TunePostingSchedulesCommand::class))
+                    ->name("$workspace->name - mixpost:tune-posting-schedules")
+                    ->weekly();
 
                 $schedule
                     ->job(new WorkspaceArtisanJob($workspace, RunAccountProviderJobsCommand::class, ['priority' => 'high']))

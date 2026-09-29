@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 use Inovector\Mixpost\Abstracts\Image;
 use Inovector\Mixpost\Concerns\UsesMediaFileDataRules;
+use Inovector\Mixpost\Concerns\UsesMediaFolder;
 use Inovector\Mixpost\Concerns\UsesMediaPath;
 use Inovector\Mixpost\Enums\Capability;
 use Inovector\Mixpost\Exceptions\ChunkedUploadSessionNotFound;
@@ -21,11 +22,12 @@ use Inovector\Mixpost\Support\MediaUploader;
 class ChunkedUploadComplete extends FormRequest
 {
     use UsesMediaFileDataRules;
+    use UsesMediaFolder;
     use UsesMediaPath;
 
     public function rules(): array
     {
-        return $this->mediaFileDataRules();
+        return array_merge($this->mediaFileDataRules(), $this->folderRules());
     }
 
     public function handle(): Media
@@ -50,6 +52,7 @@ class ChunkedUploadComplete extends FormRequest
                 MediaVideoThumbConversion::name('thumb')->atSecond(5),
             ])
             ->data($this->extractFileData())
+            ->folder($this->resolveFolderId())
             ->deferVideoConversion()
             ->uploadAndInsert();
 

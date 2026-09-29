@@ -1,142 +1,67 @@
-# Mixpost Update Playbook
+# Mixpost customization-preserving upgrade playbook
 
-Use this when updating the production Mixpost Pro Team Docker image on `mixpost-hetzner`.
+This supersedes the former “pull latest and recreate” procedure. Production is a licensed Pro application, while this repository also contains the separate Lite package. Updating the Lite dependency file does not upgrade production.
 
-Production runs from `/root/mixpost/docker-compose.yml` and keeps Peachy-specific files as read-only bind mounts. Do not delete those files and do not run `docker compose down -v`.
+## Release contract
 
-For routine upgrades and versioned customization changes, use the Mixpost Deploy action in the Infra dashboard. Its dedicated deployer fetches the committed `ops/production-overrides/deployment-manifest.json`, backs up current files and Compose configuration, writes a generated read-only overlay, pulls the vendor image, recreates only Mixpost, and verifies the complete mount set. It does not replace or restart MySQL or Redis.
+A release is the **vendor base digest + exact Pro version/source + composer.lock + customization Git commit + mount manifest + database checkpoint**. The vendor image downloads packages at startup: an image digest alone is not an application version or a reliable rollback. Build a frozen image with `ops/upgrades/build-frozen-image.sh`; its startup uses the installed code and never resolves packages or restores an application from shared storage.
 
-The manual commands below are the recovery and review path. Running them alone does not sync newly committed managed overrides.
+The authoritative application override map is `ops/production-overrides/deployment-manifest.json`. Startup (`peachy-start.sh`) and PHP upload limits (`uploads.ini`, both CLI and FPM) are also versioned; their mounts are infrastructure paths outside the legacy Infra manifest format. Preserve the storage volume, environment, proxy routing, networks and service credentials. Never mount a Vite manifest or individual hashed client asset.
 
-## Preflight
+## 1. Inventory and checkpoint
 
-```bash
-ssh mixpost-hetzner
-cd /root/mixpost
+1. Use an isolated checkout of current `origin/main`. Reconcile local-only commits and edits; never overwrite the user's checkout or assume remote Git contains every live fix.
+2. Record running Pro version, Composer source reference and lock hash, Docker image ID, Compose files, entrypoint, all bind mounts and hashes, and MySQL/Redis container IDs. Inspect runtime app/bootstrap/package source against the pristine installed archive to catch unmounted hotfixes.
+3. Save the current Compose, environment, every mounted file, release metadata, pristine app archive and a **consistent database dump** under a root-only timestamped backup directory. Do not put credentials, database dumps or licensed full-source archives in Git. Use the app container's database dump client with configured credentials, `--single-transaction --no-tablespaces --skip-lock-tables`; check exit status and dump size. MySQL 8.0.32's dump client can require unavailable FLUSH privileges; the app's MariaDB client works with the application user.
+4. Retain a frozen copy of the old application for rollback, not merely the old vendor base image. Preserve local media/storage and the external object-store configuration. Record queued/delayed jobs and upcoming scheduled publications before cutover.
 
-stamp=$(date +%Y%m%d-%H%M%S)
-mkdir -p backups/update-$stamp
-cp docker-compose.yml backups/update-$stamp/
-cp *.php *.sh *.ini *.blade.php *.json *.js *.png backups/update-$stamp/ 2>/dev/null || true
+## 2. Obtain and compare the target
 
-docker compose ps
-docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && composer show inovector/mixpost-pro-team --no-interaction" || true
+1. Read the [official release notes](https://mixpost.app/releases/pro) and [upgrade guidance](https://docs.mixpost.app/pro/upgrading/). Resolve the licensed package in a disposable container using a protected Composer auth file. Do not run the vendor startup against production to obtain source: it also migrates and starts workers.
+2. Export pristine old and target sources. For every mount, compare **old upstream → custom** and **old upstream → new upstream**. `ops/upgrades/audit-overrides.py` produces a complete checksum inventory from exported sources and `docker inspect` mount JSON.
+3. Reapply the required behavior to the new source. Review successful merges too: syntactically valid old state handling can break new queue/retry contracts. Use upstream implementations where equivalent; retain stronger custom safeguards where upstream only partially covers them.
+4. Record each customization as retained unchanged, rebased, replaced by equivalent upstream behavior, or inactive/historical. Add newly required classes to the manifest. Include server-only files in Git. Do not restore retired upload patches merely because a file remains in the repository.
+5. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
+
+## 3. Rehearse in isolation
+
+1. Restore the database dump to **separate MySQL and Redis containers** on a Docker `--internal` network. The candidate must not join production networks or mount writable production storage.
+2. Copy the application key only through protected host files so the copied database remains readable. Override database/Redis hosts, mailer to `log`, broadcasts to `log`, sessions/cache to isolated stores. Run no cron or Horizon. Block outbound networking even when HTTP is faked in tests.
+3. Apply the complete candidate manifest. Run package discovery, publish the packaged assets, normal migrations, and `mixpost:upgrade-database --force`. Review every migration, including column drops. Check existing users/workspaces/accounts/posts/media and provider IDs survive, and validate new per-account statuses and schedules.
+4. Lint all PHP inside the target PHP runtime. Run the override regression suite under `ops/production-overrides/tests/`; plain script tests run directly, while PHPUnit tests require the appropriate runner. A Lite test suite is not proof of Pro compatibility.
+5. Exercise success, partial failure, exhausted jobs, staggered schedules, concurrent publishing runs, retries with existing remote IDs, blank additional content, social-video preparation/timeouts, Instagram terminal-only retry, X historical pagination, thumbnail repeat imports, Threads uploads, YouTube reports and failure-mail rendering. Fake external HTTP and notifications; never run test publishes against customer accounts.
+6. Verify routes, cached routes/views, scheduler registration, provider class loading, health/login/public page and all packaged assets. Rehearse boot from the frozen image, with the same mount structure planned for production.
+
+## 4. Freeze and deploy
+
+From the Docker host, with a tested source container and an exact committed customization revision:
+
+```sh
+ops/upgrades/build-frozen-image.sh \
+  mixpost-v7-build \
+  inovector/mixpost-pro-team@sha256:REVIEWED_BASE_DIGEST \
+  peachy/mixpost-pro:VERSION-COMMIT \
+  FULL_CUSTOMIZATION_COMMIT
 ```
 
-## Update
+The builder excludes environment files, runtime caches, logs, sessions, media and Composer credentials. Inspect the resulting image for absence of secrets and check its installed package/lock hash. Use a unique tag and record its immutable image ID.
 
-Prefer recreating only the app container. This keeps MySQL and Redis running unless the vendor update explicitly requires otherwise.
+1. Acquire `/run/lock/infra-deploy-mixpost.lockdir` to exclude dashboard deployments. Check for due publications and drain active publishing jobs. Put the app into maintenance and pause scheduler/workers for the final database checkpoint; do not clear Redis queues.
+2. Take another consistent database dump after draining. Save Compose and all current mounts again. Existing serialized v6 queue jobs must drain or be reviewed for compatibility before v7 workers consume them.
+3. Install reviewed host override files atomically and generate the manifest's read-only mounts. Preserve non-manifest mounts. Set the app service to the frozen image and recreate **only** `mixpost` with `--no-deps --pull never`. MySQL and Redis remain running.
+4. Confirm migration completion before resuming normal traffic and workers. Check exact package/source/lock identity, expected image ID, every mounted hash, Horizon, scheduler, health, login, assets and an authenticated page. Confirm protected container IDs are unchanged.
+5. Save release evidence and the rollback checkpoint. Monitor the first naturally scheduled publication; do not create an unsolicited social post or email as a test.
 
-```bash
-docker compose pull mixpost
-docker compose up -d --force-recreate mixpost
-```
+### Infra dashboard limitation
 
-## Archived Upload Resilience Image
+The legacy `deploy-mixpost.sh` pulls the vendor `latest` image and cannot freeze Composer resolution or undo database migrations. Do not use its generic Deploy/Rollback buttons for this major-version release. The frozen image uses a different configured image reference so the old updater's preflight refuses it. Until Infra is upgraded to this release contract, use this reviewed playbook for subsequent updates. Never retag a frozen release as vendor `latest` to bypass that guard.
 
-Production no longer uses the locally built upload-resilience image; Pro Team 6.2.2 and later incorporated the required upload flow. `ops/production-image/` is retained only as an incident-history and rollback reference. Do not copy, build, or promote it during a normal update, and do not bind-mount a hashed client manifest or individual JavaScript chunk.
+## 5. Rollback
 
-If a regression ever requires reviving that image, rebase both patches against the exact target Pro Team source, update the pinned digest and package version, rebuild from a scrubbed archive, and validate the entire upload flow before changing Compose. Never reuse the archived 6.2.0 defaults unchanged.
+Stop publishing and writes first. If migrations ran, **image-only rollback is insufficient**: restore the matching pre-upgrade database checkpoint, prior frozen application, Compose and override snapshot together. Do not restore a database over later successful publications without first reconciling provider IDs and queued jobs; that can cause duplicate publishing. Retain the displaced database for reconciliation.
 
-If the vendor specifically requires a full compose restart, this is acceptable after the backup:
+Recreate only the app (`--no-deps --pull never`), then verify package identity, schema, every mount, log ownership, health, login, scheduler, Horizon and unchanged MySQL/Redis containers. Do not use `docker compose down -v`, delete media, clear all queues or reconnect social accounts to complete an upgrade.
 
-```bash
-docker compose pull
-docker compose down
-docker compose up -d
-```
+## Required release evidence
 
-Do not use `docker compose down -v`.
-
-## Post-Update Asset Check
-
-Major Mixpost updates can change Vite asset names. Production should not bind-mount Mixpost's hashed client manifest or app chunks; let the image serve its packaged `public/vendor/mixpost/manifest.json`.
-
-```bash
-docker exec mixpost-mixpost-1 sh -lc "grep -n 'resources/js/app.js\|assets/app-' /var/www/html/public/vendor/mixpost/manifest.json | tail -20"
-curl -sS -L https://mixpost.peachyhq.com/mixpost/login | grep -Eo '/vendor/mixpost/assets/[^\" ]+' | head
-```
-
-Fail the update if the login page or app entrypoint references missing assets:
-
-```bash
-entry=$(curl -sS -L https://mixpost.peachyhq.com/mixpost/login | grep -Eo '/vendor/mixpost/assets/app-[^\" ]+\.js' | head -1)
-curl -fsS "https://mixpost.peachyhq.com$entry" |
-  perl -ne 'while(m#assets/[A-Za-z0-9_.-]+\.(?:js|css|png|svg|jpg|jpeg|webp|woff2?)#g){print "/vendor/mixpost/$&\n"}' |
-  sort -u |
-  xargs -n1 -P16 -I{} sh -c 'code=$(curl -s -o /dev/null -w "%{http_code}" "https://mixpost.peachyhq.com$1"); [ "$code" = 200 ] || printf "%s %s\n" "$code" "$1"' sh {}
-```
-
-The command should print nothing. If it reports missing assets, inspect the current image and Compose mounts before recreating `mixpost`.
-
-## Verification
-
-```bash
-docker compose ps
-docker compose logs --tail=120 mixpost
-
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/InstagramAnalytics.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php
-docker exec -e PEACHY_POST_VERSION_CONTENT_PATH=/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php -i mixpost-mixpost-1 php < ops/production-overrides/tests/PeachyPostVersionContentTest.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php
-docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php
-docker exec -e POST_FAILURE_EXPLANATION_PATH=/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php -i mixpost-mixpost-1 php < ops/production-overrides/tests/PostFailureExplanationTest.php
-
-docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && composer show inovector/mixpost-pro-team --no-interaction | sed -n '1,8p'"
-docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan about --only=environment"
-docker exec -i mixpost-mixpost-1 sh -lc "cd /var/www/html && php artisan schedule:list | grep -E 'low-cost-post-analytics|twitter-post-analytics'"
-```
-
-Then verify the browser:
-
-1. Open `https://mixpost.peachyhq.com/mixpost/login` in a fresh/private browser.
-2. Hard reload the logged-in dashboard with `Cmd+Shift+R`.
-3. Confirm the dashboard renders and no blank white page remains.
-4. Upload a valid video under 500 MB, then confirm `mixpost.chunked_upload.chunk_stored` entries include an upload UUID and chunk index in `storage/logs/laravel.log`.
-5. Select a video larger than 500 MB and confirm it is rejected before chunks are transferred with both the 500 MB limit and the selected file size.
-6. Interrupt a chunked upload and confirm the progress panel reports a connection interruption rather than a JavaScript exception.
-
-## If The Page Is Blank
-
-First suspect a stale asset manifest or cached browser module.
-
-```bash
-curl -sS -L https://mixpost.peachyhq.com/mixpost/login | grep -Eo '/vendor/mixpost/assets/[^\" ]+'
-curl -sS -L https://mixpost.peachyhq.com/mixpost/login \
-  | grep -Eo '/vendor/mixpost/assets/[^\" ]+' \
-  | sort -u \
-  | while read -r asset; do
-      printf '%s ' "$asset"
-      curl -sSI "https://mixpost.peachyhq.com$asset" | head -1
-    done
-```
-
-If any referenced asset returns `404`, inspect the current image and Compose mounts; do not reintroduce a pinned manifest unless there is a maintained custom client bundle. If assets return `200`, hard reload Chrome with `Cmd+Shift+R` or test in a private window.
-
-## Rollback
-
-Dashboard deployments record their backup under `/root/mixpost/backups/dashboard-deploys` and roll back the prior image plus managed override files together. Use the dashboard rollback action for that release whenever possible.
-
-For a manual recovery, use the timestamped backup from `backups/update-$stamp` to restore host-mounted overrides. If the new image itself is bad, pin the previous image digest in `docker-compose.yml`, then recreate only the app container.
-
-```bash
-cp backups/update-YYYYMMDD-HHMMSS/* .
-docker compose up -d --force-recreate mixpost
-```
-
-## Imported-thumbnail regression gate
-
-Preserve and compare the four thumbnail-related overrides and run the repeat-import regression test described in [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) after every Pro image update.
+Record old/new versions, package source and lock hashes, base/frozen image IDs, Git commit, mount inventory, checkpoint paths, migration output, regression results and runtime/browser evidence. Clearly distinguish tests with fake providers from witnessed live publishing. Keep sensitive backups on the host; publish only sanitized hashes and outcomes in the repository.

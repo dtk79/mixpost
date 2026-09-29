@@ -358,11 +358,12 @@ trait ManagesResources
     public function getUserTweetTimeline(
         string $userId,
         string $paginationToken = '',
+        bool $withNonPublicMetrics = true,
         ?string $startTime = null,
         ?string $endTime = null
     ): SocialProviderResponse
     {
-        $params = $this->twitterTimelineParams($paginationToken, $startTime, $endTime);
+        $params = $this->twitterTimelineParams($paginationToken, $startTime, $endTime, $withNonPublicMetrics);
 
         $response = $this->connection->get("users/$userId/tweets", $params);
         $this->removeUnavailableHistoricalMetricErrors($response, $userId);
@@ -379,12 +380,15 @@ trait ManagesResources
     protected function twitterTimelineParams(
         string $paginationToken = '',
         ?string $startTime = null,
-        ?string $endTime = null
+        ?string $endTime = null,
+        bool $withNonPublicMetrics = true
     ): array {
+        $metricFields = $withNonPublicMetrics ? 'public_metrics,non_public_metrics' : 'public_metrics';
+
         // `note_tweet` carries the full body of a long-form post. The ordinary `text` field is
         // truncated at 280 characters and ends in a t.co link.
         $params = [
-            'tweet.fields' => 'article,note_tweet,public_metrics,non_public_metrics,created_at,in_reply_to_user_id,attachments',
+            'tweet.fields' => "article,note_tweet,$metricFields,created_at,in_reply_to_user_id,attachments",
             'expansions' => 'article.cover_media,article.media_entities,attachments.media_keys',
             'media.fields' => 'type,url,preview_image_url',
             'exclude' => 'retweets,replies',

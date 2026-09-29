@@ -8,6 +8,7 @@ use Illuminate\Validation\Rules\File;
 use Inovector\Mixpost\Abstracts\Image;
 use Inovector\Mixpost\Concerns\UsesFileConfig;
 use Inovector\Mixpost\Concerns\UsesMediaFileDataRules;
+use Inovector\Mixpost\Concerns\UsesMediaFolder;
 use Inovector\Mixpost\Concerns\UsesMediaPath;
 use Inovector\Mixpost\Enums\Capability;
 use Inovector\Mixpost\Enums\FileSizeUnit;
@@ -26,6 +27,7 @@ class MediaUploadFile extends FormRequest
 {
     use UsesFileConfig;
     use UsesMediaFileDataRules;
+    use UsesMediaFolder;
     use UsesMediaPath;
 
     public function rules(): array
@@ -40,7 +42,7 @@ class MediaUploadFile extends FormRequest
 
                 validator(['file' => $value], ['file' => [$rules]])->validate();
             }],
-        ], $this->mediaFileDataRules());
+        ], $this->mediaFileDataRules(), $this->folderRules());
     }
 
     public function handle(): Media
@@ -56,6 +58,7 @@ class MediaUploadFile extends FormRequest
                 MediaVideoThumbConversion::name('thumb')->atSecond(5),
             ])
             ->data($this->extractFileData())
+            ->folder($this->resolveFolderId())
             ->deferVideoConversion()
             ->uploadAndInsert();
 

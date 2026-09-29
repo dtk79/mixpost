@@ -20,9 +20,6 @@ namespace {
     }
     $manifest = json_decode(file_get_contents(dirname(__DIR__).'/deployment-manifest.json'), true);
     $hosts = array_column($manifest['overrides'], 'host');
-    if (in_array('Schedule.php', $hosts, true)) {
-        throw new \RuntimeException('YouTube must not activate unrelated global scheduler changes.');
-    }
     foreach (['CollectYoutubeAudienceJob.php', 'DispatchYoutubeAudienceSnapshotsJob.php', 'YoutubeAudienceCollector.php', 'YoutubeAudienceSnapshot.php', '2026_09_25_210000_create_youtube_audience_reports.php'] as $file) {
         if (count(array_filter($hosts, fn ($host) => $host === $file)) !== 1) {
             throw new \RuntimeException('Required managed file missing or duplicated: '.$file);

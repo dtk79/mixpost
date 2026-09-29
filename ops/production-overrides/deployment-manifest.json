@@ -74,12 +74,158 @@
     {
       "source": "ops/production-overrides/2026_09_25_210000_create_youtube_audience_reports.php",
       "host": "2026_09_25_210000_create_youtube_audience_reports.php",
-      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/database/migrations/2026_09_25_210000_create_youtube_audience_reports.php"
+      "container": "/var/www/html/database/migrations/2026_09_25_210000_create_youtube_audience_reports.php"
     },
     {
       "source": "ops/production-overrides/DispatchYoutubeAudienceSnapshotsJob.php",
       "host": "DispatchYoutubeAudienceSnapshotsJob.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DispatchYoutubeAudienceSnapshotsJob.php"
+    },
+    {
+      "source": "ops/production-overrides/AppServiceProvider.php",
+      "host": "AppServiceProvider.php",
+      "container": "/var/www/html/app/Providers/AppServiceProvider.php"
+    },
+    {
+      "source": "ops/production-overrides/PostFormRequest.php",
+      "host": "PostFormRequest.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php"
+    },
+    {
+      "source": "ops/production-overrides/TrustProxies.php",
+      "host": "TrustProxies.php",
+      "container": "/var/www/html/app/Http/Middleware/TrustProxies.php"
+    },
+    {
+      "source": "ops/production-overrides/web.php",
+      "host": "web.php",
+      "container": "/var/www/html/routes/web.php"
+    },
+    {
+      "source": "ops/production-overrides/home.blade.php",
+      "host": "home.blade.php",
+      "container": "/var/www/html/resources/views/home.blade.php"
+    },
+    {
+      "source": "ops/production-overrides/ImportThreadsPostsJob.php",
+      "host": "ImportThreadsPostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Jobs/ImportThreadsPostsJob.php"
+    },
+    {
+      "source": "ops/production-overrides/MigrateStorage.php",
+      "host": "MigrateStorage.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php"
+    },
+    {
+      "source": "ops/production-overrides/ThreadsManagesOAuth.php",
+      "host": "ThreadsManagesOAuth.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesOAuth.php"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadComplete.php",
+      "host": "ChunkedUploadComplete.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php"
+    },
+    {
+      "source": "ops/production-overrides/ImportFacebookPagePostsJob.php",
+      "host": "ImportFacebookPagePostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportFacebookPagePostsJob.php"
+    },
+    {
+      "source": "ops/production-overrides/DownloadImportedPostThumbnailJob.php",
+      "host": "DownloadImportedPostThumbnailJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DownloadImportedPostThumbnailJob.php"
+    },
+    {
+      "source": "ops/production-overrides/ImportInstagramMediaJob.php",
+      "host": "ImportInstagramMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyHelpers.php",
+      "host": "BlueskyHelpers.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Helpers.php"
+    },
+    {
+      "source": "ops/production-overrides/ManagesInstagramJobs.php",
+      "host": "ManagesInstagramJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramJobs.php"
+    },
+    {
+      "source": "ops/production-overrides/ManagesBlueskyJobs.php",
+      "host": "ManagesBlueskyJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesBlueskyJobs.php"
+    },
+    {
+      "source": "ops/production-overrides/PeachyPostVersionContent.php",
+      "host": "PeachyPostVersionContent.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php"
+    },
+    {
+      "source": "ops/production-overrides/ThreadsManagesContainer.php",
+      "host": "ThreadsManagesContainer.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesContainer.php"
+    },
+    {
+      "source": "ops/production-overrides/peachy-posting.png",
+      "host": "peachy-posting.png",
+      "container": "/var/www/html/public/vendor/mixpost/peachy-posting.png"
+    },
+    {
+      "source": "ops/production-overrides/InstagramAnalytics.php",
+      "host": "InstagramAnalytics.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/InstagramAnalytics.php"
+    },
+    {
+      "source": "ops/production-overrides/ImportTwitterPostsJob.php",
+      "host": "ImportTwitterPostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php"
+    },
+    {
+      "source": "ops/production-overrides/AppMigrateStorageCommand.php",
+      "host": "AppMigrateStorageCommand.php",
+      "container": "/var/www/html/app/Console/Commands/MigrateStorage.php"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyUsesUploads.php",
+      "host": "BlueskyUsesUploads.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php"
+    },
+    {
+      "source": "ops/production-overrides/ManagesTwitterJobs.php",
+      "host": "ManagesTwitterJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php"
+    },
+    {
+      "source": "ops/production-overrides/BuildChatSystemPrompt.php",
+      "host": "BuildChatSystemPrompt.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php"
+    },
+    {
+      "source": "ops/production-overrides/Schedule.php",
+      "host": "Schedule.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php"
+    },
+    {
+      "source": "ops/production-overrides/app.blade.php",
+      "host": "app.blade.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php"
+    },
+    {
+      "source": "ops/production-overrides/MediaUploadFile.php",
+      "host": "MediaUploadFile.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php"
+    },
+    {
+      "source": "ops/production-overrides/FinalizePostPublishing.php",
+      "host": "FinalizePostPublishing.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/FinalizePostPublishing.php"
     }
-  ]
+  ],
+  "compatibility": {
+    "package": "inovector/mixpost-pro-team",
+    "version": "7.0.1",
+    "source": "e4cfc6333a34f3d9fe08e47f81ab672a6a65a3fd",
+    "baseImage": "inovector/mixpost-pro-team@sha256:0076027bb9e2a0425568e17965bc8c90758de585efc4769e1457ce91de41df06"
+  }
 }

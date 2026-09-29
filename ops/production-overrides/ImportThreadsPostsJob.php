@@ -27,8 +27,10 @@ class ImportThreadsPostsJob extends SocialProviderJob
     {
         $items = Arr::get($response->context(), 'data', []);
 
-        $this->importPosts($items);
-        $this->dispatchThumbnailDownload($items);
+        $downloadedThumbnails = ImportedPost::downloadedThumbnails($this->account->id, Arr::pluck($items, 'id'));
+
+        $this->importPosts($items, $downloadedThumbnails);
+        $this->dispatchThumbnailDownload($items, $downloadedThumbnails);
         $this->dispatchPostInsights($items);
 
         if ($after = Arr::get($response->context(), 'paging.cursors.after')) {
@@ -36,19 +38,19 @@ class ImportThreadsPostsJob extends SocialProviderJob
         }
     }
 
-    private function importPosts(array $items): void
+    private function importPosts(array $items, array $downloadedThumbnails): void
     {
         $workspaceId = WorkspaceManager::current()->id;
         $accountId = $this->account->id;
 
-        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId) {
+        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId, $downloadedThumbnails) {
             return [
                 'workspace_id' => $workspaceId,
                 'account_id' => $accountId,
                 'provider_post_id' => $item['id'],
                 'text' => $item['text'] ?? '',
                 'url' => $item['permalink'] ?? '',
-                'thumbnail' => $item['thumbnail_url'] ?? $item['media_url'] ?? '',
+                'thumbnail' => $downloadedThumbnails[$item['id']] ?? $item['thumbnail_url'] ?? $item['media_url'] ?? '',
                 'content_type' => $item['media_type'] ?? '',
                 'data' => json_encode([
                     'username' => $item['username'] ?? '',
@@ -62,15 +64,19 @@ class ImportThreadsPostsJob extends SocialProviderJob
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
-            'content_type', 'data',
+            'content_type', 'data', 'created_at',
         ]);
     }
 
-    private function dispatchThumbnailDownload(array $items): void
+    private function dispatchThumbnailDownload(array $items, array $downloadedThumbnails): void
     {
         $thumbnails = [];
 
         foreach ($items as $item) {
+            if (isset($downloadedThumbnails[$item['id']])) {
+                continue;
+            }
+
             $url = $item['thumbnail_url'] ?? $item['media_url'] ?? '';
 
             if ($url) {

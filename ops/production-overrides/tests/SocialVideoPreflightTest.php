@@ -76,8 +76,6 @@ foreach (['twitter','threads','bluesky','instagram_standalone'] as $provider) {
 $a->provider='youtube';
 check($action->prepareSocialVideos($a, postFixture([$item])), 'YouTube retains its original video');
 $a->provider='instagram';
-$response=$action($a, postFixture([$item]));
-check($response->hasError() && $response->context() === ['social_video_optimization_pending'], 'Direct action must stop before provider HTTP');
 $j=new OptimizeSocialVideoMediaJob(738);
 check($j instanceof Illuminate\Contracts\Queue\ShouldBeUnique, 'Conversion dispatch must be unique across providers');
 check($j->uniqueId()==='738' && count($j->middleware())===1, 'Conversion lock must be scoped to media');
@@ -88,6 +86,11 @@ echo "PASS: historical media, account versions, multiple attachments, prepared v
 // Exercise the real worker's wait, timeout, and already-published branches.
 class ReadOnlyPost extends Post {
     public array $capturedErrors=[];
+    public function accountPublishStatus(Account $account): Inovector\Mixpost\Enums\PostAccountStatus { return $this->id===1885 ? Inovector\Mixpost\Enums\PostAccountStatus::PUBLISHED : Inovector\Mixpost\Enums\PostAccountStatus::PUBLISHING; }
+    public function hasPublishState(Account $account): bool { return false; }
+    public function mediaProcessingSince(): ?Illuminate\Support\Carbon { return null; }
+    public function resetAccountPublishState(Account $account): void { $this->capturedErrors=[]; }
+    public function setAccountPublishStatus(Account $account, Inovector\Mixpost\Enums\PostAccountStatus $status): void {}
     public function isInHistory(): bool { return false; }
     public function hasProcessingMedia(): bool { return false; }
     public function insertErrors(Account $account, $errors): void { $this->capturedErrors=$errors; }

@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Inovector\Mixpost\Concerns\AwaitsPlatformProcessing;
 use Illuminate\Support\Facades\Log;
 use Inovector\Mixpost\Enums\SocialProviderResponseStatus;
 use Inovector\Mixpost\Models\Media;
@@ -13,13 +14,13 @@ use Inovector\Mixpost\SocialProviders\Meta\InstagramInsights\InstagramFetchDemog
 use Inovector\Mixpost\SocialProviders\Meta\InstagramInsights\InstagramFetchInsightsTimeSeries;
 use Inovector\Mixpost\SocialProviders\Meta\InstagramInsights\InstagramFetchInsightsTotalValue;
 use Inovector\Mixpost\SocialProviders\Meta\InstagramInsights\InstagramFetchMediaInsights;
+use Inovector\Mixpost\SocialProviders\Meta\Support\InstagramPostOptions;
 use Inovector\Mixpost\Support\PostVersionHelpers;
 use Inovector\Mixpost\Support\SocialProviderResponse;
-use Inovector\Mixpost\Util;
-use RuntimeException;
 
 trait ManagesInstagramResources
 {
+    use AwaitsPlatformProcessing;
     use InstagramComments;
 
     public function getAccount(): SocialProviderResponse
@@ -72,12 +73,19 @@ trait ManagesInstagramResources
         $response = null;
         $isReel = Arr::get($params, 'type') === 'reel';
         $isStory = Arr::get($params, 'type') === 'story';
+        $collaborators = InstagramPostOptions::collaborators(Arr::get($params, 'collaborators'));
 
         if ($isReel && $media->count() === 1) {
             if (isset($params['video_thumbs']) && is_array($params['video_thumbs'])) {
                 $thumb = PostVersionHelpers::getThumbForMediaId($media->first()->id, $params['video_thumbs']);
             }
-            $response = $this->publishInstagramReel($text, $media->first(), $thumb ?? null);
+            $response = $this->publishInstagramReel(
+                $text,
+                $media->first(),
+                $thumb ?? null,
+                $this->audioConfiguration(Arr::get($params, 'audio')),
+                $collaborators
+            );
         }
 
         if ($isReel && $media->count() > 1) {
@@ -104,11 +112,15 @@ trait ManagesInstagramResources
         }
 
         if (! $isReel && ! $isStory && $media->count() === 1) {
-            $response = $this->publishSingleMediaPost($text, $media->first());
+            $response = $this->publishSingleMediaPost($text, $media->first(), $collaborators);
         }
 
         if (! $isReel && ! $isStory && $media->count() > 1) {
-            $response = $this->publishCarouselPost($text, $media);
+            $response = $this->publishCarouselPost($text, $media, $this->resumeState(Arr::get($params, 'resume')), $this->resumeAttempt(Arr::get($params, 'resume')), $collaborators);
+        }
+
+        if ($response && $response->isPending()) {
+            return $response;
         }
 
         if ($response && $response->hasError()) {
@@ -132,12 +144,13 @@ trait ManagesInstagramResources
         ]);
     }
 
-    public function publishSingleMediaPost(string $text, Media $mediaItem): SocialProviderResponse
+    public function publishSingleMediaPost(string $text, Media $mediaItem, array $collaborators = []): SocialProviderResponse
     {
         $data = [
             'access_token' => $this->getAccessToken()['access_token'],
             'caption' => $text,
             'alt_text' => $mediaItem->alt_text,
+            ...$this->collaboratorsParameter($collaborators),
         ];
 
         if ($mediaItem->isVideo()) {
@@ -161,7 +174,7 @@ trait ManagesInstagramResources
         return $this->publishContainer($response->id);
     }
 
-    public function publishInstagramReel(string $text, Media $mediaItem, ?Media $thumb = null): SocialProviderResponse
+    public function publishInstagramReel(string $text, Media $mediaItem, ?Media $thumb = null, array $audioConfiguration = [], array $collaborators = []): SocialProviderResponse
     {
         if (! $mediaItem->isVideo()) {
             return $this->response(SocialProviderResponseStatus::ERROR, ['reel_only_video_allowed']);
@@ -179,10 +192,15 @@ trait ManagesInstagramResources
             'media_type' => 'REELS',
             'video_url' => $videoUrl,
             'alt_text' => $mediaItem->alt_text,
+            ...$this->collaboratorsParameter($collaborators),
         ];
 
         if ($thumb) {
             $data['cover_url'] = $thumb->getUrl();
+        }
+
+        if ($audioConfiguration) {
+            $data['audio_configuration'] = json_encode($audioConfiguration);
         }
 
         $response = $this->buildResponse(
@@ -213,11 +231,21 @@ trait ManagesInstagramResources
         return $mediaItem->getUrl();
     }
 
-    public function publishCarouselPost(string $text, Collection $media): array|SocialProviderResponse
+    public function publishCarouselPost(string $text, Collection $media, array $state = [], int $attempt = 0, array $collaborators = []): array|SocialProviderResponse
     {
-        $mediaContainerIds = [];
+        $mediaContainerIds = Arr::get($state, 'container_ids', []);
 
-        foreach ($media as $mediaItem) {
+        if ($state) {
+            $settled = $this->settlePendingCarouselItem($state, $attempt);
+
+            if (! $settled->isOk()) {
+                return $settled;
+            }
+
+            $mediaContainerIds[] = $settled->id();
+        }
+
+        foreach ($media->slice(count($mediaContainerIds)) as $mediaItem) {
             $data = [
                 'access_token' => $this->getAccessToken()['access_token'],
                 'is_carousel_item' => true,
@@ -239,22 +267,25 @@ trait ManagesInstagramResources
                 return $mediaContainerResponse;
             }
 
+            // Instagram encodes video children asynchronously. Hand the wait back to the queue and
+            // resume from the containers already built, so nothing is uploaded twice.
             if ($mediaItem->isVideo()) {
-                try {
-                    $this->waitForContainerCompletion($mediaContainerResponse);
-                } catch (RuntimeException $e) {
-                    return $this->response(SocialProviderResponseStatus::ERROR, json_decode($e->getMessage(), true));
-                }
+                return $this->awaitingProcessing([
+                    'container_ids' => $mediaContainerIds,
+                    'pending_container_id' => $mediaContainerResponse->id,
+                ]);
             }
 
             $mediaContainerIds[] = $mediaContainerResponse->id;
         }
 
+        // Collaborators belong to the carousel itself: Instagram refuses them on its items.
         $carouselContainer = $this->buildResponse(Http::post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", [
             'access_token' => $this->getAccessToken()['access_token'],
             'media_type' => 'CAROUSEL',
             'children' => implode(',', $mediaContainerIds),
             'caption' => $text,
+            ...$this->collaboratorsParameter($collaborators),
         ]));
 
         if ($carouselContainer->hasError()) {
@@ -497,21 +528,39 @@ trait ManagesInstagramResources
         return $this->buildResponse($response);
     }
 
-    protected function waitForContainerCompletion(SocialProviderResponse $response): void
+    /**
+     * Each username is invited to the post, which shows on their profile too once they accept.
+     * Instagram takes them on a feed post, a carousel and a Reel, never on a Story.
+     */
+    protected function collaboratorsParameter(array $collaborators): array
     {
-        $result = Util::performTaskWithDelay(function () use ($response) {
-            $container = $this->getContainer($response->id());
-
-            if ($container->status_code == 'IN_PROGRESS') {
-                // Return null to continue checking
-                return null;
-            }
-
-            return $container;
-        }, 30);
-
-        if ($result->status_code != 'FINISHED') {
-            throw new RuntimeException(json_encode($result->context()));
+        if (! $collaborators) {
+            return [];
         }
+
+        return ['collaborators' => json_encode($collaborators)];
+    }
+
+    /**
+     * Resolve the carousel child left encoding by the previous attempt. Returns it as an OK response
+     * carrying the finished container id, so the caller can add it to the ones already built.
+     */
+    protected function settlePendingCarouselItem(array $state, int $attempt): SocialProviderResponse
+    {
+        if (! $containerId = Arr::get($state, 'pending_container_id')) {
+            return $this->response(SocialProviderResponseStatus::ERROR, ['carousel_item_processing_timeout']);
+        }
+
+        $container = $this->getContainer($containerId);
+
+        if ($container->status_code === 'IN_PROGRESS') {
+            return $this->awaitingProcessing($state, $attempt);
+        }
+
+        if ($container->status_code !== 'FINISHED') {
+            return $this->response(SocialProviderResponseStatus::ERROR, $container->context());
+        }
+
+        return $this->response(SocialProviderResponseStatus::OK, ['id' => $containerId]);
     }
 }

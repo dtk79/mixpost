@@ -7,6 +7,7 @@ use Inovector\Mixpost\Abstracts\SocialProvider;
 use Inovector\Mixpost\Concerns\OAuth\RefreshesAccessToken;
 use Inovector\Mixpost\Contracts\AccountResource;
 use Inovector\Mixpost\Contracts\SocialProviderPostOptions;
+use Inovector\Mixpost\Enums\MediaType;
 use Inovector\Mixpost\Services\GoogleService;
 use Inovector\Mixpost\Jobs\DispatchYoutubeAudienceSnapshotsJob;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesOAuth;
@@ -15,7 +16,10 @@ use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesYoutubeJobs;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\ManagesYoutubeResources;
 use Inovector\Mixpost\SocialProviders\Google\Concerns\UsesResponseBuilder;
 use Inovector\Mixpost\SocialProviders\Google\Support\YoutubePostOptions;
+use Inovector\Mixpost\Support\PostRequirement;
+use Inovector\Mixpost\Support\SocialProviderMentionConfigs;
 use Inovector\Mixpost\Support\SocialProviderPostConfigs;
+use Inovector\Mixpost\Support\SocialProviderPostRequirements;
 
 class YoutubeProvider extends SocialProvider
 {
@@ -60,19 +64,28 @@ class YoutubeProvider extends SocialProvider
     {
         return SocialProviderPostConfigs::make()
             ->simultaneousPosting(true)
-            ->minTextChar(0)
-            ->maxTextChar(5000)
-            ->minVideos(1)
-            ->maxPhotos(0)
-            ->maxVideos(1)
-            ->maxGifs(0)
-            ->allowMixingMediaTypes(false)
             ->enableVideoThumb(true);
+    }
+
+    public static function mentionConfigs(): SocialProviderMentionConfigs
+    {
+        return SocialProviderMentionConfigs::make()->supported(false);
     }
 
     public static function postOptions(): SocialProviderPostOptions
     {
         return new YoutubePostOptions;
+    }
+
+    public static function postRequirements(Closure $getAccountData): SocialProviderPostRequirements
+    {
+        return SocialProviderPostRequirements::make(
+            PostRequirement::media([MediaType::VIDEO], message: __('mixpost::post.rules.video_required')),
+            PostRequirement::maxText(5000),
+            PostRequirement::maxMedia(photos: 0, videos: 1, gifs: 0),
+            PostRequirement::requiredOptions(['title'], __('mixpost::post.rules.title_required')),
+            PostRequirement::optionMaxLength('title', 100, __('mixpost::post.rules.title_too_long', ['count' => 100])),
+        );
     }
 
     public static function externalPostUrl(AccountResource $accountResource): string
@@ -88,12 +101,8 @@ class YoutubeProvider extends SocialProvider
     public static function mapErrorMessage(string $key): string
     {
         return match ($key) {
-            'access_token_expired' => __('mixpost::account.access_token_expired'),
-            'upload_failed' => __('mixpost::service.twitter.upload_failed'),
-            'request_timeout' => __('mixpost::error.request_timeout'),
-            'unknown_error' => __('mixpost::error.unknown_error'),
             'video_not_selected' => __('mixpost::post.video_not_selected'),
-            default => $key
+            default => parent::mapErrorMessage($key),
         };
     }
 

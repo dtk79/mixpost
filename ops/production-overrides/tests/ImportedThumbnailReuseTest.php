@@ -48,14 +48,14 @@ try {
             $job = new $class($account);
             $call = new ReflectionMethod($class,$method);
             $query()->delete();
-            $call->invoke($job,[$item]);
+            $call->invoke($job,[$item],[]);
             check($query()->value('thumbnail')==='https://example.invalid/new.jpg', "$class inserts new thumbnails");
             $query()->update(['thumbnail'=>'imported/existing/preserved.jpg','text'=>'old']);
-            $call->invoke($job,[$item]);
-            $call->invoke($job,[$item]);
+            $call->invoke($job,[$item],[]);
+            $call->invoke($job,[$item],[]);
             check($query()->value('thumbnail')==='imported/existing/preserved.jpg' && $query()->value('text')==='refreshed', "$class repeat refresh preserves cached path and updates text");
             foreach ([null,'','https://example.invalid/expired.jpg'] as $previous) {
-                $query()->update(['thumbnail'=>$previous]);$call->invoke($job,[$item]);
+                $query()->update(['thumbnail'=>$previous]);$call->invoke($job,[$item],[]);
                 check($query()->value('thumbnail')==='https://example.invalid/new.jpg', "$class refreshes uncached thumbnail ".var_export($previous,true));
             }
         }

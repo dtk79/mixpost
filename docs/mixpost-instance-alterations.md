@@ -4,7 +4,11 @@ This document tracks production-specific changes made to the Peachy HQ Mixpost i
 
 The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. Host files under `/root/mixpost` are bind-mounted into the container as read-only overrides. These survive image updates, but they can also shadow upstream fixes, so every Mixpost upgrade should compare this register against the new image source.
 
-## Upgrade Review Checklist
+## Current audited release
+
+The [v7 audit](mixpost-v7-upgrade-audit.md) and `ops/production-overrides/deployment-manifest.json` supersede the historical mount table below. Use the [current upgrade playbook](mixpost-update-playbook.md), including frozen application images and database-aware rollback. Entries below retain incident history and may describe prior activation states.
+
+## Historical Upgrade Review Checklist
 
 Before upgrading Mixpost:
 

@@ -39,28 +39,30 @@ class ImportInstagramMediaJob extends SocialProviderJob
     {
         $items = $response->context()['data'];
 
-        $this->importMedia($items);
+        $downloadedThumbnails = ImportedPost::downloadedThumbnails($this->account->id, Arr::pluck($items, 'id'));
+
+        $this->importMedia($items, $downloadedThumbnails);
         $this->importMediaInsights($items);
-        $this->dispatchThumbnailDownload($items);
+        $this->dispatchThumbnailDownload($items, $downloadedThumbnails);
 
         if ($after = Arr::get($response->context(), 'paging.cursors.after')) {
             $this->dispatchOrAddToBatch((new self($this->account, ['pagination_after' => $after]))->delay(5 * 60));
         }
     }
 
-    protected function importMedia(array $items): void
+    protected function importMedia(array $items, array $downloadedThumbnails): void
     {
         $workspaceId = WorkspaceManager::current()->id;
         $accountId = $this->account->id;
 
-        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId) {
+        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId, $downloadedThumbnails) {
             return [
                 'workspace_id' => $workspaceId,
                 'account_id' => $accountId,
                 'provider_post_id' => $item['id'],
                 'text' => $item['caption'] ?? '',
                 'url' => $item['permalink'] ?? '',
-                'thumbnail' => $item['thumbnail_url'] ?? $item['media_url'] ?? '',
+                'thumbnail' => $downloadedThumbnails[$item['id']] ?? $item['thumbnail_url'] ?? $item['media_url'] ?? '',
                 'content_type' => $item['media_product_type'] ?? '',
                 'data' => json_encode([
                     'media_type' => $item['media_type'] ?? '',
@@ -69,7 +71,7 @@ class ImportInstagramMediaJob extends SocialProviderJob
                     'is_shared_to_feed' => $item['is_shared_to_feed'] ?? false,
                     'is_comment_enabled' => $item['is_comment_enabled'] ?? null,
                 ]),
-                'created_at' => Carbon::parse($item['timestamp'], 'UTC')->toDateString(),
+                'created_at' => Carbon::parse($item['timestamp'], 'UTC')->toDateTimeString(),
             ];
         });
 
@@ -77,15 +79,19 @@ class ImportInstagramMediaJob extends SocialProviderJob
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
-            'content_type', 'data',
+            'content_type', 'data', 'created_at',
         ]);
     }
 
-    protected function dispatchThumbnailDownload(array $items): void
+    protected function dispatchThumbnailDownload(array $items, array $downloadedThumbnails): void
     {
         $thumbnails = [];
 
         foreach ($items as $item) {
+            if (isset($downloadedThumbnails[$item['id']])) {
+                continue;
+            }
+
             $url = $item['thumbnail_url'] ?? $item['media_url'] ?? '';
 
             if ($url) {

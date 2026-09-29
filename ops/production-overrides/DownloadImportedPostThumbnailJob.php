@@ -61,7 +61,7 @@ class DownloadImportedPostThumbnailJob implements QueueWorkspaceAware, ShouldQue
                             ->where('provider_post_id', $providerPostId)->first();
 
                         // A stale queued job must not create an orphan for a deleted post.
-                        if (! $post || ($post->thumbnail && ! str_starts_with($post->thumbnail, 'http'))) {
+                        if (! $post || ImportedPost::isDownloadedThumbnail($post->thumbnail)) {
                             return;
                         }
 

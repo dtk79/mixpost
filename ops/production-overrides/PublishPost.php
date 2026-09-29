@@ -2,60 +2,49 @@
 
 namespace Inovector\Mixpost\Actions\Post;
 
-use Illuminate\Bus\Batch;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Log;
+use Inovector\Mixpost\Facades\WorkspaceManager;
 use Inovector\Mixpost\Jobs\AccountPublishPostJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\Post;
-use Inovector\Mixpost\Notifications\PostPublishingFailedNotification;
 use Inovector\Mixpost\Util;
-use Throwable;
 
 class PublishPost
 {
-    private const FAILURE_NOTIFICATION_EMAIL = 'socials@ducatix.com';
-
-    public function __invoke(Post $post): void
+    /**
+     * Publishes every account of the post, or only the ones handed in when the accounts leave at
+     * times of their own — a staggered post comes through here once per departure, and the
+     * accounts that already went out must not be reset and sent again.
+     */
+    public function __invoke(Post $post, ?Collection $accounts = null): void
     {
-        if ($post->isScheduleProcessing()) {
+        if ($accounts === null) {
+            // Everyone starts over, which would pull the accounts of a run still sending from under it.
+            if ($post->isScheduleProcessing()) {
+                return;
+            }
+
+            $post->resetAccountsPublishState();
+
+            $accounts = $post->accounts;
+        }
+
+        $accounts = $post->startPublishingRun($accounts);
+
+        if ($accounts->isEmpty()) {
             return;
         }
 
-        $post->setScheduleProcessing();
+        $workspaceId = WorkspaceManager::current()->id;
 
-        $jobs = $post->accounts->map(function (Account $account) use ($post) {
+        $jobs = $accounts->map(function (Account $account) use ($post) {
             return new AccountPublishPostJob($account, $post);
         });
 
         Bus::batch($jobs)
             ->allowFailures()
-            ->finally(function (Batch $batch) use ($post) {
-                if ($post->hasErrors() || $batch->hasFailures()) {
-                    $post->setFailed();
-
-                    try {
-                        Notification::route('mail', self::FAILURE_NOTIFICATION_EMAIL)
-                            ->notify(
-                                (new PostPublishingFailedNotification($post, $batch->hasFailures()))
-                                    ->delay(now()->addSeconds(10))
-                            );
-                        Log::info('mixpost.publish_failure_notification_queued', [
-                            'post_id' => $post->id,
-                            'batch_id' => $batch->id,
-                        ]);
-                    } catch (Throwable $exception) {
-                        report($exception);
-                    }
-
-                    return;
-                }
-
-                if ($post->isScheduleProcessing()) {
-                    $post->setPublished();
-                }
-            })
+            ->finally(FinalizePostPublishing::callback($post, $workspaceId))
             ->onQueue(Util::config('queue.publish_post'))
             ->dispatch();
     }

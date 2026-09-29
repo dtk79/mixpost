@@ -220,6 +220,26 @@
       "source": "ops/production-overrides/FinalizePostPublishing.php",
       "host": "FinalizePostPublishing.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/FinalizePostPublishing.php"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/SocialProviders/Twitter/Concerns/ManagesPostImport.php",
+      "host": "TwitterManagesPostImport.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesPostImport.php"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Jobs/Inbox/ImportEngagedPostJob.php",
+      "host": "ImportEngagedPostJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/Inbox/ImportEngagedPostJob.php"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Analytics/Concerns/HasPaginatedContent.php",
+      "host": "HasPaginatedContent.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasPaginatedContent.php"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Analytics/Concerns/HasInsights.php",
+      "host": "HasInsights.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasInsights.php"
     }
   ],
   "compatibility": {

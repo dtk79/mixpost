@@ -6,7 +6,7 @@ This supersedes the former “pull latest and recreate” procedure. Production 
 
 A release is the **vendor base digest + exact Pro version/source + composer.lock + customization Git commit + mount manifest + database checkpoint**. The vendor image downloads packages at startup: an image digest alone is not an application version or a reliable rollback. Build a frozen image with `ops/upgrades/build-frozen-image.sh`; its startup uses the installed code and never resolves packages or restores an application from shared storage.
 
-The authoritative application override map is `ops/production-overrides/deployment-manifest.json`. Startup (`peachy-start.sh`) and PHP upload limits (`uploads.ini`, both CLI and FPM) are also versioned; their mounts are infrastructure paths outside the legacy Infra manifest format. Preserve the storage volume, environment, proxy routing, networks and service credentials. Never mount a Vite manifest or individual hashed client asset.
+The authoritative PHP application override map is `ops/production-overrides/deployment-manifest.json`. Startup (`peachy-start.sh`) and PHP upload limits (`uploads.ini`, both CLI and FPM) are also versioned; their mounts are infrastructure paths outside the legacy Infra manifest format. Preserve the storage volume, environment, proxy routing, networks and service credentials. Never mount a Vite manifest or individual hashed client asset. The 2026-09-29 X analytics hotfix temporarily mounts one complete, matching client bundle at `/var/www/html/public/vendor/mixpost`; include that bundle in the next frozen image or replace it atomically as a whole after rebuilding from the target Pro package and the Vue overlays under `ops/production-overrides/pro-team/`.
 
 Google sign-in is a database-backed production setting rather than a file override. Preserve and recheck it using the [Google SSO runbook](google-sso.md), including the existing-user email match and the login-page button.
 
@@ -23,7 +23,8 @@ Google sign-in is a database-backed production setting rather than a file overri
 2. Export pristine old and target sources. For every mount, compare **old upstream → custom** and **old upstream → new upstream**. `ops/upgrades/audit-overrides.py` produces a complete checksum inventory from exported sources and `docker inspect` mount JSON.
 3. Reapply the required behavior to the new source. Review successful merges too: syntactically valid old state handling can break new queue/retry contracts. Use upstream implementations where equivalent; retain stronger custom safeguards where upstream only partially covers them.
 4. Record each customization as retained unchanged, rebased, replaced by equivalent upstream behavior, or inactive/historical. Add newly required classes to the manifest. Include server-only files in Git. Do not restore retired upload patches merely because a file remains in the repository.
-5. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
+5. For the X analytics client overlay, compare all three Vue components against the target package and build a complete bundle with `ops/scripts/build-pro-x-analytics-assets.sh INSTALLED_PRO_TEAM_PACKAGE_DIR NEW_OUTPUT_DIR`. Keep the licensed compiled bundle outside Git. Verify its manifest references files in the same output directory and retain the Peachy landing-page image inside it.
+6. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
 
 ## 3. Rehearse in isolation
 

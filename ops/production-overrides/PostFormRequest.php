@@ -88,7 +88,7 @@ abstract class PostFormRequest extends FormRequest
                 continue;
             }
 
-            $departures[$accountId] = Util::convertTimeToUTC(Arr::get($entry, 'date').' '.Arr::get($entry, 'time'));
+            $departures[$accountId] = Util::convertTimeToUTC(Arr::get($entry, 'date').' '.Arr::get($entry, 'time'), $this->inputTimezone());
         }
 
         return $departures;
@@ -97,7 +97,7 @@ abstract class PostFormRequest extends FormRequest
     protected function validateAccountDepartures($validator): void
     {
         foreach ($this->input('accounts_schedule', []) as $index => $entry) {
-            $departure = Util::convertTimeToUTC(Arr::get($entry, 'date').' '.Arr::get($entry, 'time'));
+            $departure = Util::convertTimeToUTC(Arr::get($entry, 'date').' '.Arr::get($entry, 'time'), $this->inputTimezone());
 
             if ($departure->gte(Carbon::now('UTC')->startOfMinute())) {
                 continue;
@@ -169,6 +169,20 @@ abstract class PostFormRequest extends FormRequest
     protected function scheduledAt(): ?string
     {
         return $this->input('date') && $this->input('time') ? "{$this->input('date')} {$this->input('time')}" : null;
+    }
+
+    protected function scheduledAtInUtc(): ?Carbon
+    {
+        return $this->scheduledAt() ? Util::convertTimeToUTC($this->scheduledAt(), $this->inputTimezone()) : null;
+    }
+
+    /**
+     * The timezone the request's dates and times are written in. The dashboard always writes them in
+     * the user's own, which is what null falls back to; the public API lets a caller name another.
+     */
+    protected function inputTimezone(): ?string
+    {
+        return null;
     }
 
     protected function inputVersions(): array

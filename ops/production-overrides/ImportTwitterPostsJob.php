@@ -26,7 +26,7 @@ class ImportTwitterPostsJob extends SocialProviderJob
         $provider = $this->connectProvider($this->account);
 
         if ($provider->getTier() === 'free' || ! $provider::supportAnalytics()) {
-            return $this->response(SocialProviderResponseStatus::OK, []);
+            return new SocialProviderResponse(SocialProviderResponseStatus::OK, []);
         }
 
         $startTime = $this->startTime($provider);
@@ -34,7 +34,7 @@ class ImportTwitterPostsJob extends SocialProviderJob
 
         // A historical cadence wholly outside a restricted range must not spend an X read.
         if ($startTime && $endTime && Carbon::parse($endTime)->lte(Carbon::parse($startTime))) {
-            return $this->response(SocialProviderResponseStatus::OK, []);
+            return new SocialProviderResponse(SocialProviderResponseStatus::OK, []);
         }
 
         // Carry the effective floor through pagination; each page rechecks current limits.

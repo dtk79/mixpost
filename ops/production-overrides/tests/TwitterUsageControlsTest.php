@@ -3,6 +3,7 @@
 require '/var/www/html/vendor/autoload.php';
 $app = require '/var/www/html/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+set_exception_handler(function (Throwable $e): void { fwrite(STDERR, (string) $e); exit(1); });
 use Carbon\Carbon;
 use Illuminate\Support\Facades\{DB, Http, Bus, Event, Notification};
 use Inovector\Mixpost\Models\{Account, Workspace};

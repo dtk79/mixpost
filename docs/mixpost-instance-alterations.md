@@ -692,3 +692,8 @@ Review/future patch candidates:
 ## Imported-thumbnail reuse and storage cleanup
 
 See [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) for the four read-only importer/downloader overrides, regression checks, cleanup manifests, and temporary-upload retention policy.
+
+
+## 2026-10-01 — Pro 7.0.3 customization-preserving upgrade
+
+Production now uses frozen Pro Team 7.0.3 with all 51 read-only mounts preserved. The X timeline import and provider job overrides were rebased for the new API usage controls; disabled and restricted analytics cannot bypass those controls through our custom historical schedule. The X request helper already supplied the new start-time behavior and retained its end-time windows. Other mounted customizations and the three rebuilt analytics Vue overlays remain in place. See the [7.0.3 upgrade record](mixpost-v7-0-3-upgrade.md) for the exact release, checkpoint and verification evidence.

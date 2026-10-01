@@ -1,6 +1,6 @@
 # Mixpost Pro 7.0.3 production upgrade
 
-Upgrade date: 2026-10-01. Status: **rehearsed; production cutover pending**. Previous frozen release: Pro Team 7.0.2. This record follows the [update playbook](mixpost-update-playbook.md).
+Upgrade date: 2026-10-01. Status: **live and verified**. Previous frozen release: Pro Team 7.0.2. This record follows the [update playbook](mixpost-update-playbook.md).
 
 ## Customization review
 
@@ -29,3 +29,18 @@ The Composer lock changed only the licensed Pro package; unrelated runtime depen
 - Health PHPUnit and YouTube SQLite snapshot tests remain unavailable in the runtime because PHPUnit and PDO SQLite are absent; independent runtime health, provider loading and cloned-MySQL probes supplement them.
 
 No unsolicited social post or email was sent. Naturally scheduled provider publishing after cutover remains a separate observation.
+
+## Production cutover and verification
+
+- Customization revision: `46836d7eddcab1d4195fd6772c3602d8bd26a9d3`, committed and pushed to `origin/main` before the final frozen build. The production image label matches that exact revision.
+- Frozen image: `peachy/mixpost-pro:7.0.3-46836d7`, immutable ID `sha256:2db7a9e90c3fee3961661b4d0625b66acc162869f7843d84b606f1a5adb19511`.
+- The final image passed an internal-network boot rehearsal with the same 51 read-only mounts planned for production, runtime provider/health/asset checks, all mounted PHP lint, the X usage regression and stable-data fingerprints. Before initialization, environment files, Composer credentials, compiled configuration and runtime logs were absent from the image.
+- Cutover completed at **2026-10-01 18:49:12 UTC (11:49 a.m. Pacific)**. The final consistent database dump, prior frozen-image archive, Compose/environment, every override, migration logs and before/after fingerprints are retained under the root-only checkpoint `/root/mixpost/backups/v703-cutover-20261001-184129`.
+- Publishing queues were empty; cron and Horizon were paused and reserved jobs drained before the final checkpoint. The app was recreated inertly for migration and verification, then recreated with web, cron and workers enabled. MySQL and Redis container identities stayed unchanged. No queues, storage volumes, social accounts or credentials were reset.
+- All 48 managed file hashes and 51 read-only bind mounts matched. Stable selected fields matched before/after for users (14), workspaces (10), accounts (27), posts (953), destinations (1,593) and media (1,167). Configuration, service and settings table fingerprints also matched, including Google SSO configuration.
+- Public health, login and landing returned HTTP 200; all 37 assets referenced by the login HTML returned HTTP 200. The analytics API and MCP `tools/list` correctly returned HTTP 401 without authentication. An authenticated API/MCP token probe was not repeated for this release; no new integration credential was created.
+- Authenticated Chrome Home and Analytics rendered with no console errors. The existing X account's September metrics and charts remained visible. The custom X age-tiered and low-cost analytics schedules remain registered. Horizon and cron are running.
+- The Google SSO settings retained the expected issuer, scopes, callback, verified-email requirement, password login and existing-user-only policy. **Test connection** succeeded. A fresh login through the Google button completed for the existing Ducati X account and returned to the same workspace as the pre-upgrade session.
+- The original dirty checkout was left unchanged. The disposable 7.0.3 rehearsal containers were removed after verification; protected backups, pristine sources and release evidence remain on the host.
+
+The host release record is `/root/mixpost/frozen-release.json`. Database-aware rollback requires restoring the matching pre-cutover database, prior frozen image, Compose and override snapshot together, as described in the playbook. The next naturally scheduled publication is **2026-10-01 21:30 UTC (2:30 p.m. Pacific)**; publishing under the new release has not yet been observed.

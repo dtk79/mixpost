@@ -10,6 +10,7 @@ use Inovector\Mixpost\Facades\WorkspaceManager;
 use Inovector\Mixpost\Jobs\SocialProviderJob;
 use Inovector\Mixpost\Models\ImportedPost;
 use Inovector\Mixpost\SocialProviders\Twitter\Enums\TwitterPostInsightType;
+use Inovector\Mixpost\SocialProviders\Twitter\Enums\TwitterAnalyticsRange;
 use Inovector\Mixpost\SocialProviders\Twitter\Models\TwitterPostInsight;
 use Inovector\Mixpost\SocialProviders\Twitter\Models\TwitterPostInsightHistory;
 use Inovector\Mixpost\SocialProviders\Twitter\TwitterProvider;
@@ -24,17 +25,54 @@ class ImportTwitterPostsJob extends SocialProviderJob
         /** @var TwitterProvider $provider */
         $provider = $this->connectProvider($this->account);
 
-        if ($provider->getTier() === 'free') {
+        if ($provider->getTier() === 'free' || ! $provider::supportAnalytics()) {
             return $this->response(SocialProviderResponseStatus::OK, []);
         }
+
+        $startTime = $this->startTime($provider);
+        $endTime = $this->options['timeline_end_time'] ?? null;
+
+        // A historical cadence wholly outside a restricted range must not spend an X read.
+        if ($startTime && $endTime && Carbon::parse($endTime)->lte(Carbon::parse($startTime))) {
+            return $this->response(SocialProviderResponseStatus::OK, []);
+        }
+
+        // Carry the effective floor through pagination; each page rechecks current limits.
+        $this->options['timeline_start_time'] = $startTime;
 
         return $provider->getUserTweetTimeline(
             $this->account->provider_id,
             $this->options['pagination_next_token'] ?? '',
             ! ($this->options['public_metrics_only'] ?? false),
-            $this->options['timeline_start_time'] ?? null,
-            $this->options['timeline_end_time'] ?? null
+            $startTime,
+            $endTime
         );
+    }
+
+    private function startTime(TwitterProvider $provider): ?string
+    {
+        $range = $provider::analyticsRange();
+        $explicitWindow = array_key_exists('timeline_start_time', $this->options);
+        $startTime = $explicitWindow
+            ? $this->options['timeline_start_time']
+            : ($this->options['start_time'] ?? null);
+
+        // FULL retains our explicit age-tiered windows, including history older than 90 days.
+        // Unwindowed imports use the vendor's initial/daily defaults.
+        if ($range === TwitterAnalyticsRange::FULL && ($explicitWindow || array_key_exists('start_time', $this->options))) {
+            return $startTime;
+        }
+
+        $days = $range->days(initialImport: $this->batch() !== null);
+        if ($days === null) {
+            return $startTime;
+        }
+
+        $floor = Carbon::now('UTC')->subDays($days);
+
+        return $startTime && Carbon::parse($startTime)->gte($floor)
+            ? $startTime
+            : $floor->toIso8601ZuluString();
     }
 
     protected function processResponse(SocialProviderResponse $response): void

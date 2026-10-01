@@ -12,11 +12,19 @@ trait ManagesTwitterJobs
 {
     public static function initialJobs(): array
     {
+        if (! static::supportAnalytics()) {
+            return [];
+        }
+
         return [ImportTwitterFollowersJob::class, ComputePostingTimeScoresJob::class];
     }
 
     public static function highPriorityJobs(): array
     {
+        if (! static::supportAnalytics()) {
+            return [];
+        }
+
         return [
             ImportTwitterFollowersJob::class,
         ];
@@ -53,6 +61,10 @@ trait ManagesTwitterJobs
 
     public static function dailyPriorityJobs(): array
     {
+        if (! static::supportAnalytics()) {
+            return [];
+        }
+
         return [ComputePostingTimeScoresJob::class];
     }
 }

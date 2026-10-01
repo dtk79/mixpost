@@ -25,6 +25,7 @@ Google sign-in is a database-backed production setting rather than a file overri
 4. Record each customization as retained unchanged, rebased, replaced by equivalent upstream behavior, or inactive/historical. Add newly required classes to the manifest. Include server-only files in Git. Do not restore retired upload patches merely because a file remains in the repository.
 5. For the X analytics client overlay, compare all three Vue components against the target package and build a complete bundle with `ops/scripts/build-pro-x-analytics-assets.sh INSTALLED_PRO_TEAM_PACKAGE_DIR NEW_OUTPUT_DIR`. Keep the licensed compiled bundle outside Git. Verify its manifest references files in the same output directory and retain the Peachy landing-page image inside it.
 6. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
+7. Since 7.0.3, preserve the vendor X API usage controls when rebasing custom import jobs. Disabled analytics must stop all X analytics requests, limited ranges must clamp every page and skip disjoint historical cadence windows, and full analytics must retain our explicit age-tiered history. Run `TwitterUsageControlsTest.php` in the isolated Pro rehearsal alongside the existing X resource regression. Do not re-enable the retired X mentions import while incorporating upstream job arrays.
 
 ## 3. Rehearse in isolation
 

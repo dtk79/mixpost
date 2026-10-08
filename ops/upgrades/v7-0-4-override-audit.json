@@ -1,0 +1,461 @@
+[
+  {
+    "host": "ImportInstagramMediaJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php",
+    "readOnly": true,
+    "liveSha256": "f5bcfdc5197076f84eb9e98c4ee1442eed99d34474cfadb5bb0e4c350a960440",
+    "oldUpstreamSha256": "dcd83dd61bbba3bc24b90afbcf31f90a46ed5215e9d286f1991a6fba508b7a3f",
+    "newUpstreamSha256": "dcd83dd61bbba3bc24b90afbcf31f90a46ed5215e9d286f1991a6fba508b7a3f",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ThreadsManagesContainer.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesContainer.php",
+    "readOnly": true,
+    "liveSha256": "22d0d743dae64db7f6d542638fa1e9807d6d47d45733ad6320105ef918c7c3fb",
+    "oldUpstreamSha256": "9675020ac43a6020de1ca143113360b181c0132ca65d6a89efdbfdd70606950e",
+    "newUpstreamSha256": "9675020ac43a6020de1ca143113360b181c0132ca65d6a89efdbfdd70606950e",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "MigrateStorage.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php",
+    "readOnly": true,
+    "liveSha256": "316f168446c9f0859e28b8578cbd29732c3e4be82e32958135c1e5a2325855a8",
+    "oldUpstreamSha256": "e013579d82cd2cd7734524d63711c3c4a3c905502d6dd1e0e680840ab6ec3c8f",
+    "newUpstreamSha256": "e013579d82cd2cd7734524d63711c3c4a3c905502d6dd1e0e680840ab6ec3c8f",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "CollectYoutubeAudienceJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/CollectYoutubeAudienceJob.php",
+    "readOnly": true,
+    "liveSha256": "f66631fa21e7b4dfd935cf2121de72626399be5b09324cd4c492e186f1980f5b",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "YoutubeAudienceSnapshot.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceSnapshot.php",
+    "readOnly": true,
+    "liveSha256": "0e3733a84a59279c5342d5906e30af9841fb59c955137cd5579957bc20ee05c1",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "HasInsights.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasInsights.php",
+    "readOnly": true,
+    "liveSha256": "db3e5a5c3ede2c43e66080ee76f06543c95304409a1eea954b411d0fa14582a2",
+    "oldUpstreamSha256": "28cd1d284b9d791a9423a8005460e51072b24c0ea33542f4e143d386072684ad",
+    "newUpstreamSha256": "28cd1d284b9d791a9423a8005460e51072b24c0ea33542f4e143d386072684ad",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "BlueskyHelpers.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Helpers.php",
+    "readOnly": true,
+    "liveSha256": "35c679eca50509904d1e13835d82f846f445b9e79aa315492f1fb25c0c516ca6",
+    "oldUpstreamSha256": "4fcf44ca7ae3621f4c52ad08d10718b3acaf0cf1b67351adb799df50a4f4d2ec",
+    "newUpstreamSha256": "4fcf44ca7ae3621f4c52ad08d10718b3acaf0cf1b67351adb799df50a4f4d2ec",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "MediaSocialVideoConversion.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php",
+    "readOnly": true,
+    "liveSha256": "32402b929f7cfeffc1bba4122a7596ba6495c1ec96a438ed69116c5eb96c70cc",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "HasPaginatedContent.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasPaginatedContent.php",
+    "readOnly": true,
+    "liveSha256": "340823dee47b5ac9cc169849fa4a4f6bb028e106e0a1a67a2b95b8aaf36ab4f0",
+    "oldUpstreamSha256": "c3c352ee6180c31a66da26ab00ed38f08cf6f430e8e35ed8a72dd2f99721b56d",
+    "newUpstreamSha256": "c3c352ee6180c31a66da26ab00ed38f08cf6f430e8e35ed8a72dd2f99721b56d",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "YoutubeProvider.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Google/YoutubeProvider.php",
+    "readOnly": true,
+    "liveSha256": "13f667d6f5d15a42c7bc62d0c8070d00fd9cd6de314d6289319930771ca374cf",
+    "oldUpstreamSha256": "0ee25915ae8813042f1bb0ebc439bc8a3a8b751b2e1b7c8f7564a12d09384985",
+    "newUpstreamSha256": "0ee25915ae8813042f1bb0ebc439bc8a3a8b751b2e1b7c8f7564a12d09384985",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "AccountPublishPost.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php",
+    "readOnly": true,
+    "liveSha256": "183fad8dcac2626eb89bc2b1a729910742f5a3268d7f49b8069d2df2cfd576f0",
+    "oldUpstreamSha256": "4bf7d2f5a07383c275687446e732efb2011d1aac43105eccf434e7a18e199769",
+    "newUpstreamSha256": "4bf7d2f5a07383c275687446e732efb2011d1aac43105eccf434e7a18e199769",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "BuildChatSystemPrompt.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php",
+    "readOnly": true,
+    "liveSha256": "9c613bd74da72434778daa92ef690d88aacbd2b683827f4ba2aa6d1d59bb524b",
+    "oldUpstreamSha256": "b34223bf89a01aeebbd3b3027537948024305cbb756202ec3157ba3a77bf37f9",
+    "newUpstreamSha256": "b34223bf89a01aeebbd3b3027537948024305cbb756202ec3157ba3a77bf37f9",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "TrustProxies.php",
+    "container": "/var/www/html/app/Http/Middleware/TrustProxies.php",
+    "readOnly": true,
+    "liveSha256": "caa57b1109ea56b81d01ed93a74fac82f2c555d71a0424ae01ed84c32af98d7b",
+    "oldUpstreamSha256": "caa57b1109ea56b81d01ed93a74fac82f2c555d71a0424ae01ed84c32af98d7b",
+    "newUpstreamSha256": "caa57b1109ea56b81d01ed93a74fac82f2c555d71a0424ae01ed84c32af98d7b",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "peachy-start.sh",
+    "container": "/usr/local/bin/peachy-start.sh",
+    "readOnly": true,
+    "liveSha256": "890836058bbf5f02fc9e15fba6373b743026b6478b0ee8b1790bc1605a4a133c",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "ManagesInstagramResources.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php",
+    "readOnly": true,
+    "liveSha256": "9f42301136577301d42cdf0fa4e17ca07d032c1929bbf092499f1a02e95dca29",
+    "oldUpstreamSha256": "0ecbc79869bba30d8e655d82f2e64a0ae1184aa3f48734931a71dc9c18fb5670",
+    "newUpstreamSha256": "0ecbc79869bba30d8e655d82f2e64a0ae1184aa3f48734931a71dc9c18fb5670",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "uploads.ini",
+    "container": "/etc/php/8.3/fpm/conf.d/99-uploads.ini",
+    "readOnly": true,
+    "liveSha256": "ad6adbf920bf1995e80d7c89f5e3b6ed0b886b1f4a47c700e2ddc1b986970408",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "TwitterManagesPostImport.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesPostImport.php",
+    "readOnly": true,
+    "liveSha256": "3d7e0a52a8bac1727380a70987ae2403bb14215117b63852854e31df08b8a81f",
+    "oldUpstreamSha256": "52d32eaf9c7594ed504c8e3f74818d044a5995ed7356b04026fa39f706650f83",
+    "newUpstreamSha256": "52d32eaf9c7594ed504c8e3f74818d044a5995ed7356b04026fa39f706650f83",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ImportEngagedPostJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/Inbox/ImportEngagedPostJob.php",
+    "readOnly": true,
+    "liveSha256": "e48ad4677bff08a6c93f5e1dcb3315dc933e0e83fe3ae36f2ca4b4c46366ea16",
+    "oldUpstreamSha256": "03a0c2c33449ace579ab640d3d55db9e662dbdde14af599eb757e9962f9f200a",
+    "newUpstreamSha256": "03a0c2c33449ace579ab640d3d55db9e662dbdde14af599eb757e9962f9f200a",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "OptimizeSocialVideoMediaJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php",
+    "readOnly": true,
+    "liveSha256": "97d276596f861cb1f3b557442a913c714a523983382d53c2ff0ef865a65a223f",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "BlueskyUsesUploads.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php",
+    "readOnly": true,
+    "liveSha256": "87af9b50af53f8307abafcb864cc0cd8de6dc5097dddb5b94066d8197930b994",
+    "oldUpstreamSha256": "dc093ff9e8b323b989a9e8ad92fb1afaf0ec1396e219c8d0abe95e189633aaf9",
+    "newUpstreamSha256": "dc093ff9e8b323b989a9e8ad92fb1afaf0ec1396e219c8d0abe95e189633aaf9",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "PeachyPostVersionContent.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php",
+    "readOnly": true,
+    "liveSha256": "da248fce5bdb7b784d25ac2fcc35b28b2a1eb9b388f6e6015fda5ecbd8500ab8",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "AppMigrateStorageCommand.php",
+    "container": "/var/www/html/app/Console/Commands/MigrateStorage.php",
+    "readOnly": true,
+    "liveSha256": "197cc4375f3ad86a71efad55c50ca282d7d0fbd9722043a1f7e26305b3dc5db3",
+    "oldUpstreamSha256": "197cc4375f3ad86a71efad55c50ca282d7d0fbd9722043a1f7e26305b3dc5db3",
+    "newUpstreamSha256": "197cc4375f3ad86a71efad55c50ca282d7d0fbd9722043a1f7e26305b3dc5db3",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "AppServiceProvider.php",
+    "container": "/var/www/html/app/Providers/AppServiceProvider.php",
+    "readOnly": true,
+    "liveSha256": "0426e5ab4acd21f1112c0e5f8874e4888820078aa708d6ada9badd9a55e07d72",
+    "oldUpstreamSha256": "0426e5ab4acd21f1112c0e5f8874e4888820078aa708d6ada9badd9a55e07d72",
+    "newUpstreamSha256": "0426e5ab4acd21f1112c0e5f8874e4888820078aa708d6ada9badd9a55e07d72",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "MediaUploadFile.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php",
+    "readOnly": true,
+    "liveSha256": "f7d152f7f69e689b198941ecfabb97dbca5b9b9bdc066643b1bd83ad71675aa0",
+    "oldUpstreamSha256": "327ea526f14f54332fe8a193ccf60ff72bb1d74470bfdc797f7164152feeb19e",
+    "newUpstreamSha256": "327ea526f14f54332fe8a193ccf60ff72bb1d74470bfdc797f7164152feeb19e",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "AccountPublishPostJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php",
+    "readOnly": true,
+    "liveSha256": "9039a999b81b28ae657e2ed52b385708135d01677ca74ecff322710587e9fedb",
+    "oldUpstreamSha256": "07186bb39ae06bfa1ab417c65a8fc21dde072c19044eba8cf09a99cc914350d3",
+    "newUpstreamSha256": "07186bb39ae06bfa1ab417c65a8fc21dde072c19044eba8cf09a99cc914350d3",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "YoutubeAudienceReport.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceReport.php",
+    "readOnly": true,
+    "liveSha256": "85b55e86547fa4be6ac46a7b2988a681abc42f6cfbeeb92b7876184e81208f7e",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "ManagesTwitterResources.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php",
+    "readOnly": true,
+    "liveSha256": "2f4bcb137ee17ab8fb0deeadf0c26577f8dcd9d8eefefa93a2fb3c301d840a06",
+    "oldUpstreamSha256": "c49896cd7b5baa7bccabacae40974a1c68c5bea4c18678b4203221a35f6abc67",
+    "newUpstreamSha256": "c49896cd7b5baa7bccabacae40974a1c68c5bea4c18678b4203221a35f6abc67",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ImportTwitterPostsJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php",
+    "readOnly": true,
+    "liveSha256": "f97b349a0bd2ed49a879f92db9c3071d7a9d110c316ea282ed19fab3d4f99942",
+    "oldUpstreamSha256": "fb6c835114923f6bbaf149d3942b9ea488345e6774505565c1e1f83f0810f604",
+    "newUpstreamSha256": "fb6c835114923f6bbaf149d3942b9ea488345e6774505565c1e1f83f0810f604",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ManagesInstagramJobs.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramJobs.php",
+    "readOnly": true,
+    "liveSha256": "80f8a26c53939094fa71615b073f2b0405b5f5f3a05ed2d667a01132b1477e1a",
+    "oldUpstreamSha256": "f5a0695752283e357e51ed9959cf074d7f65a1cdbbb98165fddf0ca81bd814ce",
+    "newUpstreamSha256": "f5a0695752283e357e51ed9959cf074d7f65a1cdbbb98165fddf0ca81bd814ce",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ManagesTwitterJobs.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php",
+    "readOnly": true,
+    "liveSha256": "e06ce4af0ba38182874d57c7c2e395efda7a0dc8e1611fde0a77c8b62ea7237b",
+    "oldUpstreamSha256": "0f5ff54003c401701d69aadc79c238344ef4d6b20491367205b258c8bb414684",
+    "newUpstreamSha256": "0f5ff54003c401701d69aadc79c238344ef4d6b20491367205b258c8bb414684",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "uploads.ini",
+    "container": "/etc/php/8.3/cli/conf.d/99-uploads.ini",
+    "readOnly": true,
+    "liveSha256": "ad6adbf920bf1995e80d7c89f5e3b6ed0b886b1f4a47c700e2ddc1b986970408",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "YoutubeAudienceCollector.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceCollector.php",
+    "readOnly": true,
+    "liveSha256": "0efe484ef37d09da523acb88be4b75f1a64b88e6b97554448b06bd50a30ea00f",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "PublishPost.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php",
+    "readOnly": true,
+    "liveSha256": "5ce37e4114ea4c1bd5fdb570dcd81155b8cc391d280017854bcd0c228934127c",
+    "oldUpstreamSha256": "5ce37e4114ea4c1bd5fdb570dcd81155b8cc391d280017854bcd0c228934127c",
+    "newUpstreamSha256": "5ce37e4114ea4c1bd5fdb570dcd81155b8cc391d280017854bcd0c228934127c",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "2026_09_25_210000_create_youtube_audience_reports.php",
+    "container": "/var/www/html/database/migrations/2026_09_25_210000_create_youtube_audience_reports.php",
+    "readOnly": true,
+    "liveSha256": "604ac40ffb0644df0423028dffc7a4e4849795c9c43898667aab2bad76512488",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "DispatchYoutubeAudienceSnapshotsJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DispatchYoutubeAudienceSnapshotsJob.php",
+    "readOnly": true,
+    "liveSha256": "d063b2a5a4b22c44e65827a296f2fed9a1a70e0948eef3117985459b1da545b4",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "PostFormRequest.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php",
+    "readOnly": true,
+    "liveSha256": "60714b680ddee6b61bea9e723176192d2d30afde83ceba67dbeed3b2201e10bc",
+    "oldUpstreamSha256": "ce8b108876defb37a7fb8c4a94e597f8fadc059e8288c3dd7d6e66fc70588fc9",
+    "newUpstreamSha256": "ce8b108876defb37a7fb8c4a94e597f8fadc059e8288c3dd7d6e66fc70588fc9",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "app.blade.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php",
+    "readOnly": true,
+    "liveSha256": "331bcfa3bf5be89a8c882c2274c154508a1b6b6cee1cd1c8298a3988fe792521",
+    "oldUpstreamSha256": "674e8066fd5a3097c9a4deb4de6e8b1f9a5f0f9f751e0695d89551785a73bc5f",
+    "newUpstreamSha256": "674e8066fd5a3097c9a4deb4de6e8b1f9a5f0f9f751e0695d89551785a73bc5f",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "PostPublishingFailedNotification.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php",
+    "readOnly": true,
+    "liveSha256": "197875601e56d01b921a4f5586d3172022e74beb2d1cc0c5867407eb37b7beae",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "peachy-posting.png",
+    "container": "/var/www/html/public/vendor/mixpost/peachy-posting.png",
+    "readOnly": true,
+    "liveSha256": "71a0047042dc2a600737a5d1546535b6d40799d0d312a596269575130671af47",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "ManagesBlueskyJobs.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesBlueskyJobs.php",
+    "readOnly": true,
+    "liveSha256": "65e5a55d46f9d4dbf2a09f4f908caca93ce43d9d2acc5b45bedb7007a205d3d4",
+    "oldUpstreamSha256": "8f6b18faf592164f545be4ef84ec6bffd65e5415849e3b4e1de8667258211e79",
+    "newUpstreamSha256": "8f6b18faf592164f545be4ef84ec6bffd65e5415849e3b4e1de8667258211e79",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ImportFacebookPagePostsJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportFacebookPagePostsJob.php",
+    "readOnly": true,
+    "liveSha256": "3dc19ded17706c06eb5c4576475d6d2301baca0cb4848ed6e98c897d99e462f9",
+    "oldUpstreamSha256": "760ed8d0a46bf1793829cedc39f5c71a1b46e1a6018a9e373a5cc3152f1ad750",
+    "newUpstreamSha256": "760ed8d0a46bf1793829cedc39f5c71a1b46e1a6018a9e373a5cc3152f1ad750",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "DownloadImportedPostThumbnailJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DownloadImportedPostThumbnailJob.php",
+    "readOnly": true,
+    "liveSha256": "b4dc7544da460a8dd569556d618d90feacd015c715afd0ca5728b6633cd6b5c0",
+    "oldUpstreamSha256": "667d84457d187cb4dbd5f42312c5769e6764a0999d6bb69c2db438650fe2753b",
+    "newUpstreamSha256": "667d84457d187cb4dbd5f42312c5769e6764a0999d6bb69c2db438650fe2753b",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ChunkedUploadComplete.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php",
+    "readOnly": true,
+    "liveSha256": "317f46c8691755b70f951518bec814ba660f2b9e58960100407481228a819f14",
+    "oldUpstreamSha256": "d7806ed8c699fc04cdec7521897b746bd7a822568bd7246355a701cfeb50ac01",
+    "newUpstreamSha256": "d7806ed8c699fc04cdec7521897b746bd7a822568bd7246355a701cfeb50ac01",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "Schedule.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php",
+    "readOnly": true,
+    "liveSha256": "7096fbf8597dd61c37834e94aa734e96c298f2e9c87a667f9c12b751cc3c0959",
+    "oldUpstreamSha256": "376fa700df7eee00d07af60577c73e2cf1e4ba32a22454c31491ceb140b4b608",
+    "newUpstreamSha256": "376fa700df7eee00d07af60577c73e2cf1e4ba32a22454c31491ceb140b4b608",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ThreadsManagesOAuth.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesOAuth.php",
+    "readOnly": true,
+    "liveSha256": "483aecd90d56fddc36f3ac78f503134d7051163d502e2fd4de7798b6cffcdbf9",
+    "oldUpstreamSha256": "d163333ffd5ee448eaac806c4172ac3c11fc55400a886ef01256d185b500894f",
+    "newUpstreamSha256": "d163333ffd5ee448eaac806c4172ac3c11fc55400a886ef01256d185b500894f",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "PostFailureExplanation.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php",
+    "readOnly": true,
+    "liveSha256": "51b8fa87e7efbe8d4e52d9d922711121a683b60e1c8c804998aac94cbcc769be",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  },
+  {
+    "host": "FinalizePostPublishing.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/FinalizePostPublishing.php",
+    "readOnly": true,
+    "liveSha256": "f62248d7dc30bd018d1f0c2b4b8187a68ecb2fc1b64bb5faea17a960f8446a77",
+    "oldUpstreamSha256": "d9ece84e3fd1139cab616e619dd8d9e0f1da73262f20f548d90c33b8dad14f3a",
+    "newUpstreamSha256": "d9ece84e3fd1139cab616e619dd8d9e0f1da73262f20f548d90c33b8dad14f3a",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "ImportThreadsPostsJob.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Jobs/ImportThreadsPostsJob.php",
+    "readOnly": true,
+    "liveSha256": "b1807c906c1e08d586657dbe2f2997b12576a43080a714421a86f6af9f8b3214",
+    "oldUpstreamSha256": "21dc8a3df2b28656952348451afb42ca610cb37e7cf3d9be495c0ee28e0c1a10",
+    "newUpstreamSha256": "21dc8a3df2b28656952348451afb42ca610cb37e7cf3d9be495c0ee28e0c1a10",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "web.php",
+    "container": "/var/www/html/routes/web.php",
+    "readOnly": true,
+    "liveSha256": "1bf7d1d560d8b5e15133c37aab16f9e9c2e7a0741cbde252dcf6b201e1c97737",
+    "oldUpstreamSha256": "1bf7d1d560d8b5e15133c37aab16f9e9c2e7a0741cbde252dcf6b201e1c97737",
+    "newUpstreamSha256": "1bf7d1d560d8b5e15133c37aab16f9e9c2e7a0741cbde252dcf6b201e1c97737",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "InstagramAnalytics.php",
+    "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/InstagramAnalytics.php",
+    "readOnly": true,
+    "liveSha256": "884762e3da16a5a488a65264926d779c2d002bf898ee2859a48d4de3397d7523",
+    "oldUpstreamSha256": "762779eacba68c4ec8df0f4a90af6f098db4bc97f472e7facebc37482a7b90ae",
+    "newUpstreamSha256": "762779eacba68c4ec8df0f4a90af6f098db4bc97f472e7facebc37482a7b90ae",
+    "review": "upstream-unchanged"
+  },
+  {
+    "host": "home.blade.php",
+    "container": "/var/www/html/resources/views/home.blade.php",
+    "readOnly": true,
+    "liveSha256": "e663dc2c96dc2ee4abce1e596003f195f1ecd2a240799960520ea95acf1c2690",
+    "oldUpstreamSha256": null,
+    "newUpstreamSha256": null,
+    "review": "custom-file"
+  }
+]

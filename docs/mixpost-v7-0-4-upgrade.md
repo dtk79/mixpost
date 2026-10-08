@@ -65,8 +65,25 @@ Horizon and cron are running, and the custom X age-tiered and low-cost 30-minute
 
 The Google SSO provider, issuer, scopes, callback, verified-email requirement, password-login option and existing-user-only provisioning remained unchanged. The first connection test shortly after boot hit a brief Google connection error; direct host/container discovery checks and the repeated UI test succeeded without configuration changes. A fresh Google sign-in completed for the existing Ducati X user and returned to the same user and Trailer Trash Boys workspace.
 
-Authenticated Home, Analytics, the X account metrics and the custom X content list render after the upgrade with no browser console errors. The next naturally scheduled publications are at **2026-10-08 19:00 UTC / noon Pacific**; real provider publication under 7.0.4 has not yet been observed. Follow the playbook's database-aware recovery procedure if rollback is needed, and reconcile later successful provider IDs and queued jobs before restoring a checkpoint.
+Authenticated Home, Analytics, the X account metrics and the custom X content list render after the upgrade with no browser console errors. The first naturally scheduled noon publications are now verified through stored provider IDs and publication flags, as recorded below. Follow the playbook's database-aware recovery procedure if rollback is needed, and reconcile later successful provider IDs and queued jobs before restoring a checkpoint.
 
 The release record and sanitized checksum audit are committed separately from the unchanged customization revision labeled on the frozen image. Disposable 7.0.4 rehearsal containers and their internal network were removed after verification; protected backups and pristine source exports remain on the host.
 
-A thread heartbeat, `Verify Mixpost 7.0.4 publications` (`verify-mixpost-7-0-4-publications`), is scheduled hourly to complete the publication observation. It stays quiet before 12:15 p.m. Pacific, makes read-only production checks thereafter, and pauses after conclusive verification or a reported failure requiring user action. It will not publish, retry, send messages, change data or redeploy.
+The thread heartbeat `Verify Mixpost 7.0.4 publications` (`verify-mixpost-7-0-4-publications`) completed its read-only publication observation and is paused. It did not publish, retry, send messages, change production data or redeploy.
+
+
+## First scheduled publication follow-up
+
+Verified **2026-10-08 19:32:46 UTC / 12:32 p.m. Pacific**, using read-only production queries. Both noon posts have parent status `PUBLISHED` (2), schedule status `PROCESSED` (2), and zero active publishing runs. Post 2049 was recorded published at 19:00:26 UTC; post 2079 at 19:00:28 UTC.
+
+| Post | Destination row | Account | Provider | Stored provider post ID | Result |
+| --- | --- | --- | --- | --- | --- |
+| 2049 | 3475 | 61 | X | `2108271278129852520` | Published (2), `post_published=true`, no errors |
+| 2049 | 3476 | 88 | Bluesky | `at://did:plc:2evyd7itxvvk6ay235rrywtg/app.bsky.feed.post/3mxf5g3ysma2p` | Published (2), `post_published=true`, CID present, no errors |
+| 2079 | 3524 | 92 | X | `2108271322753044650` | Published (2), `post_published=true`, no errors |
+
+Every destination attached to those two posts was checked. The publishing queue has no ready, reserved or delayed jobs. No failed `AccountPublishPost` jobs referencing either post were found after cutover. The analytics queue was processing its normal workload (24 ready, one reserved, one delayed); other configured queues were empty.
+
+The running app tag and immutable image ID still match `/root/mixpost/frozen-release.json` and `peachy/mixpost-pro:7.0.4-8def2a9`. Installed version 7.0.4, source `ed541fd0b1b77b839065edf40508143ab9b27ff1`, and Composer lock hash `c61f3e931a3c34355a1dd01354b8119ad3cb59d7ff855834e526d6253fdedbe8` also match. Horizon and cron are running, and public health returns `{"ok":true,"service":"mixpost"}`.
+
+This is stored provider publication evidence from Mixpost's actual scheduled runs. The X and Bluesky posts were not independently opened on their platforms. No retry, manual publication, queue clearing, account reconnection, deployment or production-data mutation was performed during this follow-up.

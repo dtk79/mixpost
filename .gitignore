@@ -7,6 +7,8 @@ coverage
 .codex-analysis/
 .playwright-cli/
 docs/*
+!docs/customizations/
+!docs/customizations/**
 !docs/*.md
 !docs/youtube-audience-probe-2026-09-25.json
 phpunit.xml
@@ -16,4 +18,5 @@ vendor
 node_modules
 resources/dist/hot
 .DS_Store
+__pycache__/
 CLAUDE.md

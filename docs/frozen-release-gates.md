@@ -5,6 +5,13 @@ October 10 incident reproduced its unsafe response handling in Pro 7.0.4. Patch
 retirement must now be demonstrated against each exact candidate; the upload
 contract remains required even when upstream supplies the implementation.
 
+The [customization documentation](customizations/README.md) and machine-checked
+[modification register](customizations/modifications.json) record every retained
+behavior. The local-upload candidate advances the contract to
+`video-upload-local-storage-v2`; the current production recovery release remains
+v1 until a reviewed cutover installs the matching wrapper and evidence together.
+Never replace the live wrapper with v2 while its app only has v1 evidence.
+
 ## Enforcement
 
 `ops/scripts/verify-frozen-upload-release.py` resolves an existing image to its
@@ -22,8 +29,16 @@ failed builds block issuance. A failed rerun removes its output gate.
 The validator also reproduces root-owned temporary media parents in an isolated
 container, requires a write attempt as `www-data` to fail, invokes the actual
 startup repair function, and requires create/write/read/cleanup to pass as
-`www-data`. The startup guard requires this fifth suite. Only shared parents
+`www-data`. The startup guard requires this permissions suite. Only shared parents
 are repaired; existing upload sessions and media files remain intact.
+
+The sixth suite has 17 local-storage checks: deterministic transfer, exact
+size/digest verification, lost-acknowledgment reconciliation, local retention,
+readiness, cleanup recovery, and capacity refusal. It uses no real storage calls.
+The separate `LocalMediaStagingIntegrationTest.php` must run in the isolated Pro
+rehearsal; it checks actual database/file/request/video behavior. Container
+replacement on a private persistent volume and the controlled single-PUT
+readback probe are separate runtime evidence. No real publication is authorized.
 
 The backend checks run in a disposable, read-only, network-disabled container
 without production volumes or environment. Validation starts no app processes,
@@ -33,7 +48,7 @@ those remain separate required rehearsal and post-cutover checks.
 
 The existing mounted `peachy-start.sh` validates passing evidence and the actual
 source, compiled assets, Composer/npm locks, and override fingerprints **before**
-Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all five suites;
+Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all six suites;
 there is no “superseded upstream” exemption. The evidence is in the existing
 storage volume at `/var/www/html/storage/app/.release-gates/`. Multiple tested
 release records can coexist, allowing a staged candidate and the current or
@@ -52,7 +67,7 @@ existing frozen startup entrypoint. The Infra generic updater remains disabled.
 ## Candidate procedure
 
 Copy the reviewed repository's `ops/scripts/verify-frozen-upload-release.py`,
-`ops/production-overrides/peachy-start.sh`, and the five upload test files to the
+`ops/production-overrides/peachy-start.sh`, and the six upload test files to the
 same relative paths under `/root/mixpost/release-tools/`. Use a frozen candidate
 built from exact licensed source and complete assets; never use `latest` or the
 archived 6.2.0 defaults. The current validator requires Python 3.11+, Node/npm,
@@ -155,3 +170,18 @@ upgrade/restart the app or change the database; all 52 mounts and the app/MySQL/
 Redis container IDs were unchanged. Live health/login and Horizon checks passed.
 The affected user's specific
 Chrome video remains a separate live acceptance check.
+
+## Reviewing changed mounts
+
+`--candidate-overrides` accepts a private JSON mapping from existing read-only
+container destinations to reviewed candidate source files. It snapshots those
+files for validation and still verifies that the running baseline did not change.
+Unknown/new mount destinations are rejected. New image-baked files are mandatory
+source fingerprints. This flag creates evidence only; it installs no live file.
+Before app-only cutover, install the reviewed bind files under the existing mount
+paths and pass `--check-plan` against those exact bytes. Preserve previous files,
+wrapper, evidence, and image for a compatible rollback.
+
+For local uploads, rollback also requires no pending staged records, or a tested
+rollback image that retains local readers, delivery jobs, and publication guards.
+An old image plus a healthy login cannot safely process a new durable outbox.

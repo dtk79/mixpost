@@ -22,6 +22,7 @@ use Inovector\Mixpost\Support\File as FileSupport;
 use Inovector\Mixpost\Support\FileSize;
 use Inovector\Mixpost\Support\MediaSource;
 use Inovector\Mixpost\Support\MediaUploader;
+use Inovector\Mixpost\Support\LocalMediaStaging;
 
 class MediaUploadFile extends FormRequest
 {
@@ -51,7 +52,9 @@ class MediaUploadFile extends FormRequest
 
         Access::check(Capability::UploadMedia, WorkspaceManager::current())->validate();
 
-        $media = MediaUploader::fromSource($source)
+        if (LocalMediaStaging::enabled()) { LocalMediaStaging::ensureCapacity($this->getFile()->getSize()); }
+
+        $uploader = MediaUploader::fromSource($source)
             ->path(self::mediaWorkspacePathWithDateSubpath())
             ->conversions([
                 MediaImageResizerConversion::name('thumb')->width(Image::MEDIUM_WIDTH)->height(Image::MEDIUM_HEIGHT),
@@ -59,8 +62,10 @@ class MediaUploadFile extends FormRequest
             ])
             ->data($this->extractFileData())
             ->folder($this->resolveFolderId())
-            ->deferVideoConversion()
-            ->uploadAndInsert();
+            ->deferVideoConversion();
+
+        if (LocalMediaStaging::enabled()) { return LocalMediaStaging::store($uploader); }
+        $media = $uploader->uploadAndInsert();
 
         if ($media->isVideo()) {
             OptimizeSocialVideoMediaJob::dispatch($media->id);

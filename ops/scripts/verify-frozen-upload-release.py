@@ -27,6 +27,12 @@ SOURCE_FILES = (
     'resources/js/Components/Media/UploadProgressPanel.vue',
     'resources/js/Components/Media/UploadProgressItem.vue',
     'src/Support/ChunkedUpload.php',
+    'src/Support/LocalMediaStaging.php', 'src/Support/LocalChunkedUpload.php',
+    'src/Support/StagedFileTransfer.php', 'src/Jobs/DeliverStagedMediaJob.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php',
+    'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php',
 )
 SUITES = {
     'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 13),
@@ -34,6 +40,7 @@ SUITES = {
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
     'assets-build': ('VideoUploadAssetsTest.mjs', 1),
     'media-temp-permissions': ('MediaTemporaryPermissionsTest.php', 1),
+    'local-media-staging': ('LocalMediaStagingTest.php', 17),
 }
 
 
@@ -138,7 +145,7 @@ def compose_state(container):
 def check_plan(image, proof, baseline):
     record = json.loads(proof.read_text())
     image_id = json.loads(run(['docker', 'image', 'inspect', image]))[0]['Id']
-    if record.get('status') != 'passed' or record.get('contract') != 'video-upload-recovery-v1' or record.get('imageId') != image_id:
+    if record.get('status') != 'passed' or record.get('contract') != 'video-upload-local-storage-v2' or record.get('imageId') != image_id:
         raise RuntimeError('Missing passing evidence for this exact image')
     if record.get('validatorSha256') != sha(__file__):
         raise RuntimeError('Validator changed since evidence was issued; rerun')
@@ -163,7 +170,7 @@ def check_plan(image, proof, baseline):
     print(f'PASS: cutover configuration and current tests match {image_id}; database rehearsal/checkpoint and post-cutover checks remain required')
 
 
-def verify(image, output, baseline):
+def verify(image, output, baseline, candidate_overrides=None):
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True, mode=0o700)
     proof = output / 'upload-gate.json'
@@ -173,6 +180,11 @@ def verify(image, output, baseline):
     live = json.loads(run(['docker', 'inspect', baseline]))[0]
     compose, _ = compose_state(live)
     mounts = live['Mounts']
+    reviewed = json.loads(candidate_overrides.read_text()) if candidate_overrides else {}
+    destinations = {m['Destination'] for m in mounts if m['Type'] == 'bind'}
+    if not isinstance(reviewed, dict) or not set(reviewed) <= destinations:
+        raise RuntimeError('Candidate override mapping must contain only existing bind destinations')
+    baseline_hashes = {m['Destination']: sha(m['Source']) for m in mounts if m['Type'] == 'bind'}
     wrapper_mount = next((m for m in mounts if m['Destination'] == '/usr/local/bin/peachy-start.sh'), None)
     if not wrapper_mount or wrapper_mount['Type'] != 'bind' or wrapper_mount['RW']:
         raise RuntimeError('Required read-only startup guard mount is missing')
@@ -206,7 +218,7 @@ def verify(image, output, baseline):
             for i, mount in enumerate(mounts):
                 if mount['Type'] != 'bind':
                     continue
-                original = WRAPPER if mount == wrapper_mount else Path(mount['Source'])
+                original = WRAPPER if mount == wrapper_mount else Path(reviewed.get(mount['Destination'], mount['Source']))
                 snapshot = snapshots / str(i)
                 shutil.copyfile(original, snapshot)
                 destination = mount['Destination']
@@ -243,6 +255,16 @@ def verify(image, output, baseline):
             if sum(line.startswith('PASS ') for line in result.splitlines()) != 12:
                 raise RuntimeError('Expected all 12 backend checks')
             suites['backend-recovery'] = {'exitCode': 0, 'checks': 12, 'testSha256': sha(test), 'logSha256': sha(log)}
+            print('Checking local storage delivery and publication readiness...', flush=True)
+            test = TESTS / 'LocalMediaStagingTest.php'
+            log = output / 'local-media-staging.log'
+            result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                          '--tmpfs', '/tmp:rw', '--entrypoint', 'php', *bindings,
+                          '--mount', f'type=bind,src={test},dst=/tmp/local-staging-test.php,readonly',
+                          image_id, '/tmp/local-staging-test.php'], log=log)
+            if sum(line.startswith('PASS ') for line in result.splitlines()) != 17:
+                raise RuntimeError('Expected all 17 local staging checks')
+            suites['local-media-staging'] = {'exitCode': 0, 'checks': 17, 'testSha256': sha(test), 'logSha256': sha(log)}
             print('Checking media permissions as the application user...', flush=True)
             test = TESTS / 'MediaTemporaryPermissionsTest.php'
             log = output / 'media-temp-permissions.log'
@@ -261,6 +283,7 @@ def verify(image, output, baseline):
             )
             result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
                           '--tmpfs', '/tmp:rw', '--tmpfs', APP + '/storage/mixpost-media:rw',
+                          '--tmpfs', APP + '/storage/app:rw',
                           '--entrypoint', 'bash', *bindings,
                           '--mount', f'type=bind,src={test},dst=/tmp/permissions-test.php,readonly',
                           image_id, '-euc', command], log=log)
@@ -283,17 +306,18 @@ def verify(image, output, baseline):
             # Recheck original mounts: a concurrent override change invalidates this validation.
             for mount in mounts:
                 if mount['Type'] == 'bind' and mount != wrapper_mount:
-                    if sha(mount['Source']) != fingerprints[mount['Destination']]:
+                    if sha(mount['Source']) != baseline_hashes[mount['Destination']]:
                         raise RuntimeError('Mounted override changed during validation; rerun')
             record = {
-                'schema': 1, 'status': 'passed', 'contract': 'video-upload-recovery-v1',
+                'schema': 1, 'status': 'passed', 'contract': 'video-upload-local-storage-v2',
                 'imageId': image_id, 'imageReference': image,
                 'at': datetime.now(timezone.utc).isoformat(),
                 'validatorSha256': sha(__file__), 'suites': suites, 'files': fingerprints,
                 'mountInventory': inventory, 'baselineContainerId': live['Id'], 'compose': compose,
                 'buildAttempts': build_attempts,
                 'frontendInputSha256': hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest(),
-                'scope': 'upload-contract-only; database rehearsal and live checks also required',
+                'reviewedOverrideDestinations': sorted(reviewed),
+                'scope': 'upload/local-storage contract; database rehearsal and live checks also required',
             }
             staged = output / '.upload-gate.json.tmp'
             staged.write_text(json.dumps(record, indent=2) + '\n')
@@ -315,11 +339,12 @@ if __name__ == '__main__':
     group.add_argument('--output', type=Path, help='Private audit directory; a failed run removes the gate')
     group.add_argument('--check-plan', type=Path, help='Recheck a passing gate against the exact candidate and effective Compose before cutover')
     parser.add_argument('--baseline-container', default='mixpost-mixpost-1')
+    parser.add_argument('--candidate-overrides', type=Path, help='Reviewed existing bind destination to candidate file mapping; final host bytes must match before cutover')
     args = parser.parse_args()
     try:
         if args.check_plan:
             check_plan(args.image, args.check_plan, args.baseline_container)
         else:
-            verify(args.image, args.output, args.baseline_container)
+            verify(args.image, args.output, args.baseline_container, args.candidate_overrides)
     except (RuntimeError, OSError, ValueError, KeyError, StopIteration) as error:
         raise SystemExit(f'BLOCKED: {error}')

@@ -1,0 +1,481 @@
+{
+  "schema": 1,
+  "overrides": [
+    {
+      "source": "ops/production-overrides/ManagesTwitterResources.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/PostFailureExplanation.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PostFailureExplanation.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/PostPublishingFailedNotification.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Notifications/PostPublishingFailedNotification.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/PublishPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/PublishPost.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/AccountPublishPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/AccountPublishPostJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/OptimizeSocialVideoMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/OptimizeSocialVideoMediaJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/MediaSocialVideoConversion.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaSocialVideoConversion.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ManagesInstagramResources.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramResources.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeProvider.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Google/YoutubeProvider.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceReport.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceReport.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceSnapshot.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceSnapshot.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/YoutubeAudienceCollector.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/YoutubeAudienceCollector.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/CollectYoutubeAudienceJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/CollectYoutubeAudienceJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/2026_09_25_210000_create_youtube_audience_reports.php",
+      "container": "/var/www/html/database/migrations/2026_09_25_210000_create_youtube_audience_reports.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/DispatchYoutubeAudienceSnapshotsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DispatchYoutubeAudienceSnapshotsJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/AppServiceProvider.php",
+      "container": "/var/www/html/app/Providers/AppServiceProvider.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/PostFormRequest.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/TrustProxies.php",
+      "container": "/var/www/html/app/Http/Middleware/TrustProxies.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/web.php",
+      "container": "/var/www/html/routes/web.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/home.blade.php",
+      "container": "/var/www/html/resources/views/home.blade.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ImportThreadsPostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Jobs/ImportThreadsPostsJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/MigrateStorage.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Commands/MigrateStorage.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ThreadsManagesOAuth.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesOAuth.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadComplete.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadComplete.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ImportFacebookPagePostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportFacebookPagePostsJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/DownloadImportedPostThumbnailJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DownloadImportedPostThumbnailJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ImportInstagramMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Jobs/ImportInstagramMediaJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyHelpers.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Helpers.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ManagesInstagramJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/Concerns/ManagesInstagramJobs.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ManagesBlueskyJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesBlueskyJobs.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/PeachyPostVersionContent.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ThreadsManagesContainer.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Threads/Concerns/ManagesContainer.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/peachy-posting.png",
+      "container": "/var/www/html/public/vendor/mixpost/peachy-posting.png",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/InstagramAnalytics.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/InstagramAnalytics.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ImportTwitterPostsJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/AppMigrateStorageCommand.php",
+      "container": "/var/www/html/app/Console/Commands/MigrateStorage.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyUsesUploads.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/UsesUploads.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/ManagesTwitterJobs.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesTwitterJobs.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/BuildChatSystemPrompt.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/AI/BuildChatSystemPrompt.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/Schedule.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/app.blade.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/resources/views/layouts/app.blade.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/MediaUploadFile.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/FinalizePostPublishing.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/FinalizePostPublishing.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/SocialProviders/Twitter/Concerns/ManagesPostImport.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesPostImport.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Jobs/Inbox/ImportEngagedPostJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/Inbox/ImportEngagedPostJob.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Analytics/Concerns/HasPaginatedContent.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasPaginatedContent.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/pro-team/src/Analytics/Concerns/HasInsights.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasInsights.php",
+      "status": "required",
+      "documentation": "docs/mixpost-instance-alterations.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
+    },
+    {
+      "source": "ops/production-overrides/LocalMediaStaging.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalMediaStaging.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/StagedFileTransfer.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/StagedFileTransfer.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/LocalChunkedUpload.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalChunkedUpload.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/DeliverStagedMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DeliverStagedMediaJob.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadInitiate.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadChunk.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadAbort.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/MediaResource.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Resources/MediaResource.php",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/CopyMedia.php",
+      "host": "CopyMedia.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/local-uploads.md",
+      "acceptance": "Copy preserves independent file/outbox identity and exact-candidate runtime behavior",
+      "retirement": "Equivalent upstream failure/recovery contract must pass; retain tests"
+    }
+  ],
+  "imagePatchFiles": [
+    "ops/production-patches/video-upload-network-errors-7.0.4.patch",
+    "ops/production-patches/video-upload-recovery-7.0.4.patch",
+    "ops/production-patches/local-uploads/Dockerfile"
+  ],
+  "infrastructureFiles": [
+    "ops/production-overrides/peachy-start.sh",
+    "ops/production-overrides/uploads.ini"
+  ],
+  "releaseChecklist": "docs/customizations/update-hardening.md"
+}

@@ -22,6 +22,14 @@ try {
     if (!is_writable('/var/www/html/storage/mixpost-media/temp/chunked')) {
         throw new RuntimeException('Chunked upload parent is not writable');
     }
+    foreach (['public', 'peachy-upload-state/chunked', 'peachy-upload-state/locks'] as $parent) {
+        $probe = '/var/www/html/storage/app/'.$parent.'/ops-permissions-'.bin2hex(random_bytes(16)).'.txt';
+        try {
+            if (file_put_contents($probe, 'verified') !== 8 || file_get_contents($probe) !== 'verified') {
+                throw new RuntimeException('Persistent upload parent is not writable');
+            }
+        } finally { if (is_file($probe)) { unlink($probe); } }
+    }
 } finally {
     $directory?->delete();
 }

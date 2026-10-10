@@ -6,6 +6,12 @@ error strings, or when the graph is insufficient.
 
 # Frozen production releases
 
+Use `docs/customizations/README.md` as the modification/hardening entry point.
+Keep its register, deployment manifest, implementation, and acceptance tests in
+sync. Local acceptance, restart recovery, verified cloud delivery, and publishing
+readiness are required behavior contracts; include registered image-baked
+files in upgrade audits (`--manifest` and `--image-source`), not just mounts; no upstream-adoption waiver applies.
+
 Follow `docs/mixpost-update-playbook.md` and `docs/frozen-release-gates.md`.
 Production Pro source differs from this repository's Lite package. Test the
 exact frozen candidate and its compiled assets using the release validator.

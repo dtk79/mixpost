@@ -85,6 +85,10 @@ echo "PASS: historical media, account versions, multiple attachments, prepared v
 
 // Exercise the real worker's wait, timeout, and already-published branches.
 class ReadOnlyPost extends Post {
+    public function __construct(array $attributes = []) {
+        parent::__construct($attributes);
+        $this->setRelation('versions', collect([new PostVersion(['account_id' => 0, 'is_original' => true, 'content' => [], 'options' => []])]));
+    }
     public array $capturedErrors=[];
     public function accountPublishStatus(Account $account): Inovector\Mixpost\Enums\PostAccountStatus { return $this->id===1885 ? Inovector\Mixpost\Enums\PostAccountStatus::PUBLISHED : Inovector\Mixpost\Enums\PostAccountStatus::PUBLISHING; }
     public function hasPublishState(Account $account): bool { return false; }

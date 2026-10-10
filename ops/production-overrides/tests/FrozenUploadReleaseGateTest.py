@@ -23,13 +23,13 @@ class StartupGuardTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.gate = self.root / 'gate.json'
         self.record = {
-            'schema': 1, 'status': 'passed', 'contract': 'video-upload-recovery-v1',
+            'schema': 1, 'status': 'passed', 'contract': 'video-upload-local-storage-v2',
             'imageId': 'sha256:' + 'a' * 64,
             'suites': {name: {'exitCode': 0, 'checks': count,
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
                        for name, count in [('frontend-network', 13), ('frontend-queue', 3),
                                            ('backend-recovery', 12), ('assets-build', 1),
-                                           ('media-temp-permissions', 1)]},
+                                           ('media-temp-permissions', 1), ('local-media-staging', 17)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,
                                             'Destination': '/usr/local/bin/peachy-start.sh'}],
         }
@@ -216,7 +216,7 @@ class CutoverPlanTest(unittest.TestCase):
         self.patcher.start()
         self.addCleanup(self.patcher.stop)
         self.record = {
-            'status': 'passed', 'contract': 'video-upload-recovery-v1', 'imageId': self.image_id,
+            'status': 'passed', 'contract': 'video-upload-local-storage-v2', 'imageId': self.image_id,
             'validatorSha256': validator.sha(validator.__file__), 'baselineContainerId': self.live['Id'],
             'mountInventory': copy.deepcopy(self.live['Mounts']),
             'files': {'/usr/local/bin/peachy-start.sh': validator.sha(WRAPPER)},

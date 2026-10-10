@@ -16,7 +16,8 @@ use Inovector\Mixpost\Jobs\OptimizeSocialVideoMediaJob;
 use Inovector\Mixpost\MediaConversions\MediaImageResizerConversion;
 use Inovector\Mixpost\MediaConversions\MediaVideoThumbConversion;
 use Inovector\Mixpost\Models\Media;
-use Inovector\Mixpost\Support\ChunkedUpload;
+use Inovector\Mixpost\Support\LocalChunkedUpload as ChunkedUpload;
+use Inovector\Mixpost\Support\LocalMediaStaging;
 use Inovector\Mixpost\Support\MediaUploader;
 
 class ChunkedUploadComplete extends FormRequest
@@ -35,17 +36,19 @@ class ChunkedUploadComplete extends FormRequest
         $chunkedUpload = new ChunkedUpload;
         $uploadUuid = $this->route('uploadUuid');
 
-        try {
-            $file = $chunkedUpload->complete($uploadUuid);
-        } catch (ChunkedUploadSessionNotFound $e) {
-            throw ValidationException::withMessages([
-                'upload_session' => ['Upload session not found.'],
-            ]);
-        }
-
         Access::check(Capability::UploadMedia, WorkspaceManager::current())->validate();
+        try {
+            return $chunkedUpload->completeAndStore($uploadUuid, function ($file, $localUuid): Media {
+                return $this->storeSource($file, $localUuid);
+            });
+        } catch (ChunkedUploadSessionNotFound $e) {
+            throw ValidationException::withMessages(['upload_session' => ['Upload session not found.']]);
+        }
+    }
 
-        $media = MediaUploader::fromSource($file)
+    private function storeSource($file, ?string $localUuid): Media
+    {
+        $uploader = MediaUploader::fromSource($file)
             ->path(self::mediaWorkspacePathWithDateSubpath())
             ->conversions([
                 MediaImageResizerConversion::name('thumb')->width(Image::MEDIUM_WIDTH)->height(Image::MEDIUM_HEIGHT),
@@ -53,14 +56,14 @@ class ChunkedUploadComplete extends FormRequest
             ])
             ->data($this->extractFileData())
             ->folder($this->resolveFolderId())
-            ->deferVideoConversion()
-            ->uploadAndInsert();
+            ->deferVideoConversion();
+
+        if ($localUuid !== null && LocalMediaStaging::enabled()) { return LocalMediaStaging::store($uploader, $localUuid); }
+        $media = $uploader->uploadAndInsert();
 
         if ($media->isVideo()) {
             OptimizeSocialVideoMediaJob::dispatch($media->id);
         }
-
-        $chunkedUpload->cleanup($uploadUuid);
 
         return $media;
     }

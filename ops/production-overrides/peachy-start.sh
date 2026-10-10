@@ -20,11 +20,11 @@ try {
     blocked('missing or invalid upload gate');
 }
 if (($gate['schema'] ?? null) !== 1 || ($gate['status'] ?? null) !== 'passed'
-    || ($gate['contract'] ?? null) !== 'video-upload-recovery-v1'
+    || ($gate['contract'] ?? null) !== 'video-upload-local-storage-v2'
     || !preg_match('/^sha256:[0-9a-f]{64}$/', $gate['imageId'] ?? '')) {
     blocked('unsupported or incomplete upload contract');
 }
-foreach (['frontend-network' => 13, 'frontend-queue' => 3, 'backend-recovery' => 12, 'assets-build' => 1, 'media-temp-permissions' => 1] as $name => $count) {
+foreach (['frontend-network' => 13, 'frontend-queue' => 3, 'backend-recovery' => 12, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
     $suite = $gate['suites'][$name] ?? [];
     if (($suite['exitCode'] ?? null) !== 0 || ($suite['checks'] ?? 0) < $count
         || !preg_match('/^[0-9a-f]{64}$/', $suite['testSha256'] ?? '')
@@ -38,7 +38,12 @@ $required = array_map(fn($file) => $pro.$file, [
     'resources/js/bootstrap.js', 'resources/js/Composables/useNotifications.js',
     'resources/js/Composables/useChunkedUpload.js', 'resources/js/Components/Media/UploadMedia.vue',
     'resources/js/Components/Media/UploadProgressPanel.vue', 'resources/js/Components/Media/UploadProgressItem.vue',
-    'src/Support/ChunkedUpload.php', 'package.json', 'package-lock.json', 'vite.config.js',
+    'src/Support/ChunkedUpload.php', 'src/Support/LocalMediaStaging.php', 'src/Support/LocalChunkedUpload.php',
+    'src/Support/StagedFileTransfer.php', 'src/Jobs/DeliverStagedMediaJob.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php',
+    'src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php',
+    'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php', 'package.json', 'package-lock.json', 'vite.config.js',
 ]);
 $required[] = '/var/www/html/composer.lock';
 $required[] = '/usr/local/bin/peachy-start.sh';
@@ -110,6 +115,11 @@ ensure_media_temp_permissions() {
     /var/www/html/storage/mixpost-media \
     /var/www/html/storage/mixpost-media/temp \
     /var/www/html/storage/mixpost-media/temp/chunked
+  install -d -o www-data -g www-data -m 755 \
+    /var/www/html/storage/app/public \
+    /var/www/html/storage/app/peachy-upload-state \
+    /var/www/html/storage/app/peachy-upload-state/chunked \
+    /var/www/html/storage/app/peachy-upload-state/locks
 }
 ensure_media_temp_permissions
 

@@ -13,6 +13,7 @@ use Inovector\Mixpost\Jobs\OptimizeSocialVideoMediaJob;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\Post;
 use Inovector\Mixpost\Support\PeachyPostVersionContent;
+use Inovector\Mixpost\Support\LocalMediaStaging;
 use Inovector\Mixpost\Support\PostContentParser;
 use Inovector\Mixpost\Support\PostRequirements;
 use Inovector\Mixpost\Support\PostRequirementViolation;
@@ -31,8 +32,23 @@ class AccountPublishPost
 {
     use UsesSocialProviderManager;
 
+    public function prepareStorage(Account $account, Post $post): bool
+    {
+        $parser = new PostContentParser($account, $post);
+        $ids = collect($parser->getVersionContent())->pluck('media')->flatten()->unique()->values()->all();
+        $ready = true;
+        foreach ($parser->formatMedia($ids) as $media) {
+            if (! LocalMediaStaging::ready($media)) {
+                LocalMediaStaging::enqueue($media);
+                $ready = false;
+            }
+        }
+        return $ready;
+    }
+
     public function prepareSocialVideos(Account $account, Post $post): bool
     {
+        if (! $this->prepareStorage($account, $post)) { return false; }
         if (! in_array($account->provider, ['instagram', 'instagram_standalone', 'twitter', 'threads', 'bluesky'], true)) {
             return true;
         }
@@ -53,6 +69,9 @@ class AccountPublishPost
 
     public function __invoke(Account $account, Post $post): SocialProviderResponse
     {
+        if (! $this->prepareStorage($account, $post)) {
+            return new SocialProviderResponse(SocialProviderResponseStatus::ERROR, ['Media storage transfer is pending. Your upload is retained locally; retry publishing after preparation finishes.']);
+        }
         $parser = new PostContentParser($account, $post);
 
         $content = PeachyPostVersionContent::withoutEmptyAdditionalItems($parser->getVersionContent());

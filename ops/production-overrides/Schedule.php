@@ -32,6 +32,8 @@ class Schedule
         ])->monthly();
 
         $schedule->command('mixpost:prune-temporary-directory')->hourly();
+        $schedule->call(fn () => \Inovector\Mixpost\Support\LocalMediaStaging::dispatchPending())
+            ->name('mixpost:deliver-staged-media')->everyMinute()->withoutOverlapping();
 
         if (MediaFilesystem::isCloudDisk(Util::config('disk'))) {
             $schedule->command('mixpost:cleanup-multipart-uploads')->daily();

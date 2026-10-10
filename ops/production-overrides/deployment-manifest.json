@@ -240,12 +240,68 @@
       "source": "ops/production-overrides/pro-team/src/Analytics/Concerns/HasInsights.php",
       "host": "HasInsights.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Analytics/Concerns/HasInsights.php"
+    },
+    {
+      "source": "ops/production-overrides/LocalMediaStaging.php",
+      "host": "LocalMediaStaging.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalMediaStaging.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/StagedFileTransfer.php",
+      "host": "StagedFileTransfer.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/StagedFileTransfer.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/LocalChunkedUpload.php",
+      "host": "LocalChunkedUpload.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalChunkedUpload.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/DeliverStagedMediaJob.php",
+      "host": "DeliverStagedMediaJob.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/DeliverStagedMediaJob.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadInitiate.php",
+      "host": "ChunkedUploadInitiate.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadChunk.php",
+      "host": "ChunkedUploadChunk.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/ChunkedUploadAbort.php",
+      "host": "ChunkedUploadAbort.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/MediaResource.php",
+      "host": "MediaResource.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Resources/MediaResource.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/CopyMedia.php",
+      "host": "CopyMedia.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php",
+      "delivery": "frozen-image"
     }
   ],
   "compatibility": {
     "package": "inovector/mixpost-pro-team",
-    "version": "7.0.1",
-    "source": "e4cfc6333a34f3d9fe08e47f81ab672a6a65a3fd",
-    "baseImage": "inovector/mixpost-pro-team@sha256:0076027bb9e2a0425568e17965bc8c90758de585efc4769e1457ce91de41df06"
+    "version": "7.0.4",
+    "source": "ed541fd0b1b77b839065edf40508143ab9b27ff1",
+    "baseImage": "peachy/mixpost-pro:7.0.4-upload-recovery-20261010",
+    "baseImageId": "sha256:345d1dfe21b4f539da7b6ebf058a5307aebe200f22088bbc7f5d56e519bd6b53",
+    "note": "Verified frozen recovery parent; local-upload overlay requires its own exact-candidate gate and isolated rehearsal."
   }
 }

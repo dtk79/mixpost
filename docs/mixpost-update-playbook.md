@@ -2,6 +2,8 @@
 
 This supersedes the former “pull latest and recreate” procedure. Production is a licensed Pro application, while this repository also contains the separate Lite package. Updating the Lite dependency file does not upgrade production.
 
+The [customization hub](customizations/README.md), [modification register](customizations/modifications.json), and [hardening checklist](customizations/update-hardening.md) are required update inputs. Run `python3 ops/scripts/check-customization-register.py`; additions and deployment delivery modes must match the source register and image recipe.
+
 ## Release contract
 
 A release is the **vendor base digest + exact Pro version/source + composer.lock + customization Git commit + mount manifest + database checkpoint**. The vendor image downloads packages at startup: an image digest alone is not an application version or a reliable rollback. Build a frozen image with `ops/upgrades/build-frozen-image.sh`; its startup uses the installed code and never resolves packages or restores an application from shared storage.
@@ -11,6 +13,8 @@ The authoritative PHP application override map is `ops/production-overrides/depl
 Google sign-in is a database-backed production setting rather than a file override. Preserve and recheck it using the [Google SSO runbook](google-sso.md), including the existing-user email match and the login-page button.
 
 The mounted `peachy-start.sh` also enforces the [frozen upload release gate](frozen-release-gates.md) before migrations and services start. Each exact candidate must pass the frontend/queue/backend recovery tests and match freshly rebuilt assets. A release announcement or an older “superseded upstream” note cannot waive this contract.
+
+Local-upload candidates additionally require the v2 six-suite gate, isolated real-video/ordinary-file/outbox/publication tests, persistent-volume container-replacement recovery, and controlled cloud byte readback. Preserve the dedicated media worker lease and background scanner. See [local uploads](customizations/local-uploads.md) for capacity, retries, and rollback constraints. Pending staged records must drain before rollback to an app lacking this route; never rewind the database over newly accepted media.
 
 ## 1. Inventory and checkpoint
 
@@ -22,7 +26,7 @@ The mounted `peachy-start.sh` also enforces the [frozen upload release gate](fro
 ## 2. Obtain and compare the target
 
 1. Read the [official release notes](https://mixpost.app/releases/pro) and [upgrade guidance](https://docs.mixpost.app/pro/upgrading/). Resolve the licensed package in a disposable container using a protected Composer auth file. Do not run the vendor startup against production to obtain source: it also migrates and starts workers.
-2. Export pristine old and target sources. For every mount, compare **old upstream → custom** and **old upstream → new upstream**. `ops/upgrades/audit-overrides.py` produces a complete checksum inventory from exported sources and `docker inspect` mount JSON.
+2. Export pristine old and target sources. For every mount, compare **old upstream → custom** and **old upstream → new upstream**. `ops/upgrades/audit-overrides.py` produces the checksum inventory from exported sources and `docker inspect` mount JSON. Pass `--manifest ops/production-overrides/deployment-manifest.json --image-source CODE_ONLY_RUNNING_IMAGE_EXPORT` to include registered files baked into the image; missing image exports fail the audit. A mount-only inventory cannot preserve the local-upload helpers.
 3. Reapply the required behavior to the new source. Review successful merges too: syntactically valid old state handling can break new queue/retry contracts. Use upstream implementations where equivalent; retain stronger custom safeguards where upstream only partially covers them.
 4. Record each customization as retained unchanged, rebased, replaced by equivalent upstream behavior, or inactive/historical. Add newly required classes to the manifest. Include server-only files in Git. Retire a patch only after its acceptance/failure cases pass against the exact unpatched upstream candidate and compiled assets. October 10 inspection found unsafe upload response handling again in 7.0.4: preserve/rebase the current `ops/production-patches/video-upload-*.patch` behavior and pass its recovery contract. Never revive the archived 6.2.0 image defaults.
 5. For the X analytics client overlay, compare all three Vue components against the target package and build a complete bundle with `ops/scripts/build-pro-x-analytics-assets.sh INSTALLED_PRO_TEAM_PACKAGE_DIR NEW_OUTPUT_DIR`. Keep the licensed compiled bundle outside Git. Verify its manifest references files in the same output directory and retain the Peachy landing-page image inside it.

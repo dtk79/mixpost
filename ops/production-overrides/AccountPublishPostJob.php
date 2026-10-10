@@ -94,6 +94,16 @@ class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
             return;
         }
 
+        if (! $accountPublishPost->prepareStorage($this->account, $this->post)) {
+            $key = "media-storage-wait:{$this->post->id}:{$this->account->id}";
+            Cache::add($key, time(), 7200);
+            if (time() - Cache::get($key) >= 3600) {
+                $this->post->insertErrors($this->account, ['Media storage transfer is still pending. The file was retained locally; retry publishing after preparation finishes.']);
+                Cache::forget($key);
+            } else { $this->release(30); }
+            return;
+        }
+        Cache::forget("media-storage-wait:{$this->post->id}:{$this->account->id}");
         $isResuming = $this->post->hasPublishState($this->account);
 
         if ($retryAfter = $this->rateLimitExpiration()) {

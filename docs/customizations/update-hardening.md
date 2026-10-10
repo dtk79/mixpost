@@ -21,6 +21,12 @@
    Legacy sessions may still live in the old app's ephemeral
    `storage/mixpost-media/temp/chunked`: snapshot and restore them before each
    replacement starts. Creating the shared parents alone does not preserve them.
+5. Reconcile active `networkExperiments` with the live frozen-release record.
+   Preserve their host proxy file hash and both live/effective router labels.
+   These files live outside the app's 52 mounts and need their own readback.
+   Keep the active HTTP/1.1 experiment through app upgrades unless an explicit
+   reviewed outcome authorizes retirement; verify new connections and an
+   unchanged control-host protocol. App/image success cannot retire this test.
 
 ## Required candidate checks
 

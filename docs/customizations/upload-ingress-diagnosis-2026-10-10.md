@@ -1,9 +1,46 @@
 # Slow ingress: active-user evidence and protocol experiment
 
-Status: diagnostic candidate prepared and isolated protocol checks passed.
-The production connection settings have **not** been changed by this experiment.
-The deployed app remains the verified progress r2 release described in
+Status: controlled HTTP/1.1 experiment activated with explicit user approval.
+Production fresh connections now negotiate HTTP/1.1. The affected computer's
+speed outcome is still pending. The deployed app remains the verified progress
+r2 image described in
 [upload-transfer-progress.md](upload-transfer-progress.md).
+
+## Approved production activation
+
+The user approved “Activate the controlled test.” The fresh checkpoint is
+`/root/mixpost/backups/upload-http1-cutover-20261010-213638`, including a
+254,204,905-byte database backup, old Compose/release/gate and override snapshots.
+Both current Compose files remain effective, with the single TLS label merged
+into the dashboard override. The app image stayed
+`sha256:29a8d847ddc61b452a64660a121b2a31664f5bb7908c705b1e2fa60e21e84b02`.
+
+Fresh exact-image validation passed all 52 required checks and all 57 registered
+source/wrapper matches. Work drained while web service stayed available, before
+short maintenance. App-only inert initialization preserved data fingerprints;
+normal startup preserved all 52 mounts, all 362 source/asset hashes, and MySQL/
+Redis identities. Horizon, cron, the scanner, persistent local route, permissions,
+and the dedicated media worker remained healthy. The same exact r2 image's
+restored-database rehearsal remains the app/source evidence; the separate proxy
+rehearsal covers the changed negotiation setting.
+
+At 21:40:04 UTC, fresh HTTP/2-offering clients negotiated HTTP/1.1 on Mixpost.
+Home, health, and login returned HTTP 200; unauthenticated API access returned
+HTTP 401. The control host `x.ducatix.com` retained HTTP/2 and its expected 307
+redirect. The host TLS file matched the tested SHA-256 and the live router label
+was `mixpost-upload-http1@file`. These runtime checks prove activation, not the
+affected computer's upload speed. The user should close all Mixpost tabs before
+retrying so existing HTTP/2 connections cannot invalidate the comparison.
+
+The active test is registered in `modifications.json` as infrastructure and
+`networkExperiments`. Preserve its host file and label during future upgrades;
+they live outside the app mount inventory. Record the affected-machine result
+before retaining or explicitly retiring the test. Rollback restores the prior
+dashboard Compose layer and removes this named host TLS file; revalidate the
+same exact image against that restored configuration before app-only replacement.
+Keep current user media and database, restore legacy temporary sessions, and
+verify new HTTP/2 connections. An old gate cannot pass `--check-plan` against a
+replacement container's new identity; issue current-baseline evidence for rollback.
 
 ## Actual affected upload
 

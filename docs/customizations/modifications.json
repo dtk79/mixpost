@@ -477,7 +477,24 @@
   ],
   "infrastructureFiles": [
     "ops/production-overrides/peachy-start.sh",
-    "ops/production-overrides/uploads.ini"
+    "ops/production-overrides/uploads.ini",
+    "ops/production-network/mixpost-upload-http1.yml",
+    "ops/production-network/docker-compose.upload-http1.yml"
   ],
-  "releaseChecklist": "docs/customizations/update-hardening.md"
+  "releaseChecklist": "docs/customizations/update-hardening.md",
+  "networkExperiments": [
+    {
+      "id": "upload-http1-2026-10-10",
+      "status": "active-controlled-test",
+      "source": "ops/production-network/mixpost-upload-http1.yml",
+      "host": "/opt/traefik/conf/mixpost-upload-http1.yml",
+      "composeSource": "ops/production-network/docker-compose.upload-http1.yml",
+      "effectiveComposeLayer": "docker-compose.dashboard-overrides.yml",
+      "routerLabel": "traefik.http.routers.mixpost.tls.options",
+      "routerValue": "mixpost-upload-http1@file",
+      "documentation": "docs/customizations/upload-ingress-diagnosis-2026-10-10.md",
+      "acceptance": "Preserve while active; compare host file hash and live/effective router label, verify fresh Mixpost HTTP/1.1 and unchanged control-host protocol, and record affected-computer timing",
+      "retirement": "Explicit reviewed experiment outcome and rollback/readback; never silently reset protocols during an app upgrade"
+    }
+  ]
 }

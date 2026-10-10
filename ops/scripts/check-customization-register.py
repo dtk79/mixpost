@@ -26,6 +26,14 @@ def validate(root=ROOT, release_gate=None):
         assert (root / source).is_file(), f'Missing image patch: {source}'
     for source in register['infrastructureFiles']:
         assert (root / source).is_file(), f'Missing infrastructure: {source}'
+    for experiment in register.get('networkExperiments', []):
+        assert experiment['status'] in ('active-controlled-test', 'retired'), 'Unknown network experiment state'
+        assert (root / experiment['documentation']).is_file(), 'Missing network experiment documentation'
+        assert experiment['acceptance'] and experiment['retirement'], 'Missing network preservation/retirement contract'
+        if experiment['status'] == 'active-controlled-test':
+            for field in ('source', 'composeSource'):
+                assert experiment[field] in register['infrastructureFiles'], 'Unregistered network infrastructure'
+            assert experiment['host'] and experiment['routerLabel'] and experiment['routerValue'], 'Missing network runtime mapping'
     assert (root / register['releaseChecklist']).is_file(), 'Missing release checklist'
     recipe = (root / 'ops/production-patches/local-uploads/Dockerfile').read_text()
     import re

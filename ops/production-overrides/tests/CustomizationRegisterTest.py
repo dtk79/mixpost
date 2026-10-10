@@ -17,7 +17,7 @@ class PreservationRegisterTest(unittest.TestCase):
     def setUp(self):
         self.scratch = tempfile.TemporaryDirectory()
         self.root = Path(self.scratch.name)
-        for directory in ['ops/production-overrides', 'ops/production-patches', 'docs/customizations']:
+        for directory in ['ops/production-overrides', 'ops/production-patches', 'ops/production-network', 'docs/customizations']:
             shutil.copytree(ROOT / directory, self.root / directory)
         value = json.loads((ROOT/'docs/customizations/modifications.json').read_text())
         for entry in value['overrides']:
@@ -47,6 +47,12 @@ class PreservationRegisterTest(unittest.TestCase):
         self.mutate(lambda value: value['overrides'][0].update(acceptance='')); self.reject()
     def test_missing_infrastructure(self):
         (self.root / 'ops/production-overrides/peachy-start.sh').unlink(); self.reject()
+    def test_missing_network_configuration(self):
+        (self.root / 'ops/production-network/mixpost-upload-http1.yml').unlink(); self.reject()
+    def test_unregistered_active_network_configuration(self):
+        self.mutate(lambda value: value['infrastructureFiles'].remove(value['networkExperiments'][0]['composeSource'])); self.reject()
+    def test_missing_network_retirement_contract(self):
+        self.mutate(lambda value: value['networkExperiments'][0].update(retirement='')); self.reject()
     def make_gate(self):
         register_data = json.loads((self.root/'docs/customizations/modifications.json').read_text())
         files = {entry['container']: hashlib.sha256((self.root/entry['source']).read_bytes()).hexdigest() for entry in register_data['overrides']}

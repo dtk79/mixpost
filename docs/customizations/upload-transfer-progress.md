@@ -70,3 +70,31 @@ published assets, and all 57 registered customizations plus the startup wrapper
 matched the candidate gate. Private evidence is under
 `/root/mixpost/backups/upload-progress-20261010/validated`. This candidate has
 not been deployed. No app restart has occurred during the active user upload.
+
+The candidate also passed inert boot against a restored 254,185,511-byte database
+checkpoint, stable before/after data fingerprints, local upload integration, and
+11 Pro regression suites with external networking disabled and no production
+volumes or publishing processes. Rehearsal evidence is in `rehearsal-2/result.json`.
+The first rehearsal stopped because the private test directory could not be read
+as the application user; correcting permissions on the isolated code fixtures
+and rerunning the full restoration/boot/tests passed. No production permissions
+were altered.
+
+Source commit `20cbc945ed19b24846e0572ff3a5008a65177598` was pushed to main.
+Its Frozen release guard and asset-build CI passed. General CI retains the same
+pre-existing `HealthRouteTest.php:17` failure seen on parent `c775418`; each
+matrix job reports 76 passed and one failed. This is not a claim of fully green
+CI or authenticated runtime verification of the new frontend. Production still
+serves the previous local-storage image; activation requires a fresh checkpoint,
+app-only cutover, and browser proof after approval.
+
+To reproduce this overlay, export the exact verified local-storage parent into a
+private source directory and apply only the progress patch (the network/recovery
+patches are already present in that parent). Install its locked npm dependencies
+and rebuild the whole frontend. Populate the registered Docker recipe with the
+two patched source files and the entire built asset directory. Verify the
+parent tag's immutable ID before and after the build; use `--pull=false` and
+`--network none`. On a future upstream version, review/rebase all three frontend
+patches and the local-storage overrides, then require the same failure cases and
+exact source/build checks. Publishing only a new entrypoint or editing compiled
+chunks by hand is insufficient.

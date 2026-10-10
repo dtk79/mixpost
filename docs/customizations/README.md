@@ -15,6 +15,7 @@ Release notes and a newer version number cannot retire a modification.
 | [Update and hardening checklist](update-hardening.md) | Required preservation, regression, rehearsal, cutover, and follow-up steps |
 | [October 10 production release](local-upload-release-2026-10-10.md) | Exact image, live library/composer timings, delivery proof, and rollback checkpoint |
 | [Local uploads](local-uploads.md) | Persistent upload acceptance, queued delivery, readiness, recovery, and capacity |
+| [Upload transfer progress](upload-transfer-progress.md) | Sent-byte progress, confirmation phases, slow-ingress evidence, and tested follow-up candidate |
 | [Frozen release gates](../frozen-release-gates.md) | Enforced exact-candidate upload/startup contract |
 | [Frozen update playbook](../mixpost-update-playbook.md) | Operational release and database-aware rollback procedure |
 | [Upload incident investigation](../upload-storage-latency-2026-10-10.md) | October 10 provider-delay evidence and diagnostic limits |
@@ -52,5 +53,3 @@ mapping drift. The existing release gate fingerprints all effective read-only
 mounts and the upload source/build; focused behavior gates verify what fingerprints
 cannot. Manual live checks remain explicit where a provider cannot be tested
 without publishing. No test post, email, or support message is implied.
-
-See [upload transfer and confirmation](upload-transfer-progress.md) for the byte-level progress contract and the follow-up slow-ingress investigation.

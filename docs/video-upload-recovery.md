@@ -166,6 +166,15 @@ Remove them only after the same failure/recovery checks pass against unpatched
 upstream source and its built assets. Never revive the archived 6.2.0 image or
 bind-mount an individual hashed JavaScript chunk or manifest.
 
+## Follow-up: storage latency
+
+The [broader October 10 investigation](upload-storage-latency-2026-10-10.md)
+reproduced a 60-second acknowledgment stall after a complete chunk reached HEL1
+object storage. Hetzner reports ongoing intermittent stalls in that region.
+Successful retries and repaired permissions do not establish that latency is
+resolved. The report includes repeatable per-operation timing diagnostics and
+the limits of the current recovery behavior.
+
 ## Rollback
 
 Restore the saved Compose configuration and recreate only the app with

@@ -29,8 +29,8 @@ Home, health, and login returned HTTP 200; unauthenticated API access returned
 HTTP 401. The control host `x.ducatix.com` retained HTTP/2 and its expected 307
 redirect. The host TLS file matched the tested SHA-256 and the live router label
 was `mixpost-upload-http1@file`. These runtime checks prove activation, not the
-affected computer's upload speed. The user should close all Mixpost tabs before
-retrying so existing HTTP/2 connections cannot invalidate the comparison.
+affected computer's upload speed. The user should fully exit and reopen Chrome
+before retrying; closing a tab alone may leave an old HTTP/2 connection pooled.
 
 The active test is registered in `modifications.json` as infrastructure and
 `networkExperiments`. Preserve its host file and label during future upgrades;
@@ -110,8 +110,9 @@ than an individual upload URL. Other sites retain their existing protocols.
 The candidate changes no storage route, app image, database schema or upload
 retry behavior. Applying its router label requires an app-only recreation;
 the shared proxy does not require a restart. Existing HTTP/2 connections may
-survive a setting change, so the affected browser must fully close its Mixpost
-tabs and open a fresh connection for the comparison.
+survive a setting change, so the affected browser must fully exit and reopen to
+establish a fresh connection for the comparison. Closing tabs alone may retain
+idle pooled connections. Confirm the new upload protocol in the proxy log.
 
 `ops/scripts/verify-upload-http1-proxy.py` tested the actual candidate configuration
 on the current immutable Traefik image

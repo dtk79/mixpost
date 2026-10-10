@@ -1,0 +1,7 @@
+# Diagnostic candidate only. Not active until explicitly attached to Mixpost's router.
+# Copy to the watched /opt/traefik/conf directory before applying the Compose layer.
+tls:
+  options:
+    mixpost-upload-http1:
+      alpnProtocols:
+        - http/1.1

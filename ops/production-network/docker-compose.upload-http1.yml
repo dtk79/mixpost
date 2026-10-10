@@ -1,0 +1,10 @@
+# Reviewed diagnostic overlay. Validate against BOTH effective production files.
+# For activation merge this one label into the existing dashboard override layer;
+# the release validator reads the current baseline's two recorded Compose files.
+# Do not introduce an untracked third activation layer or waive that fingerprint.
+# This affects TLS negotiation for the Mixpost hostname, including ordinary pages.
+# It requires an app-only recreate. Never restart the shared proxy for this test.
+services:
+  mixpost:
+    labels:
+      traefik.http.routers.mixpost.tls.options: mixpost-upload-http1@file

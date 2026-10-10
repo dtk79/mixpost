@@ -1,0 +1,603 @@
+--- a/resources/js/Composables/useChunkedUpload.js
++++ b/resources/js/Composables/useChunkedUpload.js
+@@ -22,6 +22,8 @@
+   const error = ref(null)
+   const isAborted = ref(false)
+   const currentUploadUuid = ref(null)
++  const retryBlocked = ref(false)
++  let resumeState = null
+ 
+   const threshold = chunkedUpload?.threshold || CHUNK_SIZE
+ 
+@@ -35,6 +37,8 @@
+     error.value = null
+     isAborted.value = false
+     currentUploadUuid.value = null
++    retryBlocked.value = false
++    resumeState = null
+   }
+ 
+   const initiate = async (file, metadata = {}) => {
+@@ -42,7 +46,9 @@
+     error.value = null
+ 
+     const response = await axios.post(
+-      route(`${routePrefix}.media.chunked.initiate`, { workspace: workspaceId }),
++      route(`${routePrefix}.media.chunked.initiate`, {
++        workspace: workspaceId
++      }),
+       {
+         filename: file.name,
+         mime_type: file.type,
+@@ -65,7 +71,14 @@
+     formData.append('chunk', chunkBlob, `chunk_${chunkIndex}`)
+     formData.append('chunk_index', chunkIndex)
+ 
+-    try {
++    const waitTimer = setTimeout(() => {
++      if (!isAborted.value && status.value === 'uploading') {
++        status.value = 'waiting'
++      }
++    }, 5000)
++
++    try {
++      status.value = 'uploading'
+       const response = await axios.post(
+         route(`${routePrefix}.media.chunked.upload`, {
+           workspace: workspaceId,
+@@ -74,9 +87,13 @@
+         formData
+       )
+ 
++      clearTimeout(waitTimer)
+       return response.data
+     } catch (err) {
+-      if (retries < MAX_RETRIES && !isAborted.value) {
++      clearTimeout(waitTimer)
++      const retryable = !err.response || err.response.status >= 500 || err.response.status === 429
++      if (retryable && err.code !== 'ERR_CANCELED' && retries < MAX_RETRIES && !isAborted.value) {
++        status.value = 'retrying'
+         await new Promise(resolve => setTimeout(resolve, 1000 * (retries + 1)))
+         return uploadChunk(uploadUuid, chunkIndex, chunkBlob, retries + 1)
+       }
+@@ -87,7 +104,7 @@
+   const uploadAllChunks = async (uploadUuid, file, totalChunks, serverChunkSize) => {
+     status.value = 'uploading'
+ 
+-    for (let i = 0; i < totalChunks; i++) {
++    for (let i = resumeState?.nextChunk || 0; i < totalChunks; i++) {
+       if (isAborted.value) {
+         throw new Error('Upload aborted')
+       }
+@@ -98,6 +115,7 @@
+ 
+       await uploadChunk(uploadUuid, i, chunkBlob)
+ 
++      resumeState.nextChunk = i + 1
+       progress.value = Math.round(((i + 1) / totalChunks) * 99) // Reserve 1% for completion
+     }
+   }
+@@ -108,6 +126,8 @@
+     }
+ 
+     status.value = 'completing'
++    // A lost completion response may already have inserted media. Never replay that operation.
++    retryBlocked.value = true
+ 
+     const response = await axios.post(
+       route(`${routePrefix}.media.chunked.complete`, {
+@@ -139,10 +159,28 @@
+   }
+ 
+   const upload = async (file, metadata = {}) => {
+-    reset()
+-
+-    try {
+-      const initResult = await initiate(file, metadata)
++    if (retryBlocked.value && status.value === 'error') {
++      throw new Error(
++        error.value ||
++          'Upload confirmation was interrupted. Check the media library before uploading again.'
++      )
++    }
++    const resuming = resumeState?.file === file && !isAborted.value && status.value === 'error'
++    if (!resuming) {
++      reset()
++    } else {
++      error.value = null
++    }
++
++    try {
++      const initResult = resuming ? resumeState.initResult : await initiate(file, metadata)
++      if (isAborted.value) {
++        await abortUpload(initResult.upload_uuid)
++        throw new Error('Upload aborted')
++      }
++      if (!resuming) {
++        resumeState = { file, initResult, nextChunk: 0 }
++      }
+       const {
+         upload_uuid: uploadUuid,
+         total_chunks: totalChunks,
+@@ -155,7 +193,15 @@
+     } catch (err) {
+       if (!isAborted.value) {
+         status.value = 'error'
+-        error.value = uploadErrorMessage(err)
++        error.value = retryBlocked.value
++          ? 'Upload confirmation was interrupted. Check the media library before uploading again.'
++          : err.response?.status >= 500
++            ? 'The upload service is temporarily unavailable. Your progress is saved. Click Retry to continue.'
++            : uploadErrorMessage(err)
++        if (err.response?.status === 422 && err.response.data?.errors?.upload_session) {
++          retryBlocked.value = true
++        }
++        err.uploadMessage = error.value
+         notify('error', error.value)
+       }
+       throw err
+@@ -218,6 +264,7 @@
+     progress,
+     status,
+     error,
++    retryBlocked,
+     shouldChunk,
+     upload,
+     regularUpload,
+--- a/resources/js/Components/Media/UploadMedia.vue
++++ b/resources/js/Components/Media/UploadMedia.vue
+@@ -1,5 +1,5 @@
+ <script setup>
+-import { computed, inject, ref, watch } from 'vue'
++import { computed, inject, markRaw, ref, watch } from 'vue'
+ import { usePage } from '@inertiajs/vue3'
+ import { useI18n } from 'vue-i18n'
+ import { nanoid } from 'nanoid'
+@@ -349,42 +349,42 @@
+     uploadInstance: null
+   })
+ 
+-  addJob({
+-    id: jobId,
+-    handler: async () => {
+-      const job = getJob(jobId)
+-
+-      if (!job) {
+-        startNextJob()
+-        return
+-      }
+-
+-      await uploadFileWithProgress(job)
+-        .then(media => {
+-          if (job.cancelled) {
+-            advanceQueueIfActive(jobId)
+-            return
+-          }
+-
+-          job.status = 'complete'
+-          job.progress = 100
+-          startNextJob(media, folder)
++  const handler = async () => {
++    const job = getJob(jobId)
++
++    if (!job) {
++      startNextJob()
++      return
++    }
++
++    await uploadFileWithProgress(job)
++      .then(media => {
++        if (job.cancelled) {
++          advanceQueueIfActive(jobId)
++          return
++        }
++
++        job.status = 'complete'
++        job.progress = 100
++        startNextJob(media, folder)
++      })
++      .catch(error => {
++        if (job.cancelled) {
++          advanceQueueIfActive(jobId)
++          return
++        }
++
++        job.status = 'error'
++        job.error =
++          error.uploadMessage || error.response?.data?.message || error.message || 'Upload failed'
++        startNextJob({
++          name: file.name,
++          error: job.error
+         })
+-        .catch(error => {
+-          if (job.cancelled) {
+-            advanceQueueIfActive(jobId)
+-            return
+-          }
+-
+-          job.status = 'error'
+-          job.error = error.response?.data?.message || error.message || 'Upload failed'
+-          startNextJob({
+-            name: file.name,
+-            error: job.error
+-          })
+-        })
+-    }
+-  })
++      })
++  }
++  getJob(jobId).handler = handler
++  addJob({ id: jobId, handler })
+ }
+ 
+ const uploadMetadata = job => (job.folder ? { folder: job.folder } : {})
+@@ -392,9 +392,10 @@
+ const uploadFileWithProgress = async job => {
+   job.status = 'uploading'
+ 
+-  // Create a fresh upload instance for this specific file
+-  const uploader = useChunkedUpload({ routePrefix, workspaceId: workspaceCtx.id })
+-  job.uploadInstance = uploader
++  // Keep the session and confirmed progress when retrying this file.
++  const uploader =
++    job.uploadInstance || useChunkedUpload({ routePrefix, workspaceId: workspaceCtx.id })
++  job.uploadInstance = markRaw(uploader)
+ 
+   const shouldUseChunked = uploader.shouldChunk(job.file)
+ 
+@@ -412,6 +413,9 @@
+       return media
+     } catch (error) {
+       clearInterval(progressInterval)
++      job.progress = uploader.progress.value
++      job.phase = uploader.status.value
++      job.retryBlocked = uploader.retryBlocked.value
+       throw error
+     }
+   }
+@@ -467,14 +471,19 @@
+ }
+ 
+ const retryUpload = job => {
+-  cancelUpload(job)
++  if (job.status !== 'error' || job.retryBlocked) {
++    return
++  }
+ 
+   if (job.isRemote) {
++    cancelUpload(job)
+     handleUrlSubmit(job.url)
+     return
+   }
+ 
+-  dispatch([job.file], job.folder)
++  job.status = 'pending'
++  job.error = null
++  addJob({ id: job.id, handler: job.handler })
+ }
+ 
+ const cancelAllUploads = () => {
+--- a/resources/js/Components/Media/UploadProgressPanel.vue
++++ b/resources/js/Components/Media/UploadProgressPanel.vue
+@@ -40,6 +40,7 @@
+             :status="job.status"
+             :phase="job.phase"
+             :error="job.error"
++            :retry-blocked="job.retryBlocked || false"
+             @cancel="emit('cancel', job)"
+             @retry="emit('retry', job)"
+           />
+--- a/resources/js/Components/Media/UploadProgressItem.vue
++++ b/resources/js/Components/Media/UploadProgressItem.vue
+@@ -27,6 +27,10 @@
+   error: {
+     type: String,
+     default: null
++  },
++  retryBlocked: {
++    type: Boolean,
++    default: false
+   }
+ })
+ 
+@@ -46,6 +50,12 @@
+     case 'pending':
+       return $t('media.upload_waiting')
+     case 'uploading':
++      if (props.phase === 'waiting') {
++        return `${props.progress}% — Waiting for upload confirmation…`
++      }
++      if (props.phase === 'retrying') {
++        return `${props.progress}% — Connection interrupted. Retrying…`
++      }
+       return `${props.progress}%`
+     case 'complete':
+       return $t('media.upload_complete')
+@@ -61,7 +71,7 @@
+ })
+ 
+ const canRetry = computed(() => {
+-  return props.status === 'error'
++  return props.status === 'error' && !props.retryBlocked
+ })
+ 
+ const progressBarClasses = computed(() => {
+--- a/src/Support/ChunkedUpload.php
++++ b/src/Support/ChunkedUpload.php
+@@ -9,6 +9,7 @@
+ use Illuminate\Support\Facades\Auth;
+ use Illuminate\Support\Facades\Storage;
+ use Illuminate\Support\Str;
++use Illuminate\Validation\ValidationException;
+ use Inovector\Mixpost\Concerns\UsesFileConfig;
+ use Inovector\Mixpost\Enums\FileSizeUnit;
+ use Inovector\Mixpost\Exceptions\ChunkedUploadSessionNotFound;
+@@ -109,13 +110,25 @@
+      */
+     public function uploadChunk(string $uploadUuid, int $chunkIndex, UploadedFile $chunk): array
+     {
+-        $session = $this->getSessionData($uploadUuid);
+-
+-        if ($session['is_s3']) {
+-            return $this->uploadChunkS3($uploadUuid, $chunkIndex, $chunk, $session);
+-        }
+-
+-        return $this->uploadChunkLocal($uploadUuid, $chunkIndex, $chunk);
++        return $this->withSessionLock($uploadUuid, function (array $session) use ($uploadUuid, $chunkIndex, $chunk): array {
++            $expectedSize = $this->expectedChunkSize($session, $chunkIndex);
++            if ($chunk->getSize() !== $expectedSize) {
++                throw ValidationException::withMessages(['chunk' => ['The chunk size does not match this upload.']]);
++            }
++
++            if ($session['is_s3']) {
++                try {
++                    return $this->uploadChunkS3($uploadUuid, $chunkIndex, $chunk, $session);
++                } catch (S3Exception $error) {
++                    if ($error->getAwsErrorCode() === 'NoSuchUpload') {
++                        throw ValidationException::withMessages(['upload_session' => ['This upload session has expired. Cancel it and select the file again.']]);
++                    }
++                    throw $error;
++                }
++            }
++
++            return $this->uploadChunkLocal($uploadUuid, $chunkIndex, $chunk);
++        });
+     }
+ 
+     /**
+@@ -124,13 +137,13 @@
+      */
+     public function complete(string $uploadUuid): MediaSource
+     {
+-        $session = $this->getSessionData($uploadUuid);
+-
+-        if ($session['is_s3']) {
+-            return $this->completeS3($uploadUuid, $session);
+-        }
+-
+-        return $this->completeLocal($uploadUuid, $session);
++        return $this->withSessionLock($uploadUuid, function (array $session) use ($uploadUuid): MediaSource {
++            if ($session['is_s3']) {
++                return $this->completeS3($uploadUuid, $session);
++            }
++
++            return $this->completeLocal($uploadUuid, $session);
++        });
+     }
+ 
+     /**
+@@ -139,13 +152,44 @@
+      */
+     public function abort(string $uploadUuid): void
+     {
+-        $session = $this->getSessionData($uploadUuid);
+-
+-        if ($session['is_s3'] && $session['s3_upload_id']) {
+-            $this->abortS3($session['s3_upload_id'], $session['s3_key']);
+-        }
+-
+-        $this->cleanup($uploadUuid);
++        $this->withSessionLock($uploadUuid, function (array $session) use ($uploadUuid): void {
++            if ($session['is_s3'] && $session['s3_upload_id']) {
++                $this->abortS3($session['s3_upload_id'], $session['s3_key']);
++            }
++
++            $this->cleanup($uploadUuid);
++        });
++    }
++
++    // Serialize retries with an earlier request that is still writing the same part.
++    // Recheck ownership and existence after acquiring the lock; abort must not resurrect a session.
++    protected function withSessionLock(string $uploadUuid, callable $callback): mixed
++    {
++        $this->getSessionData($uploadUuid);
++        $lock = @fopen($this->getTempDirectory($uploadUuid).DIRECTORY_SEPARATOR.'session.lock', 'c');
++        if ($lock === false) {
++            throw new ChunkedUploadSessionNotFound($uploadUuid);
++        }
++
++        try {
++            if (! flock($lock, LOCK_EX)) {
++                throw new RuntimeException('Could not lock upload session.');
++            }
++
++            return $callback($this->getSessionData($uploadUuid));
++        } finally {
++            flock($lock, LOCK_UN);
++            fclose($lock);
++        }
++    }
++
++    protected function expectedChunkSize(array $session, int $chunkIndex): int
++    {
++        if ($chunkIndex < 0 || $chunkIndex >= $session['total_chunks']) {
++            throw ValidationException::withMessages(['chunk_index' => ['Invalid chunk index.']]);
++        }
++
++        return min($session['chunk_size'], $session['total_size'] - $chunkIndex * $session['chunk_size']);
+     }
+ 
+     public function cleanup(string $uploadUuid): void
+@@ -250,10 +294,19 @@
+         }
+ 
+         $sessionPath = $tempDir.DIRECTORY_SEPARATOR.'session.json';
+-        $result = file_put_contents($sessionPath, json_encode($data, JSON_THROW_ON_ERROR));
+-
+-        if ($result === false) {
+-            throw new RuntimeException("Failed to save session data: {$sessionPath}");
++        $temporaryPath = tempnam($tempDir, 'session-');
++        if ($temporaryPath === false) {
++            throw new RuntimeException('Failed to create upload session checkpoint.');
++        }
++        try {
++            if (file_put_contents($temporaryPath, json_encode($data, JSON_THROW_ON_ERROR)) === false
++                || ! rename($temporaryPath, $sessionPath)) {
++                throw new RuntimeException("Failed to save session data: {$sessionPath}");
++            }
++        } finally {
++            if (file_exists($temporaryPath)) {
++                @unlink($temporaryPath);
++            }
+         }
+     }
+ 
+@@ -339,6 +392,10 @@
+                     throw new RuntimeException("Missing chunk: {$i}");
+                 }
+ 
++                if (filesize($chunkPath) !== $this->expectedChunkSize($session, $i)) {
++                    throw ValidationException::withMessages(['chunk' => ['A stored chunk has an unexpected size.']]);
++                }
++
+                 $chunkHandle = fopen($chunkPath, 'rb');
+ 
+                 if ($chunkHandle === false) {
+@@ -399,25 +456,92 @@
+         $client = $filesystem->getClient();
+         $bucket = $filesystem->getConfig()['bucket'];
+ 
+-        $result = $client->uploadPart([
+-            'Bucket' => $bucket,
+-            'Key' => $session['s3_key'],
+-            'UploadId' => $session['s3_upload_id'],
+-            'PartNumber' => $chunkIndex + 1,
+-            'Body' => fopen($chunk->getRealPath(), 'rb'),
+-        ]);
+-
+-        $session['s3_parts'][] = [
+-            'part_number' => $chunkIndex + 1,
+-            'etag' => $result['ETag'],
+-        ];
+-
++        $partNumber = $chunkIndex + 1;
++        $hash = md5_file($chunk->getRealPath());
++        if ($hash === false) {
++            throw new RuntimeException('Could not read upload chunk.');
++        }
++        $previousHash = $session['s3_chunk_hashes'][$partNumber] ?? null;
++        if ($previousHash !== null && $previousHash !== $hash) {
++            throw ValidationException::withMessages(['chunk' => ['This chunk differs from the original upload.']]);
++        }
++
++        // Save intent before the remote write. A timeout can mean the part was accepted
++        // even though no acknowledgment reached us. Never trust size alone when recovering it.
++        $hasRecordedPart = collect($session['s3_parts'])->contains('part_number', $partNumber);
++        if ($previousHash !== null || $hasRecordedPart) {
++            foreach ($this->listS3Parts($session) as $part) {
++                if ((int) $part['PartNumber'] === $partNumber
++                    && (int) $part['Size'] === $chunk->getSize()
++                    && strtolower(trim($part['ETag'], '"')) === $hash) {
++                    $this->recordS3Part($uploadUuid, $session, $partNumber, $part['ETag'], $hash);
++
++                    return ['chunk_index' => $chunkIndex, 'part_number' => $partNumber, 'recovered' => true];
++                }
++            }
++        }
++
++        $session['s3_chunk_hashes'][$partNumber] = $hash;
+         $this->saveSessionData($uploadUuid, $session);
++        $body = fopen($chunk->getRealPath(), 'rb');
++        if ($body === false) {
++            throw new RuntimeException('Could not open upload chunk.');
++        }
++        try {
++            $result = $client->uploadPart([
++                'Bucket' => $bucket,
++                'Key' => $session['s3_key'],
++                'UploadId' => $session['s3_upload_id'],
++                'PartNumber' => $partNumber,
++                'Body' => $body,
++            ]);
++        } finally {
++            if (is_resource($body)) {
++                fclose($body);
++            }
++        }
++
++        $this->recordS3Part($uploadUuid, $session, $partNumber, $result['ETag'], $hash);
+ 
+         return [
+             'chunk_index' => $chunkIndex,
+-            'part_number' => $chunkIndex + 1,
++            'part_number' => $partNumber,
+         ];
++    }
++
++    protected function recordS3Part(string $uploadUuid, array $session, int $partNumber, string $etag, string $hash): void
++    {
++        $parts = array_filter($session['s3_parts'], fn ($part) => (int) $part['part_number'] !== $partNumber);
++        $parts[] = ['part_number' => $partNumber, 'etag' => $etag];
++        $session['s3_parts'] = array_values($parts);
++        $session['s3_chunk_hashes'][$partNumber] = $hash;
++        $this->saveSessionData($uploadUuid, $session);
++    }
++
++    protected function listS3Parts(array $session): array
++    {
++        $filesystem = $this->filesystem();
++        $parts = [];
++        $marker = 0;
++        do {
++            $result = $filesystem->getClient()->listParts([
++                'Bucket' => $filesystem->getConfig()['bucket'],
++                'Key' => $session['s3_key'],
++                'UploadId' => $session['s3_upload_id'],
++                'PartNumberMarker' => $marker,
++            ]);
++            array_push($parts, ...($result['Parts'] ?? []));
++            $nextMarker = (int) ($result['NextPartNumberMarker'] ?? 0);
++            if (! ($result['IsTruncated'] ?? false)) {
++                break;
++            }
++            if ($nextMarker <= $marker) {
++                throw new RuntimeException('Storage returned an invalid part listing.');
++            }
++            $marker = $nextMarker;
++        } while (true);
++
++        return $parts;
+     }
+ 
+     protected function completeS3(string $uploadUuid, array $session): MediaSource
+@@ -427,6 +551,20 @@
+         $bucket = $filesystem->getConfig()['bucket'];
+ 
+         $parts = $session['s3_parts'];
++        // Completion must contain every part exactly once. Never finalize a partial file.
++        $partsByNumber = [];
++        foreach ($parts as $part) {
++            $partsByNumber[(int) $part['part_number']] = $part;
++        }
++        if (count($partsByNumber) !== $session['total_chunks']) {
++            throw ValidationException::withMessages(['upload_session' => ['The upload is missing chunks. Retry the interrupted upload.']]);
++        }
++        for ($number = 1; $number <= $session['total_chunks']; $number++) {
++            if (! isset($partsByNumber[$number])) {
++                throw ValidationException::withMessages(['upload_session' => ['The upload is missing chunks. Retry the interrupted upload.']]);
++            }
++        }
++        $parts = array_values($partsByNumber);
+         usort($parts, fn ($a, $b) => $a['part_number'] <=> $b['part_number']);
+ 
+         $multipartParts = array_map(fn ($part) => [

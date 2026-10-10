@@ -1,6 +1,6 @@
 # Archived Peachy Mixpost Upload-Resilience Image
 
-Production no longer uses this image. Pro Team 6.2.2 and later incorporated the required upload flow, so this directory is retained only as an incident-history and rollback reference. Do not build or promote it during a normal update, and never reuse its archived 6.2.0 defaults against a newer package.
+Production no longer uses this image. It was retired after Pro Team 6.2.2 was believed to cover its upload handling, but October 10 inspection found the unsafe response handling again in 7.0.4. That earlier claim does not establish behavior in later releases. The current [frozen release gates](../../docs/frozen-release-gates.md) enforce upload recovery against each exact source/build. This directory remains an incident-history reference. Never reuse its archived 6.2.0 defaults against a newer package.
 
 If a regression explicitly requires reviving it, first rebase both patches against the exact target Pro Team source and update the pinned digest, package version, and tag. The image starts from a scrubbed archive, applies the upload-resilience patch, and rebuilds its client bundle. The archive must exclude `.env` and `storage`, so no credentials or uploaded media enter the image.
 
@@ -16,4 +16,4 @@ docker build \
   .
 ```
 
-The build fails when the patch no longer matches the upstream package. Rebase or remove the patch before promoting a newer Mixpost image.
+The historical build fails when the patch no longer matches upstream. A failed patch application means review and rebase; it is not permission to discard its behavior. Retire a patch only after the same regression tests pass on the exact unpatched upstream candidate and its compiled assets.

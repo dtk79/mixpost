@@ -1,0 +1,63 @@
+diff --git a/resources/js/bootstrap.js b/resources/js/bootstrap.js
+--- a/resources/js/bootstrap.js
++++ b/resources/js/bootstrap.js
+@@ -22,7 +22,7 @@
+       return Promise.reject(error)
+     }
+ 
+-    const status = error.response.status
++    const status = error.response?.status
+ 
+     if (status === 419) {
+       // Refresh session token
+diff --git a/resources/js/Composables/useNotifications.js b/resources/js/Composables/useNotifications.js
+--- a/resources/js/Composables/useNotifications.js
++++ b/resources/js/Composables/useNotifications.js
+@@ -10,6 +10,11 @@
+     }
+ 
+     if (axios.isAxiosError(message)) {
++      if (!message.response) {
++        emitter.emit('notify', { variant, message: message.message, button, group })
++        return
++      }
++
+       if (message.response.status === 422) {
+         emitter.emit('notify', {
+           variant,
+diff --git a/resources/js/Composables/useChunkedUpload.js b/resources/js/Composables/useChunkedUpload.js
+--- a/resources/js/Composables/useChunkedUpload.js
++++ b/resources/js/Composables/useChunkedUpload.js
+@@ -4,6 +4,14 @@
+ 
+ const CHUNK_SIZE = 10 * 1024 * 1024 // 10MB default
+ const MAX_RETRIES = 3
++
++const uploadErrorMessage = error => {
++  if (!error.response) {
++    return 'Connection interrupted while uploading. Check your connection and retry.'
++  }
++
++  return error.response.data?.message || error.message || 'Upload failed'
++}
+ 
+ const useChunkedUpload = ({ routePrefix, workspaceId }) => {
+   const { chunkedUpload } = useConfig()
+@@ -147,7 +155,7 @@
+     } catch (err) {
+       if (!isAborted.value) {
+         status.value = 'error'
+-        error.value = err.response?.data?.message || err.message || 'Upload failed'
++        error.value = uploadErrorMessage(err)
+         notify('error', error.value)
+       }
+       throw err
+@@ -184,7 +192,7 @@
+       return response.data
+     } catch (err) {
+       status.value = 'error'
+-      error.value = err.response?.data?.message || err.message || 'Upload failed'
++      error.value = uploadErrorMessage(err)
+       notify('error', error.value)
+       throw err
+     }

@@ -6,6 +6,8 @@ The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. 
 
 ## Current audited release
 
+The October 10 [video upload repair](video-upload-recovery.md) and [enforced release gates](frozen-release-gates.md) add required upload recovery checks to the frozen release contract.
+
 The [v7 audit](mixpost-v7-upgrade-audit.md) and `ops/production-overrides/deployment-manifest.json` supersede the historical mount table below. Use the [current upgrade playbook](mixpost-update-playbook.md), including frozen application images and database-aware rollback. Entries below retain incident history and may describe prior activation states.
 
 Google sign-in is an active database-backed configuration with no bind mount. Its settings and post-upgrade checks are recorded in the [Google SSO runbook](google-sso.md).
@@ -18,17 +20,15 @@ Before upgrading Mixpost:
 2. Review this file, `ops/production-overrides/deployment-manifest.json`, and the production Compose files.
 3. Pull the new image without replacing host overrides.
 4. Compare every mounted override against the same file in the new image.
-5. Remove an override if upstream now includes the behavior we need.
+5. Remove an override only after the same acceptance/failure cases pass against the exact unpatched upstream candidate and its compiled assets. An older release or announcement is insufficient.
 6. Rebase the override if upstream changed method signatures, imports, models, queue behavior, or response shapes.
 7. Lint mounted PHP files inside the container.
-8. Restart Mixpost and verify the acceptance checks listed below.
+8. Pass the [enforced frozen release gates](frozen-release-gates.md), complete isolated database rehearsal/checkpointing, then follow the current playbook cutover and verify the acceptance checks below.
 
-Useful commands:
+Read-only inspection example (cutover commands belong to the gated playbook):
 
 ```bash
-ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml pull mixpost'
 ssh mixpost-hetzner 'docker exec mixpost-mixpost-1 php -l /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php'
-ssh mixpost-hetzner 'docker compose -f /root/mixpost/docker-compose.yml restart mixpost'
 ```
 
 ## Production Override Inventory
@@ -60,7 +60,7 @@ This inventory combines the existing `/root/mixpost/docker-compose.yml` mounts, 
 | `/root/mixpost/home.blade.php` | `/var/www/html/resources/views/home.blade.php` | Peachy public landing page. | App layout/view changes. |
 | `/root/mixpost/peachy-posting.png` | `/var/www/html/public/vendor/mixpost/peachy-posting.png` | Landing-page image asset. | Asset path or landing-page changes. |
 | `/root/mixpost/uploads.ini` | PHP CLI/FPM config paths | Upload size/runtime config. | PHP image or upload policy changes. |
-| `/root/mixpost/peachy-start.sh` | `/usr/local/bin/peachy-start.sh` | Pre-create Laravel's log for `www-data` before root-run startup Artisan commands. | Image entrypoint, startup sequence, or log channel changes. |
+| `/root/mixpost/peachy-start.sh` | `/usr/local/bin/peachy-start.sh` | Enforce tested source/build/override fingerprints before migrations and services; then pre-create Laravel's log for `www-data`. | Upload contract, image entrypoint, startup sequence, or log channel changes. |
 | `/root/mixpost/PeachyPostVersionContent.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/PeachyPostVersionContent.php` | Remove empty additional comments/thread items while preserving the required first item and valid text, media, links, or thumbnails. | Upstream post-content normalization or validation changes. |
 | `/root/mixpost/PostFormRequest.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/Post/PostFormRequest.php` | Normalize empty additional content before editor, API, or MCP post versions are persisted. | Upstream post form validation or version input mapping changes. |
 | `/root/mixpost/AccountPublishPost.php` | `/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php` | Prevent previously persisted empty additional items from reaching social providers. | Upstream publishing flow, content types, events, or response handling changes. |
@@ -277,7 +277,7 @@ Incident recovery and verification:
 
 Status: partially superseded upstream.
 
-Mixpost now owns deferred video processing, upload progress/statuses, format handling, and the Facebook Page request-size/Reels logic. The Facebook Page and upload-resilience overrides remain superseded. The automatic provider-safe derivative was restored on 2026-07-31 because upstream format conversion does not resize or reduce MP4 uploads. `ManagesTwitterResources.php` and `ManagesInstagramResources.php` remain mounted for provider-specific X timing/derivative preference and the Instagram large-Reel guard.
+Mixpost owns deferred video processing, upload progress/statuses, format handling, and the Facebook Page request-size/Reels logic. The Facebook Page override was retired; the archived upload bundle was also retired, but October 10 restored upload safeguards after finding unsafe handling again in 7.0.4. Its behavior is now covered by the [enforced frozen release gate](frozen-release-gates.md). The automatic provider-safe derivative was restored on 2026-07-31 because upstream format conversion does not resize or reduce MP4 uploads. `ManagesTwitterResources.php` and `ManagesInstagramResources.php` remain mounted for provider-specific X timing/derivative preference and the Instagram large-Reel guard.
 
 ### 2026-07-27 - Social Video Derivatives for X and Instagram
 
@@ -309,7 +309,12 @@ Verification:
 
 ### 2026-07-27 - Upload Resilience Client Bundle
 
-Status: superseded upstream in Pro Team 6.2.2.
+Status: historical bundle retired after Pro Team 6.2.2; upload safeguards restored and enforced on October 10 in Pro Team 7.0.4.
+
+October 10 verification found the same unsafe response handling in the running
+7.0.4 package. The historical superseded status does not establish present
+coverage; see [Video upload recovery](video-upload-recovery.md) for the rebased
+guards, resumable chunk retries, and required upgrade gates.
 
 Files:
 

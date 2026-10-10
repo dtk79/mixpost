@@ -46,6 +46,11 @@ publishing workers, migrations, database connections, or real storage uploads.
 It cannot prove that a future database migration or real browser upload works;
 those remain separate required rehearsal and post-cutover checks.
 
+The asset-build gate also opens every published manifest asset inside the exact
+image as `www-data`. Root hash checks cannot detect unreadable private build
+permissions. Bake directories as 0755 and files as 0644, then require this check;
+do not depend on a manual permission repair after cutover.
+
 The existing mounted `peachy-start.sh` validates passing evidence and the actual
 source, compiled assets, Composer/npm locks, and override fingerprints **before**
 Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all six suites;
@@ -92,6 +97,12 @@ database and current release after publishing work drains. Save both Compose
 files, effective configuration, every mounted file, current gate records, and
 protected service IDs. Database-changing migrations require a database-aware
 rollback plan; do not restore an old database over later user writes blindly.
+
+Drain long-running work while the web application remains available, before the
+short maintenance window. Recheck active uploads and imminent publishing before
+replacement; postpone if work cannot safely drain. Give every rehearsal unique
+audit/resource names and remove only resources owned by that run. An aborted run
+must not reuse an older success record.
 
 After all rehearsal/checkpoint checks pass, stage the candidate evidence without
 removing the current gate. The filename is the exact image ID's hexadecimal part:

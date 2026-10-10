@@ -6,6 +6,10 @@ composer uploads now acknowledge persistent local media before background
 delivery to object storage. Only the app was replaced; MySQL, Redis, the storage
 volume, networks, credentials, and all 52 mounts were preserved.
 
+The subsequent [progress and permission-gate release](upload-transfer-progress.md)
+records the currently serving frontend image and its independent live proof.
+This record preserves the original local-storage cutover and backend contract.
+
 ## Exact release
 
 - Pro package: `inovector/mixpost-pro-team` 7.0.4,

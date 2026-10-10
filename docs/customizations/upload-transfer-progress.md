@@ -59,64 +59,125 @@ authenticated browser proof remain separate release requirements. Preserve all
 active upload sessions; do not restart an app in the middle of this incident's
 transfer to improve the display.
 
-## Validated candidate
+## Verified production release
 
-The candidate is `peachy/mixpost-pro:7.0.4-local-uploads-progress-20261010`,
-immutable ID `sha256:0d25c7f755a34d9d970a4a2410477ac55f4890f9f2099ec55eba9cef671decad`.
-Its parent is the verified local-storage release
-`sha256:5bffe8f060b2846b07a8f75450c51cc72f6c2f97f899ecf9c3f2d13b7128a333`.
-All six exact-image suites passed, the entire frontend rebuild matched the
-published assets, and all 57 registered customizations plus the startup wrapper
-matched the candidate gate. Private evidence is under
-`/root/mixpost/backups/upload-progress-20261010/validated`. This candidate has
-not been deployed. No app restart has occurred during the active user upload.
+Production now uses
+`peachy/mixpost-pro:7.0.4-local-uploads-progress-20261010-r2`, immutable ID
+`sha256:29a8d847ddc61b452a64660a121b2a31664f5bb7908c705b1e2fa60e21e84b02`.
+The deployment record was finalized at `2026-10-10T19:11:16Z`; the deploy lock
+was released after runtime, browser, delivery, and owned-fixture cleanup checks.
+The exact-image validator passed all six suites (52 required checks), a complete
+source/build byte match, and application-user reads of every published asset.
+All 57 registered overrides and the startup wrapper matched the gate. Live
+readback matched all 362 tracked source/asset files and all 52 mount entries;
+MySQL and Redis container identities were preserved. The local route, dedicated
+media worker, outbox scanner, scheduler, login, and health checks passed.
 
-The candidate also passed inert boot against a restored 254,185,511-byte database
-checkpoint, stable before/after data fingerprints, local upload integration, and
-11 Pro regression suites with external networking disabled and no production
-volumes or publishing processes. Rehearsal evidence is in `rehearsal-2/result.json`.
-The first rehearsal stopped because the private test directory could not be read
-as the application user; correcting permissions on the isolated code fixtures
-and rerunning the full restoration/boot/tests passed. No production permissions
-were altered.
+The corrected image passed inert initialization against a restored
+254,190,705-byte checkpoint, unchanged before/after data fingerprints, the local
+upload integration, and 11 Pro regression suites. The authoritative current
+rehearsal is `rehearsal-r2/result.json`; external networking was disabled, no
+production volumes were mounted, and publishing workers were never started.
+Do not use earlier candidate/rehearsal directories as current release evidence.
 
-Source commit `20cbc945ed19b24846e0572ff3a5008a65177598` was pushed to main.
-Its Frozen release guard and asset-build CI passed. General CI retains the same
-pre-existing `HealthRouteTest.php:17` failure seen on parent `c775418`; each
-matrix job reports 76 passed and one failed. This is not a claim of fully green
-CI or authenticated runtime verification of the new frontend. Production still
-serves the previous local-storage image; activation requires a fresh checkpoint,
-app-only cutover, and browser proof after approval.
+The initial production permission check found that the original progress image
+copied its manifest as 0600 and its asset directory as 0700 from the private build
+context. Root hash checks and inert data tests passed, but browser pages briefly
+returned HTTP 500 because the web process could not read the assets. Temporary
+read permissions restored service. The corrected Docker recipe bakes asset
+directories as 0755 and files as 0644, and the release validator reads every
+manifest asset inside the immutable image as `www-data` before issuing a gate.
+The original immutable image fails the new negative permission probe.
 
-To reproduce this overlay, export the exact verified local-storage parent into a
-private source directory and apply only the progress patch (the network/recovery
-patches are already present in that parent). Install its locked npm dependencies
-and rebuild the whole frontend. Populate the registered Docker recipe with the
-two patched source files and the entire built asset directory. Verify the
-parent tag's immutable ID before and after the build; use `--pull=false` and
-`--network none`. On a future upstream version, review/rebase all three frontend
-patches and the local-storage overrides, then require the same failure cases and
-exact source/build checks. Publishing only a new entrypoint or editing compiled
-chunks by hand is insufficient.
+The first repackaged candidate also failed exact source/build matching. A fresh
+complete build produced the final r2 image, which matched the independent
+validator rebuild exactly. No mismatched assets or hash differences were waived.
+The original progress image and r1 are rejected intermediates, unsuitable for
+rollback or restart. The healthy preceding release is the verified local-storage
+image `sha256:5bffe8f060b2846b07a8f75450c51cc72f6c2f97f899ecf9c3f2d13b7128a333`,
+with its matching earlier wrapper and gate.
 
-## Application-user asset permission gate
+The final fresh production checkpoint is
+`/root/mixpost/backups/upload-progress-final-cutover-20261010-190104`, including a
+254,193,299-byte database dump, configuration/mount snapshots, preserved legacy
+chunk sessions, stable inert fingerprints, runtime proof, and deployment record.
+Private candidate/build/gate/browser evidence is under
+`/root/mixpost/backups/upload-progress-20261010`. The preceding stable image's
+Compose/wrapper checkpoint is
+`/root/mixpost/backups/upload-progress-cutover-20261010-184710`. A frontend rollback
+must keep current accepted media and the current database; restore the matching
+stable image, wrapper, and gate together. Do not restore a database dump over
+subsequently accepted uploads.
 
-The first live login check rejected the original candidate: its asset manifest
-was mode 0600 and its asset directory mode 0700, copied from a private build
-context. Root hash checks and inert database tests had passed but did not prove
-the web process could read those files. Browser pages briefly returned HTTP 500.
-Read permissions were restored on the copied asset trees to restore service; no
-source bytes, data, credentials, or mounted overrides were changed by that repair.
+## Authenticated Chrome proof and remaining incident
 
-The Docker recipe now explicitly sets asset directories to 0755 and files to
-0644. The validator must read every published manifest asset inside the exact
-image as `www-data`, with networking disabled and the preserved overrides
-mounted read-only, before issuing the asset-build gate. A negative probe against
-the original immutable image must fail. This check belongs to the release gate,
-not a one-off production permission repair.
+Two owned 12 MiB fixtures were uploaded through the real Chrome media library.
+A deliberately slowed verification tab (524,288 upload bytes/second) showed 12%
+and 39% progress before the first 10 MiB request acknowledgment; it did not label
+active transfer as confirmation waiting. Its final request returned HTTP 201 in
+400 ms. After removing the test throttle, the ordinary upload was accepted in
+4,427 ms from initiation through final confirmation, with its last request taking
+302 ms. Both HTTP 201 responses exposed `storage_state=pending` and processing
+state while the accepted files were staged locally; both appeared in the library.
+The temporary browser network override was reset.
 
-The corrected image is
-`peachy/mixpost-pro:7.0.4-local-uploads-progress-20261010-r1`, immutable ID
-`sha256:535996cddcd457b4fcaacaa83a5741251a65e4b44ca7689d036d5ac9099725af`.
-Its full validation, restored-data rehearsal, activation, and authenticated
-browser proof must be recorded separately before declaring deployment complete.
+Fixture 1583 was created at 19:05:41 UTC and ready on S3 at 19:05:45 with no
+failures. Fixture 1584 was accepted at 19:06:16 but a background S3 operation
+raised `Aws\S3\Exception\S3Exception`, logged at 19:07:18. Its local copy remained
+safe and available. The ordinary outbox/worker retry delivered it at 19:08:04,
+with one failed attempt and no browser resubmission. Five subsequent read-only
+HEAD probes on that fixture returned the expected 12,582,912 bytes in 39.01,
+6.93, 4.55, 3.71, and 3.60 ms; these do not identify the earlier operation's
+specific HTTP status, AWS error, or network cause.
+
+Both delivered originals matched SHA-256
+`032c213b323c0cf7af6998da3b26a505926f1803544bd435da86fa165fa09fed`, their thumbnail
+and social-video derivatives existed, and their retained local originals were
+cleaned after verified cloud promotion. Only owned fixtures 1583/1584 and their
+objects/checkpoints were removed after readiness, identity, byte-hash, and
+reference checks. User media 1581/1582 remain ready on S3. No draft was created
+and nothing was published by the browser tests.
+
+The object-storage problem is intermittent and still requires diagnosis; the
+local route prevents it from holding browser acceptance hostage. The original
+slow browser-to-server transfer is a separate unresolved issue. The connected
+Chrome profile had no user Mixpost tab, so the test above does not prove that the
+original slow tab/network is fixed. Future diagnostics should record sanitized
+S3 operation, HTTP/AWS error code, connection errno, and duration, without signed
+URLs, request bodies, credentials, or account content.
+
+## Upgrade preservation and operational lessons
+
+Progress source was shipped in `20cbc945ed19b24846e0572ff3a5008a65177598`;
+asset-permission packaging/gate hardening in
+`8feb325704a1e61d5208b5f614a4e4ba468a45f9`. Frozen release guard CI and asset-build CI
+passed. The old general CI preservation assertion looked for health registration
+in `web.php` and the earlier closure syntax for the home route. It now verifies
+health registration in the mounted `AppServiceProvider.php` and preserves the
+current conditional home route. All six PHP/Laravel matrix jobs passed on
+`8b5837053d19a91392849b9af41b9662e5ca9ff8` (77 tests each).
+
+Before cutover, check scheduled publishing and active uploads/jobs while normal
+service remains available. The final cutover waited for an Instagram media
+import to finish; its queued work was preserved. Drain long-running work before
+entering the short maintenance window. If draining takes too long, restore
+normal service and postpone replacement, rather than prolonging user-visible
+maintenance or killing an active job. Recheck work immediately before pausing,
+then checkpoint and replace only the app.
+
+Every rehearsal needs a unique audit directory and unique owned container/network
+names. Cleanup must remove only resources created by that run. Never overlap
+rehearsals with reused names or let an aborted run reuse an older success record.
+The final r2 rehearsal completed with separate resources and clean teardown.
+
+To reproduce the overlay, export the exact verified local-storage parent into a
+private source directory and apply only the progress patch (network/recovery
+patches are already present in that parent). Install locked npm dependencies and
+rebuild the entire frontend. Populate the registered Docker recipe with both
+patched source files and the full asset set. Verify the parent tag's immutable
+ID before and after building with `--pull=false` and `--network none`. On future
+upstream versions, review/rebase all three frontend patches and local-storage
+overrides, require every existing failure case, compare the complete rebuild,
+check immutable asset permissions as the application user, then rehearse and
+verify the live browser. Editing compiled chunks or replacing only an entrypoint
+is insufficient.

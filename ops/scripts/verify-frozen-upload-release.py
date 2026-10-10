@@ -93,6 +93,20 @@ def compare_build(built, published):
     return files
 
 
+def check_asset_readability(image_id, bindings, files, log):
+    # Host/root reads and matching hashes do not prove PHP or nginx can serve
+    # the packaged assets. Check their actual image permissions as www-data.
+    program = ('foreach (json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR) as $path) {'
+               '$stream = @fopen($path, "rb");'
+               'if ($stream === false) {fwrite(STDERR, "Unreadable published asset\\n"); exit(1);}'
+               'fread($stream, 1); fclose($stream);}'
+               'echo "PASS published assets readable as application user\\n";')
+    return run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                '--user', 'www-data', '--entrypoint', 'php', *bindings,
+                image_id, '-r', program,
+                json.dumps([ASSETS + '/' + name for name in files])], log=log)
+
+
 def frontend_inputs(package):
     paths = list(package.glob('package*.json')) + [package / 'vite.config.js']
     for name in ('resources', 'src'):
@@ -294,9 +308,13 @@ def verify(image, output, baseline, candidate_overrides=None):
             print('Rebuilding the complete frontend and comparing image assets...', flush=True)
             files, build_attempts, inputs = rebuild_and_compare(package, published, env, output)
             log = output / 'assets-build.log'
+            readability_log = output / 'assets-readability.log'
+            readability = check_asset_readability(image_id, bindings, files, readability_log)
             env['MIXPOST_ASSET_DIR'] = str(published)
             test = TESTS / 'VideoUploadAssetsTest.mjs'
             run(['node', str(test)], env=env, log=log)
+            with log.open('a') as stream:
+                stream.write('\n' + readability + '\n')
             suites['assets-build'] = {'exitCode': 0, 'checks': 1, 'testSha256': sha(test), 'logSha256': sha(log)}
             for name in SOURCE_FILES + ('package.json', 'package-lock.json', 'vite.config.js'):
                 fingerprints[PRO + '/' + name] = sha(package / name)

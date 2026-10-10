@@ -98,3 +98,25 @@ parent tag's immutable ID before and after the build; use `--pull=false` and
 patches and the local-storage overrides, then require the same failure cases and
 exact source/build checks. Publishing only a new entrypoint or editing compiled
 chunks by hand is insufficient.
+
+## Application-user asset permission gate
+
+The first live login check rejected the original candidate: its asset manifest
+was mode 0600 and its asset directory mode 0700, copied from a private build
+context. Root hash checks and inert database tests had passed but did not prove
+the web process could read those files. Browser pages briefly returned HTTP 500.
+Read permissions were restored on the copied asset trees to restore service; no
+source bytes, data, credentials, or mounted overrides were changed by that repair.
+
+The Docker recipe now explicitly sets asset directories to 0755 and files to
+0644. The validator must read every published manifest asset inside the exact
+image as `www-data`, with networking disabled and the preserved overrides
+mounted read-only, before issuing the asset-build gate. A negative probe against
+the original immutable image must fail. This check belongs to the release gate,
+not a one-off production permission repair.
+
+The corrected image is
+`peachy/mixpost-pro:7.0.4-local-uploads-progress-20261010-r1`, immutable ID
+`sha256:535996cddcd457b4fcaacaa83a5741251a65e4b44ca7689d036d5ac9099725af`.
+Its full validation, restored-data rehearsal, activation, and authenticated
+browser proof must be recorded separately before declaring deployment complete.

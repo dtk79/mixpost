@@ -125,6 +125,20 @@ class StartupGuardTest(unittest.TestCase):
 
 
 class RebuildProvenanceTest(unittest.TestCase):
+    def test_asset_permissions_are_checked_in_the_exact_image_as_application_user(self):
+        with patch.object(validator, 'run', return_value='PASS') as run:
+            validator.check_asset_readability('exact-image', ['--mount', 'preserved-override'],
+                                             ['manifest.json', 'assets/current.js'], None)
+        command = run.call_args.args[0]
+        self.assertEqual(command[command.index('--user') + 1], 'www-data')
+        self.assertIn('exact-image', command)
+        self.assertIn('preserved-override', command)
+        self.assertEqual(json.loads(command[-1]), [validator.ASSETS + '/manifest.json',
+                                                  validator.ASSETS + '/assets/current.js'])
+        with patch.object(validator, 'run', side_effect=RuntimeError('Unreadable published asset')):
+            with self.assertRaisesRegex(RuntimeError, 'Unreadable'):
+                validator.check_asset_readability('exact-image', [], ['manifest.json'], None)
+
     def test_stale_or_missing_assets_block_but_retained_old_chunks_are_allowed(self):
         with tempfile.TemporaryDirectory() as scratch:
             roots = [Path(scratch) / 'built', Path(scratch) / 'image']

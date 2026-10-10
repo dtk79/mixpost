@@ -24,6 +24,8 @@
 - Run `python3 ops/scripts/check-customization-register.py` and the ordinary CI
   checks. A register pass establishes documentation/mapping completeness only.
 - Run the frozen validator against the exact final image and final overrides.
+  Run `check-customization-register.py --release-gate AUDIT/upload-gate.json`
+  to require every committed override and wrapper to match the validated runtime.
   Require recovery, frontend queue ownership, compiled assets, temporary-parent
   permissions, local acceptance, verified delivery/retry, and publication gating.
 - Exercise storage unavailable before initiation, a lost write acknowledgment,

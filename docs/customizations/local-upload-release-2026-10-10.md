@@ -29,9 +29,13 @@ The exact candidate passed the six-suite frozen gate and its startup guard.
 Published frontend assets matched a fresh full build byte for byte. The 17
 standalone local-storage checks cover verified size/digest, lost acknowledgment,
 no replay, retained files, readiness, cleanup recovery, and capacity refusal.
-The 22 release-guard checks passed. Twelve preservation-register/audit checks
+The 22 release-guard checks passed. Fifteen preservation-register/audit checks
 reject missing overrides, changed destinations/delivery, missing image mappings,
-and omitted image-source exports.
+and omitted image-source exports. The runtime comparison matches all 57
+registered sources and the startup wrapper. It caught a live-only Instagram
+media-download retry safeguard; that exact deployed code was reconciled into Git
+and passed six extra checks for definite rejection, bounded retries, accepted
+container exclusion, other failures, and ambiguous transport response exclusion.
 
 The isolated Pro integration used a restored database, private persistent storage,
 and an internal Docker network. It accepted 12 MiB with zero S3 calls, enforced

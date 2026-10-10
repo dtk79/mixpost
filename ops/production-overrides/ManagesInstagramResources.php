@@ -162,10 +162,7 @@ trait ManagesInstagramResources
             $data['image_url'] = $mediaItem->getUrl();
         }
 
-        $response = $this->buildResponse(
-            $this->http()::timeout($mediaItem->isImage() ? 30 : 100)
-                ->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data)
-        );
+        $response = $this->createInstagramMediaContainer($data, $mediaItem->isImage() ? 30 : 100);
 
         if ($response->hasError()) {
             return $response;
@@ -203,9 +200,7 @@ trait ManagesInstagramResources
             $data['audio_configuration'] = json_encode($audioConfiguration);
         }
 
-        $response = $this->buildResponse(
-            $this->http()::timeout(60)->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data)
-        );
+        $response = $this->createInstagramMediaContainer($data, 60);
 
         if ($response->hasError()) {
             return $response;
@@ -261,7 +256,7 @@ trait ManagesInstagramResources
                 $data['video_url'] = $mediaItem->getUrl();
             }
 
-            $mediaContainerResponse = $this->buildResponse(Http::post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data));
+            $mediaContainerResponse = $this->createInstagramMediaContainer($data, 30);
 
             if ($mediaContainerResponse->hasError()) {
                 return $mediaContainerResponse;
@@ -310,16 +305,50 @@ trait ManagesInstagramResources
             $data['image_url'] = $mediaItem->getUrl();
         }
 
-        $response = $this->buildResponse(
-            $this->http()::timeout($mediaItem->isImage() ? 30 : 100)
-                ->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data)
-        );
+        $response = $this->createInstagramMediaContainer($data, $mediaItem->isImage() ? 30 : 100);
 
         if ($response->hasError()) {
             return $response;
         }
 
         return $this->publishContainer($response->id);
+    }
+
+    /**
+     * Retry only a definite media-download rejection before a container exists. Do not replay
+     * connection exceptions, accepted containers, or the final media_publish request.
+     */
+    protected function createInstagramMediaContainer(array $data, int $timeout): SocialProviderResponse
+    {
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $httpResponse = $this->http()::timeout($timeout)
+                ->post("{$this->resolveApiDomain()}/{$this->values['provider_id']}/media", $data);
+            $response = $this->buildResponse($httpResponse);
+
+            if (! $response->hasError()
+                || $httpResponse->json('id')
+                || (int) $httpResponse->json('error.code') !== -2
+                || (int) $httpResponse->json('error.error_subcode') !== 2207003
+                || $attempt === 3) {
+                return $response;
+            }
+
+            // Keep credentials, captions, and complete media URLs out of diagnostics.
+            Log::warning('mixpost.instagram_media_download_retry', [
+                'provider_account_id' => $this->values['provider_id'],
+                'attempt' => $attempt,
+                'media_host' => parse_url($data['image_url'] ?? $data['video_url'] ?? '', PHP_URL_HOST),
+                'error_subcode' => 2207003,
+                'provider_trace_id' => $httpResponse->json('error.fbtrace_id'),
+            ]);
+
+            $this->waitForInstagramMediaDownloadRetry($attempt);
+        }
+    }
+
+    protected function waitForInstagramMediaDownloadRetry(int $attempt): void
+    {
+        sleep(2 * $attempt);
     }
 
     public function publishContainer(string|int $itemContainerId): array|SocialProviderResponse

@@ -53,3 +53,32 @@ $p=new InstagramFixture;$p->states=[['status_code'=>'FINISHED']];
 $r=$p->publishContainer('container-ready');
 checkInstagram($r->hasError() && !isset($r->context()['phase']),'Publish endpoint errors must never be marked retryable upload failures');
 echo "PASS: terminal provenance; expired/published/unknown/pending guards; bounded polling; single publication; no publish-error retry marker\n";
+
+// Preserve the live media-download retry safeguard found during source reconciliation.
+class InstagramDownloadFixture extends InstagramFixture {
+    public array $downloadWaits = [];
+    public function create(): SocialProviderResponse { return $this->createInstagramMediaContainer(['image_url'=>'https://media.test/fixture.jpg'],30); }
+    protected function waitForInstagramMediaDownloadRetry(int $attempt): void { $this->downloadWaits[] = $attempt; }
+}
+$downloadFailure = ['error'=>['code'=>-2, 'error_subcode'=>2207003, 'message'=>'Rejected before container creation']];
+Http::swap(new Illuminate\Http\Client\Factory);
+Http::fakeSequence()->push($downloadFailure,400)->push(['id'=>'accepted-container'],200);
+$p = new InstagramDownloadFixture; $r = $p->create();
+checkInstagram($r->isOk() && $r->id()==='accepted-container' && count(Http::recorded())===2 && $p->downloadWaits===[1], 'Definite pre-container rejection can retry once and recover');
+Http::swap(new Illuminate\Http\Client\Factory);
+Http::fake(['graph.test/*'=>Http::response($downloadFailure,400)]);
+$p = new InstagramDownloadFixture; $r = $p->create();
+checkInstagram($r->hasError() && count(Http::recorded())===3 && $p->downloadWaits===[1,2], 'Download rejection retries are capped at three requests');
+foreach ([['error'=>['code'=>-1,'error_subcode'=>2207003]], ['error'=>['code'=>-2,'error_subcode'=>2207004]], ['id'=>'accepted-container']+$downloadFailure] as $unsafe) {
+    Http::swap(new Illuminate\Http\Client\Factory);
+    Http::fake(['graph.test/*'=>Http::response($unsafe,400)]);
+    $p = new InstagramDownloadFixture; $p->create();
+    checkInstagram(count(Http::recorded())===1 && $p->downloadWaits===[], 'Other failures or an accepted container must not replay creation');
+}
+Http::swap(new Illuminate\Http\Client\Factory);
+$calls = 0;
+Http::fake(function () use (&$calls) { $calls++; throw new Illuminate\Http\Client\ConnectionException('Injected lost response'); });
+$p = new InstagramDownloadFixture; $failed = false;
+try { $p->create(); } catch (Illuminate\Http\Client\ConnectionException $error) { $failed = true; }
+checkInstagram($failed && $calls===1 && $p->downloadWaits===[], 'Ambiguous transport failure must propagate without replay');
+echo "PASS: Instagram media-download retry preservation (6 cases)\n";

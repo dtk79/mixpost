@@ -85,7 +85,7 @@ python3 release-tools/ops/scripts/verify-frozen-upload-release.py \
   --image "$candidate" --output "$audit"
 ```
 
-Preserve `upload-gate.json` and its private logs. Rehearse the exact candidate
+Preserve `upload-gate.json` and its private logs. Run `python3 ops/scripts/check-customization-register.py --release-gate AUDIT/upload-gate.json` from the reviewed checkout; a live-only safeguard missing from Git or mismatched runtime source must block promotion. Rehearse the exact candidate
 against an isolated restored database with inert external services and run the
 provider/content/thumbnail regressions in the update playbook. Checkpoint the
 database and current release after publishing work drains. Save both Compose

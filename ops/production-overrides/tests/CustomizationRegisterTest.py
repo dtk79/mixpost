@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Ensure preservation checks reject omissions and drift, not just current files."""
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -18,6 +19,12 @@ class PreservationRegisterTest(unittest.TestCase):
         self.root = Path(self.scratch.name)
         for directory in ['ops/production-overrides', 'ops/production-patches', 'docs/customizations']:
             shutil.copytree(ROOT / directory, self.root / directory)
+        value = json.loads((ROOT/'docs/customizations/modifications.json').read_text())
+        for entry in value['overrides']:
+            destination = self.root/entry['documentation']
+            if not destination.exists():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT/entry['documentation'], destination)
     def tearDown(self):
         self.scratch.cleanup()
     def mutate(self, callback):
@@ -40,6 +47,18 @@ class PreservationRegisterTest(unittest.TestCase):
         self.mutate(lambda value: value['overrides'][0].update(acceptance='')); self.reject()
     def test_missing_infrastructure(self):
         (self.root / 'ops/production-overrides/peachy-start.sh').unlink(); self.reject()
+    def make_gate(self):
+        register_data = json.loads((self.root/'docs/customizations/modifications.json').read_text())
+        files = {entry['container']: hashlib.sha256((self.root/entry['source']).read_bytes()).hexdigest() for entry in register_data['overrides']}
+        files['/usr/local/bin/peachy-start.sh'] = hashlib.sha256((self.root/'ops/production-overrides/peachy-start.sh').read_bytes()).hexdigest()
+        gate = self.root/'candidate.json'; gate.write_text(json.dumps({'status':'passed','files':files})); return gate
+    def test_exact_candidate_source_match(self): register.validate(self.root, self.make_gate())
+    def test_rejects_live_only_source_drift(self):
+        gate = self.make_gate(); (self.root/'ops/production-overrides/ManagesInstagramResources.php').write_text('old source')
+        with self.assertRaises(AssertionError): register.validate(self.root, gate)
+    def test_rejects_missing_candidate_fingerprint(self):
+        gate = self.make_gate(); value = json.loads(gate.read_text()); value['files'].pop('/usr/local/bin/peachy-start.sh'); gate.write_text(json.dumps(value))
+        with self.assertRaises(AssertionError): register.validate(self.root, gate)
     def test_missing_checklist(self):
         (self.root / 'docs/customizations/update-hardening.md').unlink(); self.reject()
 

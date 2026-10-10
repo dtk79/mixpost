@@ -12,6 +12,9 @@ sync. Local acceptance, restart recovery, verified cloud delivery, and publishin
 readiness are required behavior contracts; include registered image-baked
 files in upgrade audits (`--manifest` and `--image-source`), not just mounts; no upstream-adoption waiver applies.
 
+After candidate validation, run `check-customization-register.py --release-gate`
+against its evidence; every registered source and startup wrapper must match.
+
 Follow `docs/mixpost-update-playbook.md` and `docs/frozen-release-gates.md`.
 Production Pro source differs from this repository's Lite package. Test the
 exact frozen candidate and its compiled assets using the release validator.

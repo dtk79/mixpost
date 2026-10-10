@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Fail CI when a production override has no preservation record or mapping drifts."""
+import argparse
+import hashlib
 import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-def validate(root=ROOT):
+def validate(root=ROOT, release_gate=None):
     manifest = json.loads((root / 'ops/production-overrides/deployment-manifest.json').read_text())
     register = json.loads((root / 'docs/customizations/modifications.json').read_text())
     assert register['schema'] == 1
@@ -31,7 +33,19 @@ def validate(root=ROOT):
     for entry in manifest['overrides']:
         if entry.get('delivery') == 'frozen-image':
             assert copied.get(entry['host']) == entry['container'], f'Unbuilt image override: {entry["source"]}'
+    if release_gate:
+        gate = json.loads(Path(release_gate).read_text())
+        assert gate.get('status') == 'passed', 'Passing candidate evidence required'
+        for source, entry in actual.items():
+            expected_hash = hashlib.sha256((root / source).read_bytes()).hexdigest()
+            assert gate.get('files', {}).get(entry['container']) == expected_hash, f'Candidate/source drift: {source}'
+        expected_wrapper = hashlib.sha256((root / 'ops/production-overrides/peachy-start.sh').read_bytes()).hexdigest()
+        assert gate.get('files', {}).get('/usr/local/bin/peachy-start.sh') == expected_wrapper, 'Candidate startup wrapper drift'
+        print(f'PASS exact candidate matches all {len(entries)} registered sources and startup wrapper')
     print(f'PASS preservation register: {len(entries)} overrides and {len(register["imagePatchFiles"])} image patches')
 
 if __name__ == '__main__':
-    validate()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--release-gate', type=Path, help='Require every committed source to match the validated runtime fingerprint')
+    args = parser.parse_args()
+    validate(release_gate=args.release_gate)

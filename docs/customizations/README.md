@@ -13,7 +13,7 @@ Release notes and a newer version number cannot retire a modification.
 | [Instance alterations](../mixpost-instance-alterations.md) | Behavior, incidents, historical decisions, and feature-specific checks |
 | [Deployment manifest](../../ops/production-overrides/deployment-manifest.json) | Exact source-to-host-to-container mapping for mounted files |
 | [Update and hardening checklist](update-hardening.md) | Required preservation, regression, rehearsal, cutover, and follow-up steps |
-| [October 10 candidate verification](local-upload-release-2026-10-10.md) | Exact image, observed behavior, limits, and pending activation |
+| [October 10 production release](local-upload-release-2026-10-10.md) | Exact image, live library/composer timings, delivery proof, and rollback checkpoint |
 | [Local uploads](local-uploads.md) | Persistent upload acceptance, queued delivery, readiness, recovery, and capacity |
 | [Frozen release gates](../frozen-release-gates.md) | Enforced exact-candidate upload/startup contract |
 | [Frozen update playbook](../mixpost-update-playbook.md) | Operational release and database-aware rollback procedure |

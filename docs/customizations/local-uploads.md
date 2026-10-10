@@ -1,8 +1,9 @@
 # Durable local uploads and background storage delivery
 
-Implementation target: ordinary media-library and draft file uploads when the
+Active production route: ordinary media-library and draft file uploads when the
 configured final media disk is cloud storage. Existing cloud media is not moved.
 The final bucket, object URLs, credentials, and provider integrations stay intact.
+See the [October 10 release evidence](local-upload-release-2026-10-10.md).
 
 ## Acceptance and delivery contract
 

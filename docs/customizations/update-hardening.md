@@ -18,6 +18,9 @@
 4. Check retained local uploads and delivery backlog. Persistent accepted files
    and incomplete sessions must survive replacement. A rollback without the
    delivery/readiness implementation is unsafe while staged media remains.
+   Legacy sessions may still live in the old app's ephemeral
+   `storage/mixpost-media/temp/chunked`: snapshot and restore them before each
+   replacement starts. Creating the shared parents alone does not preserve them.
 
 ## Required candidate checks
 

@@ -20,6 +20,8 @@ const compiled = readdirSync(join(assetDir, 'assets')).filter(name => name.endsW
 for (const message of [
   'Your progress is saved. Click Retry to continue.',
   'Waiting for upload confirmation',
+  'Upload connection is slow. Still trying',
+  'Saving upload',
   'Check the media library before uploading again.'
 ]) assert.ok(compiled.includes(message), `Missing compiled recovery behavior: ${message}`)
 console.log(`PASS ${Object.keys(manifest).length} manifest entries, all assets/imports, and compiled upload recovery messages`)

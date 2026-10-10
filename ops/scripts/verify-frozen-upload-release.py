@@ -35,7 +35,7 @@ SOURCE_FILES = (
     'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php',
 )
 SUITES = {
-    'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 13),
+    'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 18),
     'frontend-queue': ('VideoUploadQueueRecoveryTest.mjs', 3),
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
     'assets-build': ('VideoUploadAssetsTest.mjs', 1),

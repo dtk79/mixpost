@@ -471,6 +471,8 @@
   "imagePatchFiles": [
     "ops/production-patches/video-upload-network-errors-7.0.4.patch",
     "ops/production-patches/video-upload-recovery-7.0.4.patch",
+    "ops/production-patches/video-upload-progress-7.0.4.patch",
+    "ops/production-patches/upload-progress/Dockerfile",
     "ops/production-patches/local-uploads/Dockerfile"
   ],
   "infrastructureFiles": [

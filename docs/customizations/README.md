@@ -52,3 +52,5 @@ mapping drift. The existing release gate fingerprints all effective read-only
 mounts and the upload source/build; focused behavior gates verify what fingerprints
 cannot. Manual live checks remain explicit where a provider cannot be tested
 without publishing. No test post, email, or support message is implied.
+
+See [upload transfer and confirmation](upload-transfer-progress.md) for the byte-level progress contract and the follow-up slow-ingress investigation.

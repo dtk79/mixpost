@@ -24,7 +24,7 @@ if (($gate['schema'] ?? null) !== 1 || ($gate['status'] ?? null) !== 'passed'
     || !preg_match('/^sha256:[0-9a-f]{64}$/', $gate['imageId'] ?? '')) {
     blocked('unsupported or incomplete upload contract');
 }
-foreach (['frontend-network' => 13, 'frontend-queue' => 3, 'backend-recovery' => 12, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
+foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' => 12, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
     $suite = $gate['suites'][$name] ?? [];
     if (($suite['exitCode'] ?? null) !== 0 || ($suite['checks'] ?? 0) < $count
         || !preg_match('/^[0-9a-f]{64}$/', $suite['testSha256'] ?? '')

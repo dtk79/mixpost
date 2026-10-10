@@ -1,0 +1,113 @@
+--- a/resources/js/Composables/useChunkedUpload.js
++++ b/resources/js/Composables/useChunkedUpload.js
+@@ -71,26 +71,55 @@
+     formData.append('chunk', chunkBlob, `chunk_${chunkIndex}`)
+     formData.append('chunk_index', chunkIndex)
+
+-    const waitTimer = setTimeout(() => {
+-      if (!isAborted.value && status.value === 'uploading') {
+-        status.value = 'waiting'
+-      }
+-    }, 5000)
++    const { file, initResult } = resumeState
++    const confirmedBytes = Math.min(chunkIndex * initResult.chunk_size, file.size)
++    const chunkBytes = Math.min(initResult.chunk_size, file.size - confirmedBytes)
++    const confirmedProgress = Math.floor((confirmedBytes / file.size) * 99)
++    progress.value = confirmedProgress
++    let bodySent = false
++    let activeRequest = true
++    let waitTimer
++    const watchTransfer = () => {
++      clearTimeout(waitTimer)
++      waitTimer = setTimeout(() => {
++        if (activeRequest && !isAborted.value) {
++          status.value = bodySent ? 'waiting' : 'stalled'
++        }
++      }, 5000)
++    }
+
+     try {
+       status.value = 'uploading'
++      watchTransfer()
+       const response = await axios.post(
+         route(`${routePrefix}.media.chunked.upload`, {
+           workspace: workspaceId,
+           uploadUuid
+         }),
+-        formData
++        formData,
++        {
++          onUploadProgress: event => {
++            if (!activeRequest || isAborted.value) return
++            const fraction = event.total > 0 ? Math.min(1, Math.max(0, event.loaded / event.total)) : 0
++            progress.value = Math.max(
++              progress.value,
++              Math.floor(((confirmedBytes + chunkBytes * fraction) / file.size) * 99)
++            )
++            bodySent = event.total > 0 && event.loaded >= event.total
++            status.value = 'uploading'
++            watchTransfer()
++          }
++        }
+       )
+
++      activeRequest = false
+       clearTimeout(waitTimer)
+       return response.data
+     } catch (err) {
++      activeRequest = false
+       clearTimeout(waitTimer)
++      // Only acknowledged chunks are resumable; discard this attempt's sent-byte estimate.
++      progress.value = confirmedProgress
+       const retryable = !err.response || err.response.status >= 500 || err.response.status === 429
+       if (retryable && err.code !== 'ERR_CANCELED' && retries < MAX_RETRIES && !isAborted.value) {
+         status.value = 'retrying'
+@@ -116,7 +145,7 @@
+       await uploadChunk(uploadUuid, i, chunkBlob)
+
+       resumeState.nextChunk = i + 1
+-      progress.value = Math.round(((i + 1) / totalChunks) * 99) // Reserve 1% for completion
++      progress.value = Math.floor((Math.min((i + 1) * serverChunkSize, file.size) / file.size) * 99)
+     }
+   }
+
+@@ -228,12 +257,14 @@
+         {
+           onUploadProgress: progressEvent => {
+             if (progressEvent.total) {
+-              progress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
++              progress.value = Math.min(99, Math.floor((progressEvent.loaded / progressEvent.total) * 99))
++              if (progressEvent.loaded >= progressEvent.total) status.value = 'completing'
+             }
+           }
+         }
+       )
+
++      progress.value = 100
+       status.value = 'complete'
+       return response.data
+     } catch (err) {
+--- a/resources/js/Components/Media/UploadProgressItem.vue
++++ b/resources/js/Components/Media/UploadProgressItem.vue
+@@ -38,7 +38,7 @@
+
+ const { t: $t } = useI18n()
+
+-// The chunked flow waits on a slow server round-trip (e.g. S3 multipart init) before any bytes move
++// Initialization creates the server upload session before transfer begins.
+ const isPreparing = computed(() => props.status === 'uploading' && props.phase === 'initiating')
+
+ const statusText = computed(() => {
+@@ -52,6 +52,12 @@
+     case 'uploading':
+       if (props.phase === 'waiting') {
+         return `${props.progress}% — Waiting for upload confirmation…`
++      }
++      if (props.phase === 'stalled') {
++        return `${props.progress}% — Upload connection is slow. Still trying…`
++      }
++      if (props.phase === 'completing') {
++        return `${props.progress}% — Saving upload…`
+       }
+       if (props.phase === 'retrying') {
+         return `${props.progress}% — Connection interrupted. Retrying…`

@@ -203,7 +203,7 @@ test('canceling during initialization aborts the later-created session without s
   assert.equal(aborts[0].uploadUuid, 'late-session')
 })
 
-test('a slow chunk shows that confirmation is pending instead of unexplained frozen progress', async () => {
+test('a chunk with no transfer events reports a slow connection, not confirmation', async () => {
   let release
   let waitingTimer
   const { instance } = uploader(url => {
@@ -214,10 +214,102 @@ test('a slow chunk shows that confirmation is pending instead of unexplained fro
   const uploading = instance.smartUpload(file)
   await new Promise(resolve => setImmediate(resolve))
   waitingTimer()
-  assert.equal(instance.status.value, 'waiting')
+  assert.equal(instance.status.value, 'stalled')
   release({ data: {} })
   await uploading
   assert.equal(instance.status.value, 'complete')
+})
+
+const controlledTransfer = (size = 12, chunkSize = 4) => {
+  const requests = []
+  const timers = new Map()
+  let timerId = 0
+  const loaded = uploader((url, body, config) => {
+    if (url.name.endsWith('.initiate')) return { data: { upload_uuid: 'streamed', chunk_size: chunkSize, total_chunks: Math.ceil(size / chunkSize) } }
+    return new Promise((resolve, reject) => requests.push({ url, config, resolve, reject }))
+  }, {
+    setTimeout: (callback, delay) => { if (delay !== 5000) { callback(); return }; timers.set(++timerId, callback); return timerId },
+    clearTimeout: id => timers.delete(id)
+  })
+  const uploading = loaded.instance.smartUpload({ ...file, size })
+  const tick = () => new Promise(resolve => setImmediate(resolve))
+  const idle = () => { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(callback => callback()) }
+  return { ...loaded, uploading, requests, tick, idle, timers }
+}
+
+test('sent bytes advance the first chunk and active events clear a slow-connection warning', async () => {
+  const transfer = controlledTransfer(12, 12)
+  await transfer.tick()
+  transfer.requests[0].config.onUploadProgress({ loaded: 6, total: 12 })
+  assert.equal(transfer.instance.progress.value, 49)
+  assert.equal(transfer.instance.status.value, 'uploading')
+  transfer.idle()
+  assert.equal(transfer.instance.status.value, 'stalled')
+  transfer.requests[0].config.onUploadProgress({ loaded: 9, total: 12 })
+  assert.equal(transfer.instance.progress.value, 74)
+  assert.equal(transfer.instance.status.value, 'uploading')
+  transfer.requests[0].resolve({ data: {} })
+  await transfer.tick()
+  transfer.requests[1].resolve({ data: { id: 1 } })
+  await transfer.uploading
+  assert.equal(transfer.timers.size, 0)
+})
+
+test('confirmation waiting starts only after the body is sent and completion reserves 100 percent', async () => {
+  const transfer = controlledTransfer(12, 12)
+  await transfer.tick()
+  transfer.requests[0].config.onUploadProgress({ loaded: 12, total: 12 })
+  transfer.idle()
+  assert.equal(transfer.instance.status.value, 'waiting')
+  assert.equal(transfer.instance.progress.value, 99)
+  transfer.requests[0].resolve({ data: {} })
+  await transfer.tick()
+  assert.equal(transfer.instance.status.value, 'completing')
+  assert.equal(transfer.instance.progress.value, 99)
+  transfer.requests[1].resolve({ data: { id: 1 } })
+  await transfer.uploading
+  assert.equal(transfer.instance.progress.value, 100)
+})
+
+test('a failed chunk rolls back estimated sent bytes and late callbacks cannot alter a retry', async () => {
+  const transfer = controlledTransfer(12, 12)
+  await transfer.tick()
+  const attempt = transfer.requests[0]
+  attempt.config.onUploadProgress({ loaded: 9, total: 12 })
+  attempt.reject(new Error('Network Error'))
+  await transfer.tick()
+  assert.equal(transfer.instance.progress.value, 0)
+  attempt.config.onUploadProgress({ loaded: 12, total: 12 })
+  assert.equal(transfer.instance.progress.value, 0)
+  transfer.requests[1].resolve({ data: {} })
+  await transfer.tick()
+  transfer.requests[2].resolve({ data: { id: 1 } })
+  await transfer.uploading
+})
+
+test('progress is weighted by actual bytes when the final chunk is smaller', async () => {
+  const transfer = controlledTransfer(10, 8)
+  await transfer.tick()
+  transfer.requests[0].resolve({ data: {} })
+  await transfer.tick()
+  assert.equal(transfer.instance.progress.value, 79)
+  transfer.requests[1].config.onUploadProgress({ loaded: 1, total: 2 })
+  assert.equal(transfer.instance.progress.value, 89)
+  transfer.requests[1].resolve({ data: {} })
+  await transfer.tick()
+  transfer.requests[2].resolve({ data: { id: 1 } })
+  await transfer.uploading
+})
+
+test('canceling ignores late transfer events and never completes the file', async () => {
+  const transfer = controlledTransfer(12, 12)
+  await transfer.tick()
+  transfer.instance.abort()
+  transfer.requests[0].config.onUploadProgress({ loaded: 12, total: 12 })
+  assert.equal(transfer.instance.progress.value, 0)
+  transfer.requests[0].resolve({ data: {} })
+  await assert.rejects(transfer.uploading, /Upload aborted/)
+  assert.equal(transfer.requests.length, 1)
 })
 
 test('expired sessions disable manual replay while keeping the actionable server message', async () => {

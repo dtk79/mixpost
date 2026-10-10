@@ -17,7 +17,7 @@ Never replace the live wrapper with v2 while its app only has v1 evidence.
 `ops/scripts/verify-frozen-upload-release.py` resolves an existing image to its
 immutable ID, snapshots current read-only overrides, and exports the exact Pro
 source and published assets without copying the app environment or storage.
-It installs locked frontend dependencies, runs all 16 frontend/queue and 12
+It installs locked frontend dependencies, runs all 21 frontend/queue and 12
 backend recovery checks, rebuilds the entire frontend, and compares every active
 manifest asset byte for byte with the candidate's published build. Compiler
 runs can assign different chunk hashes; the validator allows up to three builds

@@ -27,7 +27,7 @@ class StartupGuardTest(unittest.TestCase):
             'imageId': 'sha256:' + 'a' * 64,
             'suites': {name: {'exitCode': 0, 'checks': count,
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
-                       for name, count in [('frontend-network', 13), ('frontend-queue', 3),
+                       for name, count in [('frontend-network', 18), ('frontend-queue', 3),
                                            ('backend-recovery', 12), ('assets-build', 1),
                                            ('media-temp-permissions', 1), ('local-media-staging', 17)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,

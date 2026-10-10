@@ -23,6 +23,6 @@ it('preserves the production health registration and home route overrides', func
         ->toContain("->name('peachy.health')");
 
     expect($routes)
-        ->toContain("Route::get('/',")
-        ->toContain("return view('home');");
+        ->toContain('if (Util::corePath())')
+        ->toContain("Route::get('/', fn () => view('home'));");
 });

@@ -89,6 +89,27 @@
     "startupWrapperSha256": "0c85e87f4ad38b9daa5559d9fad4df3d4108b3fb951b65138ec6ea07fc05b504",
     "evidencePath": "/var/www/html/storage/app/.release-gates/345d1dfe21b4f539da7b6ebf058a5307aebe200f22088bbc7f5d56e519bd6b53.json",
     "auditPath": "/root/mixpost/backups/upgrade-guards-20261010",
-    "authenticatedUploadVerified": false
+    "authenticatedUploadVerified": false,
+    "mediaPermissions": {
+      "at": "2026-10-10T16:03:52.314076+00:00",
+      "containerId": "6b566d88d61606bc02baec50046284f0cf9e24d43f690981256b13b8de8f77c5",
+      "imageId": "sha256:345d1dfe21b4f539da7b6ebf058a5307aebe200f22088bbc7f5d56e519bd6b53",
+      "wrapperSha256": "249ded6e7f46323f970a5ade902fb5ea2bdfdb9df4d20e1b7eff718e7181b277",
+      "gate": "/root/mixpost/backups/upload-permissions-20261010-1558/validated-release/upload-gate.json",
+      "startupGatePassed": true,
+      "cutoverPlanPassed": true,
+      "appRestarted": false,
+      "mediaParentsRepaired": true,
+      "permissionSuitePassed": true,
+      "applicationUserFilesystemCheckPassed": true,
+      "applicationUserStorageProbe": {
+        "partRecovered": true,
+        "remoteWrites": 1,
+        "multipartCompleted": true,
+        "bytesVerified": 10485760,
+        "mediaInserted": false,
+        "cleanupVerified": true
+      }
+    }
   }
 }

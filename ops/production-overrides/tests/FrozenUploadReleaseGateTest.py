@@ -28,7 +28,8 @@ class StartupGuardTest(unittest.TestCase):
             'suites': {name: {'exitCode': 0, 'checks': count,
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
                        for name, count in [('frontend-network', 13), ('frontend-queue', 3),
-                                           ('backend-recovery', 12), ('assets-build', 1)]},
+                                           ('backend-recovery', 12), ('assets-build', 1),
+                                           ('media-temp-permissions', 1)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,
                                             'Destination': '/usr/local/bin/peachy-start.sh'}],
         }

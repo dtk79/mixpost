@@ -137,6 +137,23 @@ observed, and the storage service can still time out.
 
 ## Upgrade gate
 
+### Follow-up: real upload and temporary permissions
+
+Dan confirmed `VID009 Logy Drake Beau Butler Part 2 Preview-HD.mp4` completed.
+The server recorded media ID 1570, 44,370,362 bytes, at 15:56:22 UTC on October 10.
+Its session lock was created at 15:54:27 and its initial checkpoint at 15:55:21:
+storage initiation took roughly 54 seconds, with about 1 minute 55 seconds from
+session creation to the media record. This proves this attempt completed, not
+that storage latency is resolved.
+
+Separately, recent regular uploads failed with `mkdir(): Permission denied`.
+The shared `storage/mixpost-media` and `temp` parents were root-owned mode 755;
+the chunked parent itself was writable. Their ownership was repaired without
+restarting the app or changing any session/file contents. A create/write/read/
+cleanup check passed as `www-data`. Startup now repairs these shared parents,
+the release gate requires an isolated permission regression check, and the live
+S3 probe rejects root execution. Root-run tests had masked this permission gap.
+
 Every future Pro rebuild must preserve the behavior and pass the frontend, Vue
 queue, backend, and compiled-asset gates against that exact release. The
 [frozen release validator and mounted startup guard](frozen-release-gates.md)

@@ -19,6 +19,12 @@ and never normalizes filenames or ignores mismatched bytes. Retained old
 chunks for open tabs are allowed. Missing assets, manifest imports, tests, or
 failed builds block issuance. A failed rerun removes its output gate.
 
+The validator also reproduces root-owned temporary media parents in an isolated
+container, requires a write attempt as `www-data` to fail, invokes the actual
+startup repair function, and requires create/write/read/cleanup to pass as
+`www-data`. The startup guard requires this fifth suite. Only shared parents
+are repaired; existing upload sessions and media files remain intact.
+
 The backend checks run in a disposable, read-only, network-disabled container
 without production volumes or environment. Validation starts no app processes,
 publishing workers, migrations, database connections, or real storage uploads.
@@ -27,7 +33,7 @@ those remain separate required rehearsal and post-cutover checks.
 
 The existing mounted `peachy-start.sh` validates passing evidence and the actual
 source, compiled assets, Composer/npm locks, and override fingerprints **before**
-Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all four suites;
+Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all five suites;
 there is no “superseded upstream” exemption. The evidence is in the existing
 storage volume at `/var/www/html/storage/app/.release-gates/`. Multiple tested
 release records can coexist, allowing a staged candidate and the current or
@@ -46,7 +52,7 @@ existing frozen startup entrypoint. The Infra generic updater remains disabled.
 ## Candidate procedure
 
 Copy the reviewed repository's `ops/scripts/verify-frozen-upload-release.py`,
-`ops/production-overrides/peachy-start.sh`, and the four upload test files to the
+`ops/production-overrides/peachy-start.sh`, and the five upload test files to the
 same relative paths under `/root/mixpost/release-tools/`. Use a frozen candidate
 built from exact licensed source and complete assets; never use `latest` or the
 archived 6.2.0 defaults. The current validator requires Python 3.11+, Node/npm,
@@ -108,7 +114,11 @@ Recheck the actual image/source/assets, all mounts, MySQL/Redis container IDs,
 health/login, authenticated upload/interruption/retry, Horizon, scheduler, and
 provider state. Run `ops/scripts/verify-upload-recovery-storage.php` as the
 controlled live storage probe and require completion, content verification, and
-cleanup. Record unavailable browser/provider checks explicitly. Update the
+cleanup. Run it with `docker exec -u www-data`, never root: a root probe masks
+permission failures and can leave shared temporary parents unwritable. Also
+run `MediaTemporaryPermissionsTest.php` as `www-data` in the running app before
+resuming traffic; confirm the configured temporary path is writable if it differs
+from the default. Record unavailable browser/provider checks explicitly. Update the
 frozen release record only with observed evidence and the rollback checkpoint.
 
 ## Guard regression checks

@@ -2,6 +2,10 @@
 
 // Controlled live storage check: one 10 MiB fixture, no media/database insertion.
 // It creates a temporary multipart object and always attempts to remove it.
+if (posix_geteuid() === 0) {
+    fwrite(STDERR, "Run this probe with docker exec -u www-data; root would mask upload permissions\n");
+    exit(1);
+}
 require '/var/www/html/vendor/autoload.php';
 $app = require '/var/www/html/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();

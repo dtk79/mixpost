@@ -33,6 +33,7 @@ SUITES = {
     'frontend-queue': ('VideoUploadQueueRecoveryTest.mjs', 3),
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
     'assets-build': ('VideoUploadAssetsTest.mjs', 1),
+    'media-temp-permissions': ('MediaTemporaryPermissionsTest.php', 1),
 }
 
 
@@ -242,6 +243,31 @@ def verify(image, output, baseline):
             if sum(line.startswith('PASS ') for line in result.splitlines()) != 12:
                 raise RuntimeError('Expected all 12 backend checks')
             suites['backend-recovery'] = {'exitCode': 0, 'checks': 12, 'testSha256': sha(test), 'logSha256': sha(log)}
+            print('Checking media permissions as the application user...', flush=True)
+            test = TESTS / 'MediaTemporaryPermissionsTest.php'
+            log = output / 'media-temp-permissions.log'
+            # Reproduce a root-created persistent parent. Run the real wrapper's
+            # repair function only, then the installed Pro check as www-data.
+            # No startup, application bootstrap, production volume, or network.
+            command = (
+                "mkdir -p /var/www/html/storage/mixpost-media/temp/chunked; "
+                "chown -R root:root /var/www/html/storage/mixpost-media; "
+                "chmod 755 /var/www/html/storage/mixpost-media/temp; "
+                "if runuser -u www-data -- php /tmp/permissions-test.php > /tmp/before.log 2>&1; "
+                "then echo 'Root-owned fixture unexpectedly writable'; exit 1; fi; "
+                "eval \"$(sed -n '/^ensure_media_temp_permissions()/,/^}/p' /usr/local/bin/peachy-start.sh)\"; "
+                "ensure_media_temp_permissions; "
+                "runuser -u www-data -- php /tmp/permissions-test.php"
+            )
+            result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                          '--tmpfs', '/tmp:rw', '--tmpfs', APP + '/storage/mixpost-media:rw',
+                          '--entrypoint', 'bash', *bindings,
+                          '--mount', f'type=bind,src={test},dst=/tmp/permissions-test.php,readonly',
+                          image_id, '-euc', command], log=log)
+            if 'PASS media temporary create/write/read/cleanup' not in result:
+                raise RuntimeError('Application-user media permission check did not pass')
+            suites['media-temp-permissions'] = {'exitCode': 0, 'checks': 1,
+                                               'testSha256': sha(test), 'logSha256': sha(log)}
             print('Rebuilding the complete frontend and comparing image assets...', flush=True)
             files, build_attempts, inputs = rebuild_and_compare(package, published, env, output)
             log = output / 'assets-build.log'

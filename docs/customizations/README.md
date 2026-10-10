@@ -30,6 +30,11 @@ above take precedence. Do not reactivate it or use a generic/latest image pull.
 The asset-build workflow cancels superseded runs and no longer force-pushes main;
 a build must not overwrite a newer modification commit.
 
+Use a complete reviewed checkout for release tooling. The package's Git export
+rules omit `docs/`, so a default Git archive lacks the preservation records.
+If copying tooling to the release host, include its registered sources and docs,
+and run the register check there before issuing or promoting candidate evidence.
+
 ## Required maintenance
 
 For every modification, record the problem, expected behavior, implementation

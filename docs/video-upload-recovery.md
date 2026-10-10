@@ -141,10 +141,12 @@ observed, and the storage service can still time out.
 
 Dan confirmed `VID009 Logy Drake Beau Butler Part 2 Preview-HD.mp4` completed.
 The server recorded media ID 1570, 44,370,362 bytes, at 15:56:22 UTC on October 10.
-Its session lock was created at 15:54:27 and its initial checkpoint at 15:55:21:
-storage initiation took roughly 54 seconds, with about 1 minute 55 seconds from
-session creation to the media record. This proves this attempt completed, not
-that storage latency is resolved.
+Its first chunk's session lock was created at 15:54:27. The checkpoint observed
+at 15:55:21 was updated during chunk handling, not session initiation; two parts
+were acknowledged by 15:55:31. The first chunk/storage confirmation stalled for
+roughly 54 seconds, and about 1 minute 55 seconds elapsed from the first chunk
+request to the media record. There is no separate browser-to-server transfer
+timing. This proves this attempt completed, not that storage latency is resolved.
 
 Separately, recent regular uploads failed with `mkdir(): Permission denied`.
 The shared `storage/mixpost-media` and `temp` parents were root-owned mode 755;

@@ -1,8 +1,9 @@
 # Slow ingress: active-user evidence and protocol experiment
 
 Status: controlled HTTP/1.1 experiment activated with explicit user approval.
-Production fresh connections now negotiate HTTP/1.1. The affected computer's
-speed outcome is still pending. The deployed app remains the verified progress
+Production fresh connections now negotiate HTTP/1.1. A first fast upload from
+the affected computer is verified below; an exact same-file comparison has not
+been recorded. The deployed app remains the verified progress
 r2 image described in
 [upload-transfer-progress.md](upload-transfer-progress.md).
 
@@ -70,6 +71,25 @@ reached `ready` on S3 at 21:18:06 UTC, without a manual requeue or resubmission.
 The precise exception operation/cause was not retained by the existing log.
 This is a separate cloud-delivery issue; it did not hold up the 488 ms local
 acceptance response. Do not delete or republish this user media as a test.
+
+## First affected-computer result after activation
+
+The user reported that `@BrianBondsXXX @JaysonParker801 Preview 1080.mp4`
+uploaded “really fast.” Session `a25b5561-ebad-463b-af8c-d0919098012a` advertised
+16,212,587 bytes and two pieces on the local route. At 02:03:41 UTC on October
+11 (19:03:41 PDT October 10), its HTTP/1.1 piece requests returned HTTP 200
+in 5,177 and 960 ms. Completion returned HTTP 201 in 181 ms, accepting media
+1592 at 02:03:47 UTC. Summed request times were 6.318 seconds, excluding session
+initiation and small gaps between requests. The user's report and server timings
+confirm a fast upload on the affected computer with the new protocol.
+
+Readback found media 1592 fully processed and ready on S3 at 02:04:01 UTC,
+about 14 seconds after local acceptance, with zero failed delivery attempts.
+The current protocol setting remains active. This video differs from the prior
+98 MB baseline, so the result does not establish an exact same-file speedup or
+prove the underlying HTTP/2/network cause. Record further affected-machine
+results before treating the incident as permanently resolved. No user media
+was deleted, retried, edited, or republished during verification.
 
 ## Controlled protocol evidence
 

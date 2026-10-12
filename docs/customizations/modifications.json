@@ -466,6 +466,26 @@
       "documentation": "docs/customizations/local-uploads.md",
       "acceptance": "Copy preserves independent file/outbox identity and exact-candidate runtime behavior",
       "retirement": "Equivalent upstream failure/recovery contract must pass; retain tests"
+    },
+    {
+      "source": "ops/production-overrides/VideoProbe.php",
+      "host": "VideoProbe.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/VideoProbe.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/video-display-proportions.md",
+      "acceptance": "Exact-candidate pixel-aspect/rotation tests and isolated actual upload; authenticated portrait library thumbnail and playback",
+      "retirement": "Equivalent upstream displayed dimensions and square-pixel thumbnails must pass the same regression and runtime checks"
+    },
+    {
+      "source": "ops/production-overrides/MediaVideoThumbConversion.php",
+      "host": "MediaVideoThumbConversion.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaVideoThumbConversion.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/video-display-proportions.md",
+      "acceptance": "Exact-candidate pixel-aspect/rotation tests and isolated actual upload; authenticated portrait library thumbnail and playback",
+      "retirement": "Equivalent upstream displayed dimensions and square-pixel thumbnails must pass the same regression and runtime checks"
     }
   ],
   "imagePatchFiles": [

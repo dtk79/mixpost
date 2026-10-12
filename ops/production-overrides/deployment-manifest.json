@@ -294,6 +294,18 @@
       "host": "CopyMedia.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php",
       "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/VideoProbe.php",
+      "host": "VideoProbe.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/VideoProbe.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/MediaVideoThumbConversion.php",
+      "host": "MediaVideoThumbConversion.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaVideoThumbConversion.php",
+      "delivery": "frozen-image"
     }
   ],
   "compatibility": {

@@ -11,6 +11,8 @@ COPY ChunkedUploadComplete.php /var/www/html/vendor/inovector/mixpost-pro-team/s
 COPY MediaUploadFile.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php
 COPY MediaResource.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Resources/MediaResource.php
 COPY CopyMedia.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php
+COPY VideoProbe.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/VideoProbe.php
+COPY MediaVideoThumbConversion.php /var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaVideoThumbConversion.php
 COPY AccountPublishPost.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php
 COPY AccountPublishPostJob.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php
 COPY Schedule.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php

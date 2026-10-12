@@ -33,6 +33,7 @@ SOURCE_FILES = (
     'src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php',
     'src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php',
     'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php',
+    'src/Support/VideoProbe.php', 'src/MediaConversions/MediaVideoThumbConversion.php',
 )
 SUITES = {
     'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 18),

@@ -76,9 +76,14 @@ const isEmpty = computed(() => !props.post.title?.trim() && !props.post.text?.tr
 
       <div
         v-if="post.thumbnail"
-        class="group relative cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="$t('post.preview')"
+        class="group relative cursor-pointer rounded-default focus:outline-hidden focus-visible:shadow-focus"
         :class="{ 'mb-s': post.text || isEmpty || post.link }"
         @click="showPreview = true"
+        @keydown.enter.prevent="showPreview = true"
+        @keydown.space.prevent="showPreview = true"
       >
         <img
           :src="post.thumbnail"

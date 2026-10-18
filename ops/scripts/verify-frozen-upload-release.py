@@ -21,6 +21,8 @@ REPO = Path(__file__).resolve().parents[2]
 TESTS = REPO / 'ops/production-overrides/tests'
 WRAPPER = REPO / 'ops/production-overrides/peachy-start.sh'
 SOURCE_FILES = (
+    'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php',
+    'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php',
     'resources/js/bootstrap.js', 'resources/js/Composables/useNotifications.js',
     'resources/js/Composables/useChunkedUpload.js',
     'resources/js/Components/Media/UploadMedia.vue',
@@ -33,6 +35,7 @@ SOURCE_FILES = (
     'src/Http/Base/Requests/Workspace/Media/ChunkedUploadChunk.php',
     'src/Http/Base/Requests/Workspace/Media/ChunkedUploadAbort.php',
     'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php',
+    'src/Support/VideoProbe.php', 'src/MediaConversions/MediaVideoThumbConversion.php',
 )
 SUITES = {
     'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 18),

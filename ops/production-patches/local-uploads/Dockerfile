@@ -1,5 +1,7 @@
 ARG BASE
 FROM ${BASE}
+COPY FacebookPageFetchPosts.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php
+COPY FacebookPageFetchPostInsights.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php
 COPY LocalMediaStaging.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalMediaStaging.php
 COPY LocalChunkedUpload.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalChunkedUpload.php
 COPY StagedFileTransfer.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/StagedFileTransfer.php
@@ -11,6 +13,8 @@ COPY ChunkedUploadComplete.php /var/www/html/vendor/inovector/mixpost-pro-team/s
 COPY MediaUploadFile.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Requests/Workspace/MediaUploadFile.php
 COPY MediaResource.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Http/Base/Resources/MediaResource.php
 COPY CopyMedia.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php
+COPY VideoProbe.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/VideoProbe.php
+COPY MediaVideoThumbConversion.php /var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaVideoThumbConversion.php
 COPY AccountPublishPost.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Post/AccountPublishPost.php
 COPY AccountPublishPostJob.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php
 COPY Schedule.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php

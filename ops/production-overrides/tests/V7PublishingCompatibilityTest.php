@@ -27,6 +27,15 @@ class V7ActionFixture extends AccountPublishPost {
 function verifyV7(bool $ok,string $message):void {if(!$ok)throw new RuntimeException($message);echo "PASS $message\n";}
 $account=Account::withoutGlobalScopes()->where('provider','twitter')->firstOrFail();
 WorkspaceManager::setCurrent(Workspace::findOrFail($account->workspace_id));
+$request = new class extends Inovector\Mixpost\Http\Base\Requests\Workspace\Post\PostFormRequest {
+    public function versionsForTest(): array { return $this->inputVersions(); }
+};
+$request->replace(['versions' => [['content' => [
+    ['body' => "First line\n\nSecond line", 'media' => []],
+    ['body' => '<div><br></div>', 'media' => []],
+]]]]);
+$versions = $request->versionsForTest();
+verifyV7(count($versions[0]['content']) === 1 && $versions[0]['content'][0]['body'] === '<div>First line</div><div><br></div><div>Second line</div>', 'API line breaks survive request normalization while empty additional items are removed');
 DB::beginTransaction();
 try {
     $source=Post::firstOrFail();

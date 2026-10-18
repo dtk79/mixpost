@@ -294,6 +294,30 @@
       "host": "CopyMedia.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Actions/Media/CopyMedia.php",
       "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/VideoProbe.php",
+      "host": "VideoProbe.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Support/VideoProbe.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/MediaVideoThumbConversion.php",
+      "host": "MediaVideoThumbConversion.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/MediaConversions/MediaVideoThumbConversion.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/FacebookPageFetchPosts.php",
+      "host": "FacebookPageFetchPosts.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/FacebookPageFetchPostInsights.php",
+      "host": "FacebookPageFetchPostInsights.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php",
+      "delivery": "frozen-image"
     }
   ],
   "compatibility": {

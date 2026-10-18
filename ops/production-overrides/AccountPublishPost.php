@@ -139,7 +139,10 @@ class AccountPublishPost
                 $response = $this->withConnectionGuard(fn () => $providerConnection->publishComment(
                     text: $parser->formatBody($content[1]['body']),
                     postId: $lastResponse->id(),
-                    params: $options,
+                    params: array_merge($options, [
+                        'media' => $parser->formatMedia($content[1]['media'] ?? []),
+                        'resume' => $this->providerStateFor($checkpoint, 1),
+                    ]),
                 ));
 
                 if ($unfinished = $this->handleUnfinished($post, $account, $response, 1, $checkpoint)) {

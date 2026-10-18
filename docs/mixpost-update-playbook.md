@@ -79,3 +79,7 @@ Preserve prior passing startup gates and their matching override snapshots. A st
 ## Required release evidence
 
 Record old/new versions, package source and lock hashes, base/frozen image IDs, Git commit, mount inventory, checkpoint paths, migration output, regression results and runtime/browser evidence. Clearly distinguish tests with fake providers from witnessed live publishing. Keep sensitive backups on the host; publish only sanitized hashes and outcomes in the repository.
+
+## Facebook post insights compatibility gate
+
+Preserve the registered [Facebook post insights compatibility](customizations/facebook-post-insights.md) customization in both fetchers and run `FacebookPostInsightsTest.php` in the isolated candidate. Meta rejects `post_video_views_unique`; including it blocks otherwise valid post and video analytics. Preserve historical values and verify source freshness and Reporting separately after cutover.

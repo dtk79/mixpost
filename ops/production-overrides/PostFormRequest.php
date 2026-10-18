@@ -14,6 +14,7 @@ use Inovector\Mixpost\Facades\SocialProviderManager;
 use Inovector\Mixpost\Facades\WorkspaceManager;
 use Inovector\Mixpost\Models\Mention;
 use Inovector\Mixpost\Models\Post;
+use Inovector\Mixpost\Support\PostBody;
 use Inovector\Mixpost\Support\PostMentions;
 use Inovector\Mixpost\Support\PeachyPostVersionContent;
 use Inovector\Mixpost\Util;
@@ -198,7 +199,7 @@ abstract class PostFormRequest extends FormRequest
             return array_merge($identity, [
                 'synced_with' => $this->syncedWith($version, $identity['account_id']),
                 'content' => PeachyPostVersionContent::withoutEmptyAdditionalItems(Arr::map($version['content'] ?? [], function ($content) use ($mentions, $mentionIds) {
-                    $body = PostMentions::expandShorthand($content['body'] ?? '', $mentions);
+                    $body = PostBody::fromText(PostMentions::expandShorthand($content['body'] ?? '', $mentions));
 
                     return [
                         'body' => PostMentions::normalize($body, $mentionIds),

@@ -93,8 +93,13 @@ const frozenBackground = computed(() =>
 
       <div
         v-if="post.thumbnail"
-        class="group shrink-0 relative w-10 h-10 cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="$t('post.preview')"
+        class="group shrink-0 relative w-10 h-10 cursor-pointer rounded-square focus:outline-hidden focus-visible:shadow-focus"
         @click.stop="showPreview = true"
+        @keydown.enter.stop.prevent="showPreview = true"
+        @keydown.space.stop.prevent="showPreview = true"
       >
         <img
           :src="post.thumbnail"

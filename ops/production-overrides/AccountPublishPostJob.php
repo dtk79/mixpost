@@ -83,13 +83,13 @@ class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
         }
 
         if (! $this->account->isServiceActive()) {
-            $this->post->insertErrors($this->account, ['service_disabled']);
+            $this->failPublishing('service_disabled');
 
             return;
         }
 
         if ($this->account->isUnauthorized()) {
-            $this->post->insertErrors($this->account, ['access_token_expired']);
+            $this->failPublishing('access_token_expired');
 
             return;
         }
@@ -117,7 +117,7 @@ class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
         // Wait for queued video conversions so providers receive the final MP4 file
         if (! $isResuming && $processingSince = $this->post->mediaProcessingSince()) {
             if ($this->mediaProcessingStalled($processingSince)) {
-                $this->failOnStalledMedia();
+                $this->failPublishing('media_processing_stalled');
 
                 return;
             }
@@ -212,10 +212,11 @@ class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
     }
 
     // Reported the way any failed publication is, so the failure reaches the post's activity,
-    // its notifications and webhooks instead of surfacing a day later as an expired job.
-    protected function failOnStalledMedia(): void
+    // its notifications and webhooks instead of surfacing a day later as an expired job, or not
+    // at all when the account was already unusable before publishing started.
+    protected function failPublishing(string $error): void
     {
-        $this->post->insertErrors($this->account, ['media_processing_stalled']);
+        $this->post->insertErrors($this->account, [$error]);
 
         PostPublishedFailed::dispatch($this->post, $this->account);
     }

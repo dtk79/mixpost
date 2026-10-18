@@ -486,6 +486,25 @@
       "documentation": "docs/customizations/video-display-proportions.md",
       "acceptance": "Exact-candidate pixel-aspect/rotation tests and isolated actual upload; authenticated portrait library thumbnail and playback",
       "retirement": "Equivalent upstream displayed dimensions and square-pixel thumbnails must pass the same regression and runtime checks"
+    },
+    {
+      "source": "ops/production-overrides/FacebookPageFetchPosts.php",
+      "host": "FacebookPageFetchPosts.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php",
+      "status": "required",
+      "documentation": "docs/customizations/facebook-post-insights.md",
+      "acceptance": "FacebookPostInsightsTest.php in exact-candidate isolated rehearsal; fresh post discovery and metric timestamps after cutover; Reporting readback",
+      "retirement": "Pristine upstream must pass the same supported-metric and pagination/error contracts and current Meta requests; preserve stored unique-view history"
+    },
+    {
+      "source": "ops/production-overrides/FacebookPageFetchPostInsights.php",
+      "host": "FacebookPageFetchPostInsights.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/facebook-post-insights.md",
+      "acceptance": "FacebookPostInsightsTest.php in exact-candidate isolated rehearsal; fresh post discovery and metric timestamps after cutover; Reporting readback",
+      "retirement": "Pristine upstream must pass the same supported-metric and pagination/error contracts and current Meta requests; preserve stored unique-view history"
     }
   ],
   "imagePatchFiles": [

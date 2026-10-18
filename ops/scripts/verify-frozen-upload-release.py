@@ -21,6 +21,7 @@ REPO = Path(__file__).resolve().parents[2]
 TESTS = REPO / 'ops/production-overrides/tests'
 WRAPPER = REPO / 'ops/production-overrides/peachy-start.sh'
 SOURCE_FILES = (
+    'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php',
     'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php',
     'resources/js/bootstrap.js', 'resources/js/Composables/useNotifications.js',
     'resources/js/Composables/useChunkedUpload.js',

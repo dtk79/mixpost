@@ -494,7 +494,8 @@
       "status": "required",
       "documentation": "docs/customizations/facebook-post-insights.md",
       "acceptance": "FacebookPostInsightsTest.php in exact-candidate isolated rehearsal; fresh post discovery and metric timestamps after cutover; Reporting readback",
-      "retirement": "Pristine upstream must pass the same supported-metric and pagination/error contracts and current Meta requests; preserve stored unique-view history"
+      "retirement": "Pristine upstream must pass the same supported-metric and pagination/error contracts and current Meta requests; preserve stored unique-view history",
+      "delivery": "frozen-image"
     },
     {
       "source": "ops/production-overrides/FacebookPageFetchPostInsights.php",

@@ -1,5 +1,6 @@
 ARG BASE
 FROM ${BASE}
+COPY FacebookPageFetchPosts.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php
 COPY FacebookPageFetchPostInsights.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php
 COPY LocalMediaStaging.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalMediaStaging.php
 COPY LocalChunkedUpload.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalChunkedUpload.php

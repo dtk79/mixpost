@@ -7,9 +7,9 @@ per-video request succeeded. Because metrics are requested together, it stopped
 both post discovery and analytics updates after October 14. Reporting's unchanged
 counters then produced zero daily deltas for October 15–17.
 
-`FacebookPageFetchPosts.php` remains mounted at its existing destination.
-`FacebookPageFetchPostInsights.php` is baked into each frozen image and included
-in the release-gate source fingerprints. Both omit only the rejected metric.
+`FacebookPageFetchPosts.php` and `FacebookPageFetchPostInsights.php` are baked
+into each frozen image and included in the release-gate source fingerprints.
+Both omit only the rejected metric.
 Keep the historical enum, stored unique-view data, pagination, request timeouts,
 page media views, reactions, comments, shares, and other supported video metrics.
 Do not substitute page totals for per-post attribution or invent missing daily

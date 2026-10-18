@@ -59,10 +59,21 @@ acknowledgment recovery, and 10 MiB multipart recovery. Both verified exact byte
 one remote write, and cleanup, with no Media record or publication created.
 The existing signed-in browser session loaded Home, Media Library, and Facebook
 Analytics without console errors. A fresh Google authorization was not performed.
-The live browser file-picker/upload/interruption check was unavailable: the Chrome
-extension did not allow local file access and the native picker was blocked by
-the locked Mac. Temporary browser network throttling was reset. This is not a
-passed live browser upload check; isolated actual-video and restart tests passed.
+The initial live browser file-picker/upload/interruption check was blocked by
+Chrome's local-file restriction and the locked Mac. After the Mac was unlocked,
+the native picker completed the check on October 18. A disposable 15,450,862-byte,
+24-second, 960-by-540 video was uploaded through Media Library with a deliberately
+interrupted browser connection. The UI showed the connection error and Retry;
+Retry reused the same chunk session, completed with HTTP 201, and created exactly
+one Media record (1685). The original object's SHA-256 matched the local fixture
+(`20827d067a67285f21952df6d3ff666decf42bf165713acd38a35b48a91e7097`).
+Cloud delivery reached ready with thumbnail and social-video conversions, and
+the browser played the video at the correct dimensions and duration. Temporary
+browser network throttling was reset. The fixture had no post references and was
+removed after verification; its Media record and all three cloud objects were
+confirmed absent, and the library search returned no files. Private screenshots
+and readback evidence are retained under `browser-followup-20261018/` in the audit
+directory. No test publication was created.
 PHPUnit and PDO SQLite are absent from the Pro runtime; health-route and available
 report/queue tests passed separately.
 

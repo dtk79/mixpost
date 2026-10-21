@@ -519,7 +519,8 @@
     "ops/production-overrides/peachy-start.sh",
     "ops/production-overrides/uploads.ini",
     "ops/production-network/mixpost-upload-http1.yml",
-    "ops/production-network/docker-compose.upload-http1.yml"
+    "ops/production-network/docker-compose.upload-http1.yml",
+    "ops/production-overrides/php-security.ini"
   ],
   "releaseChecklist": "docs/customizations/update-hardening.md",
   "networkExperiments": [

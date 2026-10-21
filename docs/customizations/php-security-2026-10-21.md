@@ -53,3 +53,33 @@ not prove remediation. Follow the full frozen-release validation and isolated
 rehearsal process for the replacement; preserve this mount as defense in depth.
 Update the FPM path if a reviewed image changes PHP series. Record source, CI,
 rehearsal, runtime, storage and browser proof separately in the release record.
+
+## Production readback on October 21
+
+The mitigation was activated on the existing frozen Pro 7.1.2 image with its
+startup guard intact. The active FPM worker reported Off and parsed a normal
+multipart upload with matching content, including a benign upload-progress
+field without starting native session tracking. Runtime `ini_set()` could not
+reenable the setting. Upload limits stayed at 500M/520M. All 52 previous mounts
+and their fingerprints were preserved; the added read-only mount brings the
+total to 53. MySQL/Redis identities and storage stayed unchanged. Stable data
+fingerprints matched before and after guarded initialization. Health, login,
+Horizon and the authenticated Home/Media Library passed.
+
+A generated 64-by-64 image uploaded through the authenticated browser/native
+file picker. Mixpost completed its normal JPEG conversion and delivered the
+image and thumbnail to S3. Readback verified the dimensions and expected pixel
+color. The test media record (1706) had no post references; its record and both
+S3 objects were removed and the library search confirmed no remaining item.
+No social post was published. Direct extension-based file selection was
+unavailable; the native picker completed the same browser upload.
+
+The private configuration/database checkpoint is
+`/root/mixpost/backups/php-security-20261021T160043Z/`.
+This is a configuration-only mitigation; no application or PHP upgrade was
+performed. The vendor amd64 image published that morning,
+`inovector/mixpost-pro-team@sha256:6cd023b9a6097720fad080d251e0f44c7f5a8fd64003fa13d7bf2ece6e5fc249`,
+was inspected in a network-disabled disposable container and still reported
+PHP 8.3.35. Do not treat that image as the patched release. The existing upload
+gate passed and 23 guard regression tests passed; a new-image rehearsal and
+hosted CI are separate from this observed production configuration change.

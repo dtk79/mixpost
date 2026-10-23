@@ -516,6 +516,7 @@
     "ops/production-patches/local-uploads/Dockerfile"
   ],
   "infrastructureFiles": [
+    "ops/upgrades/build-frozen-image.sh",
     "ops/production-overrides/peachy-start.sh",
     "ops/production-overrides/uploads.ini",
     "ops/production-network/mixpost-upload-http1.yml",

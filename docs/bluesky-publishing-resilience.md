@@ -1,7 +1,7 @@
 # Bluesky publishing resilience
 
-Status: source fixes passed isolated Pro 7.1.4 regression checks.
-Production rollout, startup gate installation, and historical recovery are separate.
+Status: deployed to production on October 23, 2026, from customization commit
+`ad1f9e73ab392696c5a78695d547a81c252692fb`. Historical post recovery is separate.
 
 ## Failure evidence
 
@@ -104,3 +104,45 @@ historical post outcomes, or publish/retry existing posts. Historical recovery
 is separate: inspect provider IDs and the live thread first, then resume only
 an approved affected account/reply. Never retry the whole multi-account post or
 republish its already-live main record.
+
+## October 23 production verification
+
+The guarded app-only cutover installed
+`peachy/mixpost-pro:7.1.4-ad1f9e7-bluesky-20261023`, immutable image
+`sha256:79b48a008ecfff063404a0dca51158a5ac0df5f0c264b0762e56f7d220c54e6e`.
+The parent remains the previously tested Pro 7.1.4 / PHP 8.5.12 frozen runtime;
+this deployment did not resolve packages or downgrade PHP.
+
+- All seven exact-candidate suites passed (70 checks), including all 18 Bluesky
+  checks. The full frontend rebuild matched the packaged assets on the third
+  deterministic-build attempt; all 62 registered sources matched the evidence.
+- An isolated restored database passed 18 Pro regression suites, stable data
+  fingerprints, persistent-volume container-replacement/outbox recovery, and
+  actual FPM checks. PHPUnit and PDO SQLite checks remain unavailable in this
+  runtime; their limits are recorded in the private rehearsal result.
+- The final maintenance checkpoint and inert initialization preserved schema,
+  stable account/post/media fields, SSO/service settings, both Compose files,
+  all 53 mounts, environment values, networks, and MySQL/Redis container IDs.
+- Live health/login returned HTTP 200, unauthenticated API access returned 401,
+  Horizon/cron/scheduler were active, and all 313 public assets matched their
+  candidate hashes. Existing authenticated Home, Analytics, and Media Library
+  pages loaded. Fresh Google authorization was not repeated.
+- The actual FPM worker remained PHP 8.5.12, with 500M/520M upload limits and
+  native upload progress Off. The public unresolved-handle lookup completed
+  without exception and retained plain text; TTB remained authorized.
+- The browser's synthetic 18,007,073-byte video upload reported interruption,
+  offered Retry, reused its original session, and completed with HTTP 201.
+  Playback reached readyState 4 at 960 by 540 with no media error. Cloud bytes
+  matched the original SHA-256; its record, three cloud objects, and small
+  upload-session checkpoint were removed after proving zero post references.
+- Both controlled live cloud recovery probes verified their exact bytes and
+  cleanup. Only this run's disposable rehearsal resources were removed.
+- No test publication, historical post retry, account reconnection, or contact
+  correction was performed. Naturally scheduled publishing was not witnessed.
+
+The authoritative live record is `/root/mixpost/frozen-release.json`; the private
+audit, matching rollback image, and final database/configuration checkpoint are
+under `/root/mixpost/backups/bluesky-deploy-20261023T214110Z/`. The installed
+startup guard now requires the Bluesky suite, and `release-tools` points to this
+reviewed deployment's tooling. Keep the previous exact wrapper, image, mounts,
+and gates together for rollback.

@@ -703,11 +703,13 @@ See [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) for t
 
 Production now uses frozen Pro Team 7.0.3 with all 51 read-only mounts preserved. The X timeline import and provider job overrides were rebased for the new API usage controls; disabled and restricted analytics cannot bypass those controls through our custom historical schedule. The X request helper already supplied the new start-time behavior and retained its end-time windows. Other mounted customizations and the three rebuilt analytics Vue overlays remain in place. See the [7.0.3 upgrade record](mixpost-v7-0-3-upgrade.md) for the exact release, checkpoint and verification evidence.
 
-## Bluesky publishing resilience (October 23, source fix)
+## Bluesky publishing resilience (October 23, deployed)
 
 The [Bluesky publishing resilience record](bluesky-publishing-resilience.md)
 documents the TTB mention and reply-preview failures and the required regression
-cases. Production rollout is separate.
+cases and the completed production deployment. The guarded app-only cutover
+preserved all 53 mounts, stable data/settings, and the patched PHP 8.5.12 runtime.
+Historical post recovery remains separate.
 
 - Helpers tolerate rejected mention lookups after bounded retries.
 - The registered image-baked publishing trait resolves relative image URLs and

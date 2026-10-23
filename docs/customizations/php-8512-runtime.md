@@ -35,3 +35,13 @@ snapshots, database checkpoint and settings fingerprints. Recreate only the app;
 an old image cannot reverse migrations. Record source, CI, rehearsal, cutover,
 storage and browser outcomes separately. The private audit directory for this
 run is `/root/mixpost/backups/php8512-upgrade-20261022/`.
+
+## Reproducible frontend build
+
+The licensed registry resolved Pro 7.1.4 (`7459823dee89a6f5018c149687a48dadfacea9de`)
+although the public releases page still listed 7.1.2. Its locked Vite 8.2 build
+produced varying chunk hashes with the default parallel compiler pool. Two
+diagnostic builds with `RAYON_NUM_THREADS=1` produced identical manifests.
+The asset builder and release validator now use that setting. Promotion still
+requires every active asset and the manifest to match a fresh build byte for
+byte; no filenames, bytes, tests or checks are ignored.

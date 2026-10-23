@@ -32,6 +32,7 @@ done
 
 (
   cd "$build_dir"
+  export RAYON_NUM_THREADS=1
   npm ci --ignore-scripts
   npm run build
 )

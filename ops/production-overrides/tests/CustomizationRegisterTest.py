@@ -20,6 +20,11 @@ class PreservationRegisterTest(unittest.TestCase):
         for directory in ['ops/production-overrides', 'ops/production-patches', 'ops/production-network', 'docs/customizations']:
             shutil.copytree(ROOT / directory, self.root / directory)
         value = json.loads((ROOT/'docs/customizations/modifications.json').read_text())
+        for source in value['infrastructureFiles']:
+            destination = self.root/source
+            if not destination.exists():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT/source, destination)
         for entry in value['overrides']:
             destination = self.root/entry['documentation']
             if not destination.exists():

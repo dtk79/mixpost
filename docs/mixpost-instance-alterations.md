@@ -702,3 +702,17 @@ See [Imported-thumbnail storage remediation](mixpost-thumbnail-storage.md) for t
 ## 2026-10-01 — Pro 7.0.3 customization-preserving upgrade
 
 Production now uses frozen Pro Team 7.0.3 with all 51 read-only mounts preserved. The X timeline import and provider job overrides were rebased for the new API usage controls; disabled and restricted analytics cannot bypass those controls through our custom historical schedule. The X request helper already supplied the new start-time behavior and retained its end-time windows. Other mounted customizations and the three rebuilt analytics Vue overlays remain in place. See the [7.0.3 upgrade record](mixpost-v7-0-3-upgrade.md) for the exact release, checkpoint and verification evidence.
+
+## Bluesky publishing resilience (October 23, source fix)
+
+The [Bluesky publishing resilience record](bluesky-publishing-resilience.md)
+documents the TTB mention and reply-preview failures and the required regression
+cases. Production rollout is separate.
+
+- Helpers tolerate rejected mention lookups after bounded retries.
+- The registered image-baked publishing trait resolves relative image URLs and
+  lets posts/replies publish without unavailable optional thumbnails.
+- The existing publishing job reports partial Bluesky thread failures while
+  preserving live provider IDs.
+- The update playbook reapplies the versioned patches and requires all 18 offline
+  Bluesky checks alongside the existing upload/storage release contracts.

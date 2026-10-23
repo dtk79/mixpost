@@ -27,7 +27,7 @@ Local-upload candidates additionally require the v2 six-suite gate, isolated rea
 
 1. Read the [official release notes](https://mixpost.app/releases/pro) and [upgrade guidance](https://docs.mixpost.app/pro/upgrading/). Resolve the licensed package in a disposable container using a protected Composer auth file. Do not run the vendor startup against production to obtain source: it also migrates and starts workers.
 2. Export pristine old and target sources. For every mount, compare **old upstream → custom** and **old upstream → new upstream**. `ops/upgrades/audit-overrides.py` produces the checksum inventory from exported sources and `docker inspect` mount JSON. Pass `--manifest ops/production-overrides/deployment-manifest.json --image-source CODE_ONLY_RUNNING_IMAGE_EXPORT` to include registered files baked into the image; missing image exports fail the audit. A mount-only inventory cannot preserve the local-upload helpers.
-3. Reapply the required behavior to the new source. Review successful merges too: syntactically valid old state handling can break new queue/retry contracts. Use upstream implementations where equivalent; retain stronger custom safeguards where upstream only partially covers them.
+3. Reapply the required behavior to the new source. Review successful merges too: syntactically valid old state handling can break new queue/retry contracts. Use upstream implementations where equivalent; retain stronger custom safeguards where upstream only partially covers them. For the [Bluesky publishing fixes](bluesky-publishing-resilience.md), run `python3 ops/scripts/apply-bluesky-publishing-fixes.py --source "$staged_pro"` against the staged effective source on every update. Already-applied patches are a no-op; changed upstream context blocks for review/rebase. Preserve the registered image-baked `BlueskyManagesPost.php` and the existing Helpers/publishing-job bind overrides.
 4. Record each customization as retained unchanged, rebased, replaced by equivalent upstream behavior, or inactive/historical. Add newly required classes to the manifest. Include server-only files in Git. Retire a patch only after its acceptance/failure cases pass against the exact unpatched upstream candidate and compiled assets. October 10 inspection found unsafe upload response handling again in 7.0.4: preserve/rebase the current `ops/production-patches/video-upload-*.patch` behavior and pass its recovery contract. Never revive the archived 6.2.0 image defaults.
 5. For the X analytics client overlay, compare all three Vue components against the target package and build a complete bundle with `ops/scripts/build-pro-x-analytics-assets.sh INSTALLED_PRO_TEAM_PACKAGE_DIR NEW_OUTPUT_DIR`. Keep the licensed compiled bundle outside Git. Verify its manifest references files in the same output directory and retain the Peachy landing-page image inside it.
 6. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
@@ -83,3 +83,20 @@ Record old/new versions, package source and lock hashes, base/frozen image IDs, 
 ## Facebook post insights compatibility gate
 
 Preserve the registered [Facebook post insights compatibility](customizations/facebook-post-insights.md) customization in both fetchers and run `FacebookPostInsightsTest.php` in the isolated candidate. Meta rejects `post_video_views_unique`; including it blocks otherwise valid post and video analytics. Preserve historical values and verify source freshness and Reporting separately after cutover.
+
+## Bluesky publishing resilience gate
+
+Follow [Bluesky publishing resilience](bluesky-publishing-resilience.md) during
+Section 2 and preserve/rebase its three versioned patches on every update.
+The registered `BlueskyManagesPost.php` is baked into the exact frozen image;
+keep the patched Helpers and publishing job in their existing read-only mounts.
+The image recipe and manifest both include the publishing trait.
+
+The frozen validator and startup guard require the `bluesky-publishing` suite
+(18 offline checks) in addition to all six existing upload/storage suites.
+Publishing and parsing-source fingerprints are mandatory even when image-baked.
+Upstream adoption must pass the same behavior checks before a patch is retired.
+Update the validator, wrapper, tests, and evidence together: gates issued without
+the Bluesky suite do not satisfy the updated wrapper. Stage passing evidence
+before installing that wrapper, and retain the previous exact wrapper, gates,
+image, and mounted files as one compatible rollback checkpoint.

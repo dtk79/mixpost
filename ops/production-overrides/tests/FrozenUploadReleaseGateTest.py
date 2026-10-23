@@ -28,7 +28,7 @@ class StartupGuardTest(unittest.TestCase):
             'suites': {name: {'exitCode': 0, 'checks': count,
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
                        for name, count in [('frontend-network', 18), ('frontend-queue', 3),
-                                           ('backend-recovery', 12), ('assets-build', 1),
+                                           ('backend-recovery', 12), ('bluesky-publishing', 18), ('assets-build', 1),
                                            ('media-temp-permissions', 1), ('local-media-staging', 17)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,
                                             'Destination': '/usr/local/bin/peachy-start.sh'}],
@@ -74,6 +74,22 @@ class StartupGuardTest(unittest.TestCase):
 
     def test_unpatched_or_changed_source_blocks_even_with_passing_record(self):
         (self.root / (validator.PRO + '/resources/js/bootstrap.js').lstrip('/')).write_text('error.response.status')
+        self.check()
+
+    def test_changed_bluesky_source_or_missing_fingerprint_blocks(self):
+        path = validator.PRO + '/src/SocialProviders/Bluesky/Concerns/ManagesPost.php'
+        original = self.root / path.lstrip('/')
+        original.write_text('unguarded thumbnail download')
+        self.check()
+        self.file(path, 'tested source')
+        del self.record['files'][path]
+        self.check()
+
+    def test_failed_or_incomplete_bluesky_suite_blocks(self):
+        self.record['suites']['bluesky-publishing']['exitCode'] = 1
+        self.check()
+        self.record['suites']['bluesky-publishing']['exitCode'] = 0
+        self.record['suites']['bluesky-publishing']['checks'] = 17
         self.check()
 
     def test_changed_compiled_chunk_blocks(self):

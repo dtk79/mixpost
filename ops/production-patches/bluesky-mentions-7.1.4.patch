@@ -1,0 +1,11 @@
+--- a/src/SocialProviders/Bluesky/Helpers.php
++++ b/src/SocialProviders/Bluesky/Helpers.php
+@@ -124,7 +124,7 @@
+     private static function resolveMention(string $server, string $handle): ?string
+     {
+         try {
+-            $response = Http::retry(3, 1000)->timeout(5)->get("$server/xrpc/com.atproto.identity.resolveHandle", [
++            $response = Http::retry(3, 1000, throw: false)->timeout(5)->get("$server/xrpc/com.atproto.identity.resolveHandle", [
+                 'handle' => $handle,
+             ]);
+         } catch (ConnectionException) {

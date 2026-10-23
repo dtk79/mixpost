@@ -29,6 +29,11 @@ SOURCE_FILES = (
     'resources/js/Components/Media/UploadProgressPanel.vue',
     'resources/js/Components/Media/UploadProgressItem.vue',
     'src/Support/ChunkedUpload.php',
+    'src/SocialProviders/Bluesky/Helpers.php',
+    'src/SocialProviders/Bluesky/Concerns/ManagesPost.php',
+    'src/Jobs/AccountPublishPostJob.php',
+    'src/Support/PostContentParser.php', 'src/Support/PeachyPostVersionContent.php',
+    'src/Support/FetchUrlCard.php',
     'src/Support/LocalMediaStaging.php', 'src/Support/LocalChunkedUpload.php',
     'src/Support/StagedFileTransfer.php', 'src/Jobs/DeliverStagedMediaJob.php',
     'src/Http/Base/Requests/Workspace/Media/ChunkedUploadInitiate.php',
@@ -41,6 +46,7 @@ SUITES = {
     'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 18),
     'frontend-queue': ('VideoUploadQueueRecoveryTest.mjs', 3),
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
+    'bluesky-publishing': ('BlueskyPublishingResilienceTest.php', 18),
     'assets-build': ('VideoUploadAssetsTest.mjs', 1),
     'media-temp-permissions': ('MediaTemporaryPermissionsTest.php', 1),
     'local-media-staging': ('LocalMediaStagingTest.php', 17),
@@ -308,6 +314,16 @@ def verify(image, output, baseline, candidate_overrides=None):
                 raise RuntimeError('Application-user media permission check did not pass')
             suites['media-temp-permissions'] = {'exitCode': 0, 'checks': 1,
                                                'testSha256': sha(test), 'logSha256': sha(log)}
+            print('Checking Bluesky publishing in the isolated candidate runtime...', flush=True)
+            test = TESTS / 'BlueskyPublishingResilienceTest.php'
+            log = output / 'bluesky-publishing.log'
+            result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                          '--tmpfs', '/tmp:rw', '--entrypoint', 'php', *bindings,
+                          '--mount', f'type=bind,src={test},dst=/tmp/bluesky-test.php,readonly',
+                          image_id, '/tmp/bluesky-test.php'], log=log)
+            if sum(line.startswith('PASS ') for line in result.splitlines()) != 18:
+                raise RuntimeError('Expected all 18 Bluesky publishing checks')
+            suites['bluesky-publishing'] = {'exitCode': 0, 'checks': 18, 'testSha256': sha(test), 'logSha256': sha(log)}
             print('Rebuilding the complete frontend and comparing image assets...', flush=True)
             files, build_attempts, inputs = rebuild_and_compare(package, published, env, output)
             log = output / 'assets-build.log'

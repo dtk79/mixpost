@@ -1,5 +1,6 @@
 ARG BASE
 FROM ${BASE}
+COPY BlueskyManagesPost.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesPost.php
 COPY FacebookPageFetchPosts.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php
 COPY FacebookPageFetchPostInsights.php /var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php
 COPY LocalMediaStaging.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Support/LocalMediaStaging.php

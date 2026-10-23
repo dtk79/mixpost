@@ -19,6 +19,8 @@ use Inovector\Mixpost\Enums\PostAccountStatus;
 use Inovector\Mixpost\Events\Post\PostPublishedFailed;
 use Inovector\Mixpost\Models\Account;
 use Inovector\Mixpost\Models\Post;
+use Inovector\Mixpost\Support\PeachyPostVersionContent;
+use Inovector\Mixpost\Support\PostContentParser;
 
 class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
 {
@@ -55,8 +57,22 @@ class AccountPublishPostJob implements QueueWorkspaceAware, ShouldQueue
 
     public function failed(?\Throwable $exception): void
     {
+        if ($this->account->provider === 'bluesky') {
+            $publishedIds = $this->post->publishedProviderPostIds($this->account);
+            $content = PeachyPostVersionContent::withoutEmptyAdditionalItems(
+                (new PostContentParser($this->account, $this->post))->getVersionContent()
+            );
+
+            if ($publishedIds && count($publishedIds) < count($content)) {
+                // Preserve live IDs so an account-scoped retry can resume the remaining replies.
+                $this->failPublishing('Part of this Bluesky thread is live, but one or more replies failed to publish. Check the publishing job logs before retrying this account.');
+
+                return;
+            }
+        }
+
         if ($this->post->accountPublishStatus($this->account) !== PostAccountStatus::PUBLISHED) {
-            $this->post->insertErrors($this->account, ['Publishing could not complete. Check video preparation and the publishing job logs before retrying.']);
+            $this->post->insertErrors($this->account, ['Publishing could not complete. Check the publishing job logs before retrying.']);
         }
     }
 

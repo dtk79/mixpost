@@ -318,6 +318,12 @@
       "host": "FacebookPageFetchPostInsights.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php",
       "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyManagesPost.php",
+      "host": "BlueskyManagesPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesPost.php",
+      "delivery": "frozen-image"
     }
   ],
   "compatibility": {

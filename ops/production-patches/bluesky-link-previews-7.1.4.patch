@@ -1,0 +1,44 @@
+--- a/src/SocialProviders/Bluesky/Concerns/ManagesPost.php
++++ b/src/SocialProviders/Bluesky/Concerns/ManagesPost.php
+@@ -185,17 +185,32 @@
+         ];
+ 
+         if ($card['default']['image']) {
+-            $file = null;
+-
++            // Preview images are optional. Sites can return relative URLs, SVGs,
++            // inaccessible images, or content that Bluesky cannot accept.
+             try {
+-                $file = TemporaryFile::make()->fromUrl($card['default']['image']);
+-                $response = $this->uploadBlob($file);
+-
+-                if (! $response->hasError()) {
+-                    $postParams['embed']['external']['thumb'] = $response->blob;
++                $image = \GuzzleHttp\Psr7\UriResolver::resolve(
++                    new \GuzzleHttp\Psr7\Uri($url),
++                    new \GuzzleHttp\Psr7\Uri(html_entity_decode($card['default']['image'], ENT_QUOTES | ENT_HTML5))
++                );
++
++                if (! in_array(strtolower($image->getScheme()), ['http', 'https'], true) || ! $image->getHost()) {
++                    return;
+                 }
+-            } finally {
+-                $file?->directory()->delete();
++
++                // Keep the directory reachable even if fromUrl throws before returning.
++                $file = TemporaryFile::make();
++                try {
++                    $file->fromUrl((string) $image);
++                    $response = $this->uploadBlob($file);
++
++                    if (! $response->hasError()) {
++                        $postParams['embed']['external']['thumb'] = $response->blob;
++                    }
++                } finally {
++                    $file->directory()->delete();
++                }
++            } catch (\Exception) {
++                // Retain the link card and publish without its thumbnail.
+             }
+         }
+     }

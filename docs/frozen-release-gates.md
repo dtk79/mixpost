@@ -18,7 +18,7 @@ Never replace the live wrapper with v2 while its app only has v1 evidence.
 immutable ID, snapshots current read-only overrides, and exports the exact Pro
 source and published assets without copying the app environment or storage.
 It installs locked frontend dependencies, runs all 21 frontend/queue and 12
-backend recovery checks, rebuilds the entire frontend, and compares every active
+backend recovery checks, and all 18 Bluesky publishing checks, then rebuilds the entire frontend, and compares every active
 manifest asset byte for byte with the candidate's published build. Compiler
 runs can assign different chunk hashes; the validator allows up to three builds
 from unchanged inputs and accepts only an exact match. It records each attempt
@@ -53,7 +53,7 @@ do not depend on a manual permission repair after cutover.
 
 The existing mounted `peachy-start.sh` validates passing evidence and the actual
 source, compiled assets, Composer/npm locks, and override fingerprints **before**
-Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all six suites;
+Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all seven suites;
 there is no “superseded upstream” exemption. The evidence is in the existing
 storage volume at `/var/www/html/storage/app/.release-gates/`. Multiple tested
 release records can coexist, allowing a staged candidate and the current or
@@ -72,7 +72,7 @@ existing frozen startup entrypoint. The Infra generic updater remains disabled.
 ## Candidate procedure
 
 Copy the reviewed repository's `ops/scripts/verify-frozen-upload-release.py`,
-`ops/production-overrides/peachy-start.sh`, and the six upload test files to the
+`ops/production-overrides/peachy-start.sh`, the six upload test files, and `BlueskyPublishingResilienceTest.php` to the
 same relative paths under `/root/mixpost/release-tools/`. Use a frozen candidate
 built from exact licensed source and complete assets; never use `latest` or the
 archived 6.2.0 defaults. The current validator requires Python 3.11+, Node/npm,
@@ -151,6 +151,7 @@ frozen release record only with observed evidence and the rollback checkpoint.
 
 ```bash
 python3 ops/production-overrides/tests/FrozenUploadReleaseGateTest.py
+python3 ops/production-overrides/tests/BlueskyPatchApplicationTest.py
 bash -n ops/production-overrides/peachy-start.sh
 ```
 
@@ -196,3 +197,19 @@ wrapper, evidence, and image for a compatible rollback.
 For local uploads, rollback also requires no pending staged records, or a tested
 rollback image that retains local readers, delivery jobs, and publication guards.
 An old image plus a healthy login cannot safely process a new durable outbox.
+
+## Bluesky contract added October 23
+
+Every new gate must include all 18 checks from
+`BlueskyPublishingResilienceTest.php`, covering unresolved mentions, optional
+link-card thumbnails, actual record errors, and visible partial-thread failures.
+Its publishing/parsing files are mandatory fingerprints, including the registered
+image-baked publishing trait. Preserve/reapply the
+[versioned Bluesky patches](bluesky-publishing-resilience.md) before validation.
+
+The v2 local-storage contract and all six existing suites remain required. This
+adds a seventh suite; it does not waive upload, permission, or storage checks.
+An older gate without the Bluesky suite cannot satisfy the updated wrapper.
+Stage passing evidence before installing the wrapper; rollback must restore the
+previous exact wrapper, gates, mounted files, and image together, or use a newly
+tested rollback candidate.

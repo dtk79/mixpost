@@ -41,6 +41,11 @@
   queue dispatch failure, worker/container restart, duplicate completion,
   concurrent completion/abort, cross-user session access, disk admission failure,
   failed verification, and cleanup interrupted after database promotion.
+- Run `python3 ops/scripts/apply-bluesky-publishing-fixes.py --source "$staged_pro"`
+  against the staged effective Pro source on every update. Preserve the registered
+  image-baked Bluesky publishing trait and the existing Helpers/job bind files.
+  Require all 18 Bluesky publishing checks and their source fingerprints in
+  addition to the existing upload/storage suites.
 - Retain provider-specific safeguards: optimized video readiness, X upload
   checkpoints/media IDs, Instagram retry/limits, Threads/Bluesky media handling,
   notifications, thumbnail reuse, analytics scoping/cadence, and SSO/health.

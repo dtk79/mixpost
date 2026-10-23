@@ -17,6 +17,7 @@ Release notes and a newer version number cannot retire a modification.
 | [Local uploads](local-uploads.md) | Persistent upload acceptance, queued delivery, readiness, recovery, and capacity |
 | [Upload transfer progress](upload-transfer-progress.md) | Sent-byte progress, confirmation phases, slow-ingress evidence, and tested follow-up candidate |
 | [Affected-computer ingress diagnosis](upload-ingress-diagnosis-2026-10-10.md) | Active HTTP/1.1 experiment and first verified fast affected-computer upload |
+| [Bluesky publishing resilience](../bluesky-publishing-resilience.md) | Mention fallback, optional previews, partial-thread failures, and required patch reapplication |
 | [Frozen release gates](../frozen-release-gates.md) | Enforced exact-candidate upload/startup contract |
 | [Frozen update playbook](../mixpost-update-playbook.md) | Operational release and database-aware rollback procedure |
 | [Upload incident investigation](../upload-storage-latency-2026-10-10.md) | October 10 provider-delay evidence and diagnostic limits |

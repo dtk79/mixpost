@@ -46,7 +46,7 @@
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php",
       "status": "required",
       "documentation": "docs/customizations/local-uploads.md",
-      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover; BlueskyPublishingResilienceTest.php must preserve unresolved mention fallback, visible partial-thread failures, and live provider IDs",
       "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
     },
     {
@@ -230,7 +230,7 @@
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Helpers.php",
       "status": "required",
       "documentation": "docs/mixpost-instance-alterations.md",
-      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover; BlueskyPublishingResilienceTest.php must preserve unresolved mention fallback, visible partial-thread failures, and live provider IDs",
       "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
     },
     {
@@ -506,6 +506,16 @@
       "documentation": "docs/customizations/facebook-post-insights.md",
       "acceptance": "FacebookPostInsightsTest.php in exact-candidate isolated rehearsal; fresh post discovery and metric timestamps after cutover; Reporting readback",
       "retirement": "Pristine upstream must pass the same supported-metric and pagination/error contracts and current Meta requests; preserve stored unique-view history"
+    },
+    {
+      "source": "ops/production-overrides/BlueskyManagesPost.php",
+      "host": "BlueskyManagesPost.php",
+      "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesPost.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/bluesky-publishing-resilience.md",
+      "acceptance": "All 18 BlueskyPublishingResilienceTest.php checks against the exact candidate, including relative thumbnails, optional preview failures, and unswallowed record errors; preserve existing provider behavior in isolated rehearsal",
+      "retirement": "Pristine upstream must pass the same mention/preview/partial-thread contracts; preserve the suite and candidate source fingerprints after retirement"
     }
   ],
   "imagePatchFiles": [
@@ -513,7 +523,10 @@
     "ops/production-patches/video-upload-recovery-7.0.4.patch",
     "ops/production-patches/video-upload-progress-7.0.4.patch",
     "ops/production-patches/upload-progress/Dockerfile",
-    "ops/production-patches/local-uploads/Dockerfile"
+    "ops/production-patches/local-uploads/Dockerfile",
+    "ops/production-patches/bluesky-mentions-7.1.4.patch",
+    "ops/production-patches/bluesky-link-previews-7.1.4.patch",
+    "ops/production-patches/bluesky-thread-failures-7.1.4.patch"
   ],
   "infrastructureFiles": [
     "ops/production-overrides/peachy-start.sh",

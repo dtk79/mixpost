@@ -322,10 +322,10 @@
   ],
   "compatibility": {
     "package": "inovector/mixpost-pro-team",
-    "version": "7.0.4",
-    "source": "ed541fd0b1b77b839065edf40508143ab9b27ff1",
-    "baseImage": "peachy/mixpost-pro:7.0.4-upload-recovery-20261010",
-    "baseImageId": "sha256:345d1dfe21b4f539da7b6ebf058a5307aebe200f22088bbc7f5d56e519bd6b53",
-    "note": "Verified frozen recovery parent; local-upload overlay requires its own exact-candidate gate and isolated rehearsal."
+    "version": "7.1.4",
+    "source": "7459823dee89a6f5018c149687a48dadfacea9de",
+    "baseImage": "peachy/mixpost-pro:7.1.4-e4f467b-php8512-20261022",
+    "baseImageId": "sha256:6d20f48879a230badaa023ea0e3994b4d95d46e46e5ec60528cff7836e7262a6",
+    "note": "Exact-source/assets gate, restored-data rehearsal, app-only cutover, FPM PHP 8.5.12 and browser interruption/retry verified; see docs/customizations/php-8512-runtime.md for evidence and explicit limits."
   }
 }

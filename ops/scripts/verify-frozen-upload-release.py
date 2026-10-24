@@ -21,6 +21,8 @@ REPO = Path(__file__).resolve().parents[2]
 TESTS = REPO / 'ops/production-overrides/tests'
 WRAPPER = REPO / 'ops/production-overrides/peachy-start.sh'
 SOURCE_FILES = (
+    'src/SocialProviders/Twitter/Concerns/ManagesResources.php',
+    'src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php',
     'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPosts.php',
     'src/SocialProviders/Meta/FacebookPageInsights/FacebookPageFetchPostInsights.php',
     'resources/js/bootstrap.js', 'resources/js/Composables/useNotifications.js',
@@ -47,6 +49,7 @@ SUITES = {
     'frontend-queue': ('VideoUploadQueueRecoveryTest.mjs', 3),
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
     'bluesky-publishing': ('BlueskyPublishingResilienceTest.php', 18),
+    'twitter-media-reads': ('TwitterMediaReadCostTest.php', 17),
     'assets-build': ('VideoUploadAssetsTest.mjs', 1),
     'media-temp-permissions': ('MediaTemporaryPermissionsTest.php', 1),
     'local-media-staging': ('LocalMediaStagingTest.php', 17),
@@ -324,6 +327,16 @@ def verify(image, output, baseline, candidate_overrides=None):
             if sum(line.startswith('PASS ') for line in result.splitlines()) != 18:
                 raise RuntimeError('Expected all 18 Bluesky publishing checks')
             suites['bluesky-publishing'] = {'exitCode': 0, 'checks': 18, 'testSha256': sha(test), 'logSha256': sha(log)}
+            print('Checking X media read costs and cached metadata...', flush=True)
+            test = TESTS / 'TwitterMediaReadCostTest.php'
+            log = output / 'twitter-media-reads.log'
+            result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                          '--tmpfs', '/tmp:rw', '--entrypoint', 'php', *bindings,
+                          '--mount', f'type=bind,src={test},dst=/tmp/twitter-media-test.php,readonly',
+                          image_id, '/tmp/twitter-media-test.php'], log=log)
+            if sum(line.startswith('PASS ') for line in result.splitlines()) != 17:
+                raise RuntimeError('Expected all 17 X media read checks')
+            suites['twitter-media-reads'] = {'exitCode': 0, 'checks': 17, 'testSha256': sha(test), 'logSha256': sha(log)}
             print('Rebuilding the complete frontend and comparing image assets...', flush=True)
             files, build_attempts, inputs = rebuild_and_compare(package, published, env, output)
             log = output / 'assets-build.log'

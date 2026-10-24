@@ -50,6 +50,12 @@
   checkpoints/media IDs, Instagram retry/limits, Threads/Bluesky media handling,
   notifications, thumbnail reuse, analytics scoping/cadence, and SSO/health.
   Execute their existing focused tests and record any remaining manual checks.
+- Rebase/apply `apply-twitter-media-cost-fixes.py --source "$staged_pro"` and
+  require the `twitter-media-reads` frozen gate. Run
+  `TwitterMediaReadIntegrationTest.php` and `TwitterUsageControlsTest.php` in
+  the isolated restored database. Repeat analytics must preserve cached
+  thumbnails/types and request no media expansions; first/missing media imports
+  must remain batched and recover after transient metadata failures.
 - Restore a production checkpoint into isolated database/cache services. Disable
   mail, broadcasting, social publishing, cron, and external storage. Rehearse
   migrations, boot/routes, data fingerprints, queue/outbox recovery, and mounted

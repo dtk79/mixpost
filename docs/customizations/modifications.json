@@ -5,8 +5,8 @@
       "source": "ops/production-overrides/ManagesTwitterResources.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Concerns/ManagesResources.php",
       "status": "required",
-      "documentation": "docs/mixpost-instance-alterations.md",
-      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "documentation": "docs/customizations/x-media-read-costs.md",
+      "acceptance": "All 17 TwitterMediaReadCostTest.php checks in the exact frozen candidate; restored-database TwitterMediaReadIntegrationTest.php and TwitterUsageControlsTest.php; cached media/type preservation and zero repeat expansions",
       "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
     },
     {
@@ -285,8 +285,8 @@
       "source": "ops/production-overrides/ImportTwitterPostsJob.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php",
       "status": "required",
-      "documentation": "docs/mixpost-instance-alterations.md",
-      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "documentation": "docs/customizations/x-media-read-costs.md",
+      "acceptance": "All 17 TwitterMediaReadCostTest.php checks in the exact frozen candidate; restored-database TwitterMediaReadIntegrationTest.php and TwitterUsageControlsTest.php; cached media/type preservation and zero repeat expansions",
       "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
     },
     {
@@ -526,7 +526,9 @@
     "ops/production-patches/local-uploads/Dockerfile",
     "ops/production-patches/bluesky-mentions-7.1.4.patch",
     "ops/production-patches/bluesky-link-previews-7.1.4.patch",
-    "ops/production-patches/bluesky-thread-failures-7.1.4.patch"
+    "ops/production-patches/bluesky-thread-failures-7.1.4.patch",
+    "ops/production-patches/twitter-media-resources-7.1.4.patch",
+    "ops/production-patches/twitter-media-import-7.1.4.patch"
   ],
   "infrastructureFiles": [
     "ops/production-overrides/peachy-start.sh",

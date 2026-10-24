@@ -4,6 +4,8 @@ namespace Inovector\Mixpost\SocialProviders\Twitter\Jobs;
 
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Inovector\Mixpost\Concerns\Job\OnAnalyticsQueue;
 use Inovector\Mixpost\Enums\SocialProviderResponseStatus;
 use Inovector\Mixpost\Facades\WorkspaceManager;
@@ -84,9 +86,15 @@ class ImportTwitterPostsJob extends SocialProviderJob
             return;
         }
 
-        $mediaMap = $this->buildMediaMap($context['includes'] ?? null);
+        $existing = ImportedPost::query()
+            ->where('workspace_id', WorkspaceManager::current()->id)
+            ->where('account_id', $this->account->id)
+            ->whereIn('provider_post_id', array_map(fn ($item) => $item->id, $items))
+            ->get(['provider_post_id', 'thumbnail', 'content_type'])
+            ->keyBy('provider_post_id');
+        $mediaMap = $this->fetchMissingMedia($items, $existing);
 
-        $this->importPosts($items, $mediaMap);
+        $this->importPosts($items, $mediaMap, $existing);
         $this->importPostInsights($items);
 
         $meta = $context['meta'] ?? null;
@@ -98,6 +106,45 @@ class ImportTwitterPostsJob extends SocialProviderJob
             ]);
             $this->dispatchOrAddToBatch((new self($this->account, $options))->delay(60));
         }
+    }
+
+    private function fetchMissingMedia(array $items, Collection $existing): array
+    {
+        $missing = [];
+        foreach ($items as $item) {
+            // Article body images are not used by the imported-post preview.
+            $hasMedia = ! empty($item->attachments->media_keys)
+                || ! empty($item->article->cover_media);
+            $cached = $existing->get($item->id);
+            if ($hasMedia && (! $cached || ! $cached->thumbnail
+                || ! in_array($cached->content_type, ['photo', 'video', 'animated_gif', 'article'], true))) {
+                $missing[] = $item->id;
+            }
+        }
+
+        $map = [];
+        foreach (array_chunk(array_values(array_unique($missing)), 100) as $ids) {
+            try {
+                $response = $this->connectProvider($this->account)->getTweetMedia($ids);
+                if ($response->hasError()) {
+                    Log::warning('mixpost.twitter_media_metadata_unavailable', [
+                        'account_id' => $this->account->id,
+                        'post_count' => count($ids),
+                        'status' => $response->status()->value,
+                    ]);
+                    continue;
+                }
+                $map = array_replace($map, $this->buildMediaMap($response->context()['includes'] ?? null));
+            } catch (\Illuminate\Http\Client\ConnectionException|\Abraham\TwitterOAuth\TwitterOAuthException $error) {
+                // Missing metadata is retried on the next scheduled refresh;
+                // it must not discard metrics or erase an existing thumbnail.
+                Log::warning('mixpost.twitter_media_metadata_connection_failed', [
+                    'account_id' => $this->account->id, 'post_count' => count($ids),
+                ]);
+            }
+        }
+
+        return $map;
     }
 
     // The timeline is newest first, so once a page ends past the 30-day window every later page does too.
@@ -176,20 +223,25 @@ class ImportTwitterPostsJob extends SocialProviderJob
         return $mediaMap[$mediaKeys[0]]['thumbnail'] ?? '';
     }
 
-    private function importPosts(array $items, array $mediaMap): void
+    private function importPosts(array $items, array $mediaMap, Collection $existing): void
     {
         $workspaceId = WorkspaceManager::current()->id;
         $accountId = $this->account->id;
 
-        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId, $mediaMap) {
+        $data = Arr::map($items, function ($item) use ($workspaceId, $accountId, $mediaMap, $existing) {
+            $cached = $existing->get($item->id);
+            $type = $this->resolveMediaType($item, $mediaMap);
+            $thumbnail = $this->resolveMediaThumbnail($item, $mediaMap);
+
             return [
                 'workspace_id' => $workspaceId,
                 'account_id' => $accountId,
                 'provider_post_id' => $item->id,
                 'text' => $this->resolveText($item),
                 'url' => "https://x.com/i/status/{$item->id}",
-                'thumbnail' => $this->resolveMediaThumbnail($item, $mediaMap),
-                'content_type' => $this->resolveMediaType($item, $mediaMap),
+                'thumbnail' => ($cached->thumbnail ?? '') !== '' ? $cached->thumbnail : $thumbnail,
+                'content_type' => $cached && in_array($cached->content_type, ['photo', 'video', 'animated_gif', 'article'], true)
+                    ? $cached->content_type : $type,
                 'created_at' => Carbon::parse($item->created_at, 'UTC')->toDateTimeString(),
             ];
         });

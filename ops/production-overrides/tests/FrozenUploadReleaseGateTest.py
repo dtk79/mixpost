@@ -28,7 +28,7 @@ class StartupGuardTest(unittest.TestCase):
             'suites': {name: {'exitCode': 0, 'checks': count,
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
                        for name, count in [('frontend-network', 18), ('frontend-queue', 3),
-                                           ('backend-recovery', 12), ('bluesky-publishing', 18), ('assets-build', 1),
+                                           ('backend-recovery', 12), ('bluesky-publishing', 18), ('twitter-media-reads', 17), ('assets-build', 1),
                                            ('media-temp-permissions', 1), ('local-media-staging', 17)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,
                                             'Destination': '/usr/local/bin/peachy-start.sh'}],
@@ -94,6 +94,21 @@ class StartupGuardTest(unittest.TestCase):
 
     def test_changed_compiled_chunk_blocks(self):
         (self.root / (validator.ASSETS + '/assets/app.js').lstrip('/')).write_text('stale bundle')
+        self.check()
+
+    def test_x_media_contract_cannot_be_dropped_or_changed(self):
+        path = validator.PRO + '/src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php'
+        (self.root / path.lstrip('/')).write_text('uncached imports overwrite thumbnails')
+        self.check()
+        self.file(path, 'tested source')
+        del self.record['files'][path]
+        self.check()
+
+    def test_failed_or_incomplete_x_media_suite_blocks(self):
+        self.record['suites']['twitter-media-reads']['exitCode'] = 1
+        self.check()
+        self.record['suites']['twitter-media-reads']['exitCode'] = 0
+        self.record['suites']['twitter-media-reads']['checks'] = 16
         self.check()
 
     def test_missing_mandatory_fingerprint_blocks(self):

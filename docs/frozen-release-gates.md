@@ -163,8 +163,9 @@ resource trait and import job are mandatory fingerprints. A missing/failed suite
 changed source or omitted fingerprint blocks startup. Rebase/apply the
 [X media cost patches](customizations/x-media-read-costs.md) for every update and
 run `TwitterMediaReadIntegrationTest.php` against isolated restored data.
-For an override-only release on the same image, checkpoint the old same-image
-gate before replacing it and retain the matching old wrapper/overrides for rollback.
+For an override-only release on the same image, preserve the old gate and stage
+the new record as `IMAGE_HEX-OVERRIDE_COMMIT.json` alongside it. Retain the matching
+old wrapper/overrides for rollback; source fingerprints select the usable record.
 
 The CI workflow runs these guard checks without licensed Pro credentials. They
 reject missing/failed suites, changed source/bundles, incomplete evidence,

@@ -52,8 +52,9 @@ Follow the parent frozen playbook, including exact-candidate asset validation,
 restored-data rehearsal, drained publishing work, database checkpoint, protected
 service identities, and app-only replacement. Update the wrapper and evidence
 together: old gates do not contain the new suite. For an override-only release
-using the same immutable image, retain the old gate in the checkpoint before
-replacing that image's gate record. Rollback restores its exact wrapper, two
+using the same immutable image, keep the old gate and stage the new record as
+`IMAGE_HEX-OVERRIDE_COMMIT.json` alongside it. The guard matches actual files,
+not just the image ID or filename. Rollback restores its exact wrapper, two
 overrides and matching gate together. Never rewind the live database over later
 publishing activity merely to undo this schema-free change.
 

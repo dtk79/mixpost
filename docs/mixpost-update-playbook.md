@@ -112,6 +112,6 @@ source and run the restored-database integration test before cutover. Upstream
 adoption must pass this same contract before a local patch is retired.
 
 Install the wrapper, candidate overrides and passing gate as one release. Old
-gates lack the new suite. When the frozen image stays the same, checkpoint its
-old gate before replacing the same-image gate record; rollback restores the
+gates lack the new suite. When the frozen image stays the same, keep its old
+gate and stage the new `IMAGE_HEX-OVERRIDE_COMMIT.json` alongside it; rollback restores the
 previous wrapper, overrides and gate together.

@@ -258,7 +258,10 @@ def verify(image, output, baseline, candidate_overrides=None):
                     target = published / destination.removeprefix(ASSETS + '/')
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(snapshot, target)
-            env = {**os.environ, 'MIXPOST_FRONTEND_SOURCE_DIR': str(package), 'HUSKY': '0'}
+            # Serialize the Rust compiler pool: parallel chunk assignment in the
+            # locked Vite/Rolldown toolchain can vary hashes across identical builds.
+            env = {**os.environ, 'MIXPOST_FRONTEND_SOURCE_DIR': str(package),
+                   'HUSKY': '0', 'RAYON_NUM_THREADS': '1'}
             print('Installing locked candidate dependencies...', flush=True)
             run(['npm', 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], cwd=package, env=env, log=output / 'npm-ci.log')
             suites = {}

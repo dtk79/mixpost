@@ -1,0 +1,27 @@
+{
+  "version": "7.1.4",
+  "php": "8.5.12",
+  "image": "peachy/mixpost-pro:7.1.4-e4f467b-php8512-20261022",
+  "imageId": "sha256:6d20f48879a230badaa023ea0e3994b4d95d46e46e5ec60528cff7836e7262a6",
+  "sourceCommit": "e4f467bd3070a946986257cb7f88a7232eadcdee",
+  "mountCount": 53,
+  "overrides": 61,
+  "sourceCi": "passed",
+  "rehearsalSuites": 17,
+  "cutover": "passed",
+  "activeAssetsByteVerified": 313,
+  "storage": "passed-with-cleanup",
+  "browserUploadRetryPlayback": "passed",
+  "fixtureCleanup": true,
+  "oversizeRejection": {
+    "bytes": 525336576,
+    "limitMB": 500,
+    "initiationStatus": 422,
+    "chunkTransfers": 0,
+    "message": "The video must no be greater than 500 MB",
+    "selectedSizeIncludedInAppMessage": false,
+    "fixtureAccepted": false
+  },
+  "rollbackCheckpoint": "/root/mixpost/backups/php8512-upgrade-20261022/cutover",
+  "verifiedAt": "2026-10-23T03:02:26.512074+00:00"
+}

@@ -4,6 +4,9 @@ require '/var/www/html/vendor/autoload.php';
 $app = require '/var/www/html/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 set_exception_handler(function (Throwable $error): void { fwrite(STDERR, (string) $error); exit(1); });
+if (app()->environment() !== 'testing' || ! str_starts_with(config('database.connections.mysql.host'), 'mixpost-local-rehearsal-')) {
+    throw new RuntimeException('Refusing X integration test outside isolated rehearsal');
+}
 use Illuminate\Support\Facades\{DB, Http, Bus, Event, Notification};
 use Inovector\Mixpost\Models\{Account, Workspace, ImportedPost};
 use Inovector\Mixpost\Facades\WorkspaceManager;

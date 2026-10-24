@@ -5,8 +5,8 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: build-assets-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-assets-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

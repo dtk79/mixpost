@@ -23,5 +23,6 @@ jobs:
           python3 ops/production-overrides/tests/CustomizationRegisterTest.py
           python3 ops/production-overrides/tests/FrozenUploadReleaseGateTest.py
           python3 ops/production-overrides/tests/BlueskyPatchApplicationTest.py
+          python3 ops/production-overrides/tests/TwitterMediaPatchApplicationTest.py
 # The licensed Pro behavior suites run on the release host against the exact
 # frozen candidate, not this repository's Lite package. CI does not waive them.

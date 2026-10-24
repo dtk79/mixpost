@@ -32,6 +32,7 @@ Local-upload candidates additionally require the v2 six-suite gate, isolated rea
 5. For the X analytics client overlay, compare all three Vue components against the target package and build a complete bundle with `ops/scripts/build-pro-x-analytics-assets.sh INSTALLED_PRO_TEAM_PACKAGE_DIR NEW_OUTPUT_DIR`. Keep the licensed compiled bundle outside Git. Verify its manifest references files in the same output directory and retain the Peachy landing-page image inside it.
 6. Record the exact target package version/source and lock hash. Package resolution can advance between the release announcement and the audit.
 7. Since 7.0.3, preserve the vendor X API usage controls when rebasing custom import jobs. Disabled analytics must stop all X analytics requests, limited ranges must clamp every page and skip disjoint historical cadence windows, and full analytics must retain our explicit age-tiered history. Run `TwitterUsageControlsTest.php` in the isolated Pro rehearsal alongside the existing X resource regression. Do not re-enable the retired X mentions import while incorporating upstream job arrays.
+8. Preserve the [X media read-cost controls](customizations/x-media-read-costs.md). Run `python3 ops/scripts/apply-twitter-media-cost-fixes.py --source "$staged_pro"` after rebasing the existing overrides. Timeline refreshes must have no expansions; only new/missing media metadata may use a bounded lookup. Preserve cached thumbnails/types, full text, metrics, pagination and range limits. Changed patch context blocks for rebase. Require all 17 `twitter-media-reads` checks in the frozen validator and `TwitterMediaReadIntegrationTest.php` in the restored-database rehearsal.
 
 ## 3. Rehearse in isolation
 
@@ -100,3 +101,17 @@ Update the validator, wrapper, tests, and evidence together: gates issued withou
 the Bluesky suite do not satisfy the updated wrapper. Stage passing evidence
 before installing that wrapper, and retain the previous exact wrapper, gates,
 image, and mounted files as one compatible rollback checkpoint.
+
+## X media expansion billing gate
+
+The validator and startup guard additionally require `twitter-media-reads`
+(17 offline checks) and fingerprints of the exact X provider and import job.
+Follow [X media read-cost controls](customizations/x-media-read-costs.md) on every
+upgrade. Rebase/apply its two versioned patches to the staged effective Pro
+source and run the restored-database integration test before cutover. Upstream
+adoption must pass this same contract before a local patch is retired.
+
+Install the wrapper, candidate overrides and passing gate as one release. Old
+gates lack the new suite. When the frozen image stays the same, keep its old
+gate and stage the new `IMAGE_HEX-OVERRIDE_COMMIT.json` alongside it; rollback restores the
+previous wrapper, overrides and gate together.

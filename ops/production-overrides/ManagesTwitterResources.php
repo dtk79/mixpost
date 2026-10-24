@@ -389,8 +389,6 @@ trait ManagesResources
         // truncated at 280 characters and ends in a t.co link.
         $params = [
             'tweet.fields' => "article,note_tweet,$metricFields,created_at,in_reply_to_user_id,attachments",
-            'expansions' => 'article.cover_media,article.media_entities,attachments.media_keys',
-            'media.fields' => 'type,url,preview_image_url',
             'exclude' => 'retweets,replies',
             'max_results' => 100,
         ];
@@ -408,6 +406,27 @@ trait ManagesResources
         }
 
         return $params;
+    }
+
+    // Timeline refreshes never expand media. Only uncached media posts need
+    // this second, bounded lookup; X deduplicates the post read within the UTC day.
+    public function getTweetMedia(array $postIds): SocialProviderResponse
+    {
+        if (! $postIds || count($postIds) > 100) {
+            throw new \InvalidArgumentException('X media lookups require 1–100 post IDs');
+        }
+
+        $response = $this->connection->get('tweets', [
+            'ids' => implode(',', array_unique($postIds)),
+            'tweet.fields' => 'article,attachments',
+            'expansions' => 'article.cover_media,attachments.media_keys',
+            'media.fields' => 'type,url,preview_image_url',
+        ]);
+
+        return $this->buildResponse($response, fn () => [
+            'data' => $response->data ?? [],
+            'includes' => $response->includes ?? null,
+        ]);
     }
 
     // Recent search for engagement directed at the account: replies to it (`to:`, caught regardless of

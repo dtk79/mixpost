@@ -18,6 +18,7 @@ Release notes and a newer version number cannot retire a modification.
 | [Upload transfer progress](upload-transfer-progress.md) | Sent-byte progress, confirmation phases, slow-ingress evidence, and tested follow-up candidate |
 | [Affected-computer ingress diagnosis](upload-ingress-diagnosis-2026-10-10.md) | Active HTTP/1.1 experiment and first verified fast affected-computer upload |
 | [Bluesky publishing resilience](../bluesky-publishing-resilience.md) | Mention fallback, optional previews, partial-thread failures, and required patch reapplication |
+| [X media read costs](x-media-read-costs.md) | Expansion-free repeat analytics, cached previews and required upgrade gates |
 | [Frozen release gates](../frozen-release-gates.md) | Enforced exact-candidate upload/startup contract |
 | [Frozen update playbook](../mixpost-update-playbook.md) | Operational release and database-aware rollback procedure |
 | [Upload incident investigation](../upload-storage-latency-2026-10-10.md) | October 10 provider-delay evidence and diagnostic limits |

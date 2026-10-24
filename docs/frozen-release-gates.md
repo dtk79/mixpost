@@ -53,7 +53,7 @@ do not depend on a manual permission repair after cutover.
 
 The existing mounted `peachy-start.sh` validates passing evidence and the actual
 source, compiled assets, Composer/npm locks, and override fingerprints **before**
-Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all seven suites;
+Artisan, migrations, cron, Horizon, or PHP-FPM start. It requires all eight suites;
 there is no “superseded upstream” exemption. The evidence is in the existing
 storage volume at `/var/www/html/storage/app/.release-gates/`. Multiple tested
 release records can coexist, allowing a staged candidate and the current or
@@ -152,8 +152,20 @@ frozen release record only with observed evidence and the rollback checkpoint.
 ```bash
 python3 ops/production-overrides/tests/FrozenUploadReleaseGateTest.py
 python3 ops/production-overrides/tests/BlueskyPatchApplicationTest.py
+python3 ops/production-overrides/tests/TwitterMediaPatchApplicationTest.py
 bash -n ops/production-overrides/peachy-start.sh
 ```
+
+The eighth suite is `twitter-media-reads`: all 17 checks from
+`TwitterMediaReadCostTest.php` must pass against the exact candidate with its
+effective overrides. Copy that test with the other release tools. The provider
+resource trait and import job are mandatory fingerprints. A missing/failed suite,
+changed source or omitted fingerprint blocks startup. Rebase/apply the
+[X media cost patches](customizations/x-media-read-costs.md) for every update and
+run `TwitterMediaReadIntegrationTest.php` against isolated restored data.
+For an override-only release on the same image, preserve the old gate and stage
+the new record as `IMAGE_HEX-OVERRIDE_COMMIT.json` alongside it. Retain the matching
+old wrapper/overrides for rollback; source fingerprints select the usable record.
 
 The CI workflow runs these guard checks without licensed Pro credentials. They
 reject missing/failed suites, changed source/bundles, incomplete evidence,

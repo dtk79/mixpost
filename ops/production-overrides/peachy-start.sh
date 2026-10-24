@@ -24,7 +24,7 @@ if (($gate['schema'] ?? null) !== 1 || ($gate['status'] ?? null) !== 'passed'
     || !preg_match('/^sha256:[0-9a-f]{64}$/', $gate['imageId'] ?? '')) {
     blocked('unsupported or incomplete upload contract');
 }
-foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' => 12, 'bluesky-publishing' => 18, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
+foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' => 12, 'bluesky-publishing' => 18, 'twitter-media-reads' => 17, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
     $suite = $gate['suites'][$name] ?? [];
     if (($suite['exitCode'] ?? null) !== 0 || ($suite['checks'] ?? 0) < $count
         || !preg_match('/^[0-9a-f]{64}$/', $suite['testSha256'] ?? '')
@@ -35,6 +35,8 @@ foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' =>
 $pro = '/var/www/html/vendor/inovector/mixpost-pro-team/';
 $assets = '/var/www/html/public/vendor/mixpost/';
 $required = array_map(fn($file) => $pro.$file, [
+    'src/SocialProviders/Twitter/Concerns/ManagesResources.php',
+    'src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php',
     'resources/js/bootstrap.js', 'resources/js/Composables/useNotifications.js',
     'resources/js/Composables/useChunkedUpload.js', 'resources/js/Components/Media/UploadMedia.vue',
     'resources/js/Components/Media/UploadProgressPanel.vue', 'resources/js/Components/Media/UploadProgressItem.vue',

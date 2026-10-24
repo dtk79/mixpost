@@ -62,3 +62,45 @@ Verify the installed source/mount hashes, cached previews in authenticated
 Analytics, a fake-transport replay against the active runtime, Horizon and the
 age-tiered schedule. Provider-faked checks do not establish X billing savings;
 actual spending can only be checked once the new X charges take effect.
+
+## Production verification — October 23, 2026 Pacific
+
+[PR #8](https://github.com/dtk79/mixpost/pull/8) merged at
+`d5998154a4bd0fec374b6da251b33f75b104e715`; all main-commit CI workflows passed.
+The source revision is `b56326907a2411161019392cdf61545728c80816`.
+
+- The exact Pro 7.1.4 / PHP 8.5.12 frozen image was retained. Only the two X bind
+  overrides and startup wrapper changed. All 53 mounts, both Compose files,
+  environment, networks, MySQL and Redis identities were preserved.
+- All eight frozen suites passed (87 checks, including 17 X media checks).
+  The complete asset rebuild matched byte for byte. All 393 gate fingerprints
+  matched the active runtime and all 313 published assets matched served bytes.
+- The restored-MySQL rehearsal passed 19 Pro regression suites, the X database
+  integration test, persistent-volume container-replacement recovery, actual
+  FPM settings/multipart checks, and isolated health/login checks. External
+  networking, production storage, cron, Horizon and notifications were disabled.
+- Inert production initialization preserved the schema, stable data and SSO
+  settings. The previous image/wrapper/overrides/gate combination also passed an
+  isolated rollback startup check. Its gate remains alongside the new record.
+- The active runtime passed all 17 X checks. A small live X lookup verified
+  attachment/article-cover identifiers without expansion and separately hydrated
+  media successfully. Authenticated X Analytics retained visible photo/video
+  previews and metrics.
+- The application-user storage probe recovered a lost acknowledgment with one
+  remote write, completed and verified 10 MiB, then verified cleanup.
+- An authenticated 18,007,073-byte video upload was interrupted, displayed the
+  recovery message and Retry control, reused the same upload session, completed
+  with HTTP 201, and played at 960×540 with readyState 4. Cloud bytes matched the
+  original; the disposable record, three cloud objects, and its completed upload
+  checkpoint were removed and verified. No social post was published or retried.
+
+The full Pro PHPUnit runner was unavailable; the health route was checked through
+the real runtime. The SQLite-only YouTube snapshot test was unavailable because
+PDO SQLite is absent; its existing report and queue-hook tests passed. These
+limitations did not replace the required X or frozen behavior suites.
+
+Private checkpoints, test logs, SQL snapshots, rollback tooling and the release
+summary are retained under
+`/root/mixpost/backups/x-media-deploy-20261024T0500Z/`. The authoritative current
+record is `/root/mixpost/frozen-release.json`. All rehearsal containers, their
+private storage volume and internal network were removed after verification.

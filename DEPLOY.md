@@ -4,61 +4,58 @@
 
 - **App id:** `mixpost`  ·  **Repo:** `dtk79/mixpost`  ·  **Branch:** `main`
 - **Runtime:** Docker Compose · docker-compose.yml @ /root/mixpost · mixpost
-- **Production path:** `/root/mixpost`  ·  **Deploy model:** `mixpost-image`
+- **Production path:** `/root/mixpost`  ·  **Deploy model:** `mixpost-frozen`
 - **Health:** https://mixpost.peachyhq.com/api/health
+
+## Release flow
+
+Follow the [shared release flow](https://github.com/dtk79/Infra/blob/main/docs/release-flow.md) for people and every agent. Ship it means focused local checks, merge commit to main immediately, and delete the head branch. Do not wait for GitHub Actions. Deploy only with Dan’s explicit authorization; CI is never a merge or deploy gate.
+
+AGENTS.md and CLAUDE.md can both point to the [shared instruction snippet](https://github.com/dtk79/Infra/blob/main/runbooks/release-flow.AGENTS-CLAUDE.md). Rollback never reverses migrations.
 
 ## Summary
 
-- Mixpost deploys with the guarded Mixpost image updater, not a production Git checkout.
-- The updater fetches the committed override manifest, snapshots every read-only bind mount, installs managed overrides, pulls the vendor image, and recreates only Mixpost.
-- MySQL, Redis, and volumes stay running; runtime verification must pass before the image is recorded as deployed.
+- Mixpost runs a frozen Pro application image recorded in `/root/mixpost/frozen-release.json`.
+- The older dashboard image updater cannot preserve this release or perform a database-aware rollback.
+- Use `docs/mixpost-update-playbook.md` for reviewed updates and recovery.
 
 ## Deploy steps
 
-1. **Complete the vendor-image compatibility review**
+1. **Review the frozen release**
 
    ```sh
-   composer test
-   # Review docs/mixpost-update-playbook.md before pulling a new Pro Team image.
-   # The dashboard deploy fetches and installs only overrides declared in the committed manifest.
+   # Follow docs/mixpost-update-playbook.md for source, mounts, version, and database checkpoint review.
    ```
 
-2. **Deploy from the Infra DevOps screen**
+2. **Rehearse and checkpoint**
 
    ```sh
-   # Select Mixpost → Deploy Mixpost image
-   # Confirm the app name; the guarded updater runs detached on the Infra host.
+   # Rehearse the exact release against isolated data; checkpoint the production database after publishing jobs drain.
    ```
 
-3. **Observe the guarded phases**
+3. **Perform the reviewed cutover**
 
    ```sh
-   # Preflight → fetch manifest → backup overrides → install managed overrides → pull image → recreate Mixpost only → verify
-   # The dashboard progress bar and deploy log retain the image and override commit.
+   # Build and install an exact frozen image using the playbook. Keep MySQL, Redis, volumes, and credentials intact.
    ```
 
-4. **Use the exact previous release for rollback**
+4. **Verify the running release**
 
    ```sh
-   # Select Rollback image when a previous verified release is available.
-   # The rollback restores the previous image and managed override files together.
-   # Reference: docs/mixpost-update-playbook.md
+   # Compare the running image, source commit, mounts, migrations, health, login, Horizon, scheduler, and protected services with the release record.
    ```
 
 ## Verify
 
 - Health: `curl -fsS https://mixpost.peachyhq.com/api/health` returns 200
-- Running container image ID matches the image resolved immediately after pull
-- Read-only bind mounts match the preserved set plus the committed manifest; every mounted PHP file passes syntax validation
-- MySQL and Redis container IDs are unchanged; Horizon, scheduler, asset manifest, and login checks pass
-- Release state records the current immutable image ID, previous image ID, exact override commit, and override backup path
+- Running image ID and configured tag match `/root/mixpost/frozen-release.json` and its frozen image labels
+- Review the source commit, mounted overrides, scheduler, Horizon, and database checkpoint using the Mixpost update playbook
 
 ## Rollback
 
-Infra DevOps screen → Mixpost → Rollback image. The deployer restores the previous managed override files, retags the previous immutable image, recreates only Mixpost, repeats the full verification gate, and preserves the displaced release as the next recovery target.
+Follow the database-aware rollback procedure in `docs/mixpost-update-playbook.md`. An image-only rollback cannot reverse v7 migrations.
 
 ## From the Infra DevOps screen
 
-- **Deploy now:** `POST /api/devops/mixpost/deploy  (deploy-mixpost.sh mixpost --force)`
-- **Rollback:** `POST /api/devops/mixpost/production/rollback  (deploy-mixpost.sh mixpost --rollback)`
-
+- **Deploy now:** `Not available for frozen Mixpost releases; follow docs/mixpost-update-playbook.md.`
+- **Rollback:** `Not available for frozen Mixpost releases; follow docs/mixpost-update-playbook.md.`

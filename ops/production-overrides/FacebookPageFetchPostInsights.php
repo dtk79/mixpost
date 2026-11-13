@@ -25,7 +25,6 @@ class FacebookPageFetchPostInsights extends FacebookPageInsightsAPI
             'post_video_views_organic',
             'post_video_views_paid',
             'post_video_views',
-            // Keep historical unique-view rows, but never request this rejected metric.
             'post_video_views_60s_excludes_shorter',
             'post_video_social_actions_count_unique',
             'post_video_view_time',

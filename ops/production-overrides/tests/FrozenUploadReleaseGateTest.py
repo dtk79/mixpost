@@ -29,13 +29,15 @@ class StartupGuardTest(unittest.TestCase):
                              'testSha256': 'b' * 64, 'logSha256': 'c' * 64}
                        for name, count in [('frontend-network', 18), ('frontend-queue', 3),
                                            ('backend-recovery', 12), ('bluesky-publishing', 18), ('twitter-media-reads', 17), ('assets-build', 1),
-                                           ('media-temp-permissions', 1), ('local-media-staging', 17)]},
+                                           ('media-temp-permissions', 1), ('local-media-staging', 17), ('instagram-story-capture', 28)]},
             'files': {}, 'mountInventory': [{'Type': 'bind', 'RW': False,
                                             'Destination': '/usr/local/bin/peachy-start.sh'}],
         }
         for name in validator.SOURCE_FILES + ('package.json', 'package-lock.json', 'vite.config.js'):
             self.file(validator.PRO + '/' + name, 'tested source')
         self.file('/var/www/html/composer.lock', 'locked dependencies')
+        for name in validator.APP_SOURCE_FILES:
+            self.file(validator.APP + '/' + name, 'tested application source')
         self.file('/usr/local/bin/peachy-start.sh', WRAPPER.read_text())
         self.file(validator.ASSETS + '/assets/app.js', 'tested frontend')
         self.file(validator.ASSETS + '/manifest.json', json.dumps({'resources/js/app.js': {'file': 'assets/app.js'}}))
@@ -56,6 +58,19 @@ class StartupGuardTest(unittest.TestCase):
 
     def test_tested_release_passes_without_starting_artisan(self):
         self.check(passes=True)
+
+    def test_story_capture_files_cannot_be_removed_or_changed(self):
+        saved = copy.deepcopy(self.record)
+        for name in validator.APP_SOURCE_FILES:
+            with self.subTest(name=name):
+                self.record = copy.deepcopy(saved)
+                path = validator.APP + '/' + name
+                del self.record['files'][path]
+                self.check()
+
+    def test_failed_or_incomplete_story_capture_suite_blocks(self):
+        self.record['suites']['instagram-story-capture']['checks'] = 27
+        self.check()
 
     def test_each_missing_suite_blocks(self):
         saved = copy.deepcopy(self.record)

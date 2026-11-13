@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->commands([\App\Console\Commands\CaptureInstagramStories::class]);
+        $this->app->afterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('peachy:capture-instagram-stories')->hourly()->withoutOverlapping(65)->runInBackground();
+        });
+
         // Liveness only: avoid sessions, database queries, and external providers.
         if (! $this->app->routesAreCached()) {
             Route::get('/api/health', static fn () => new JsonResponse([

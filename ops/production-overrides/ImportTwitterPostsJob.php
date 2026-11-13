@@ -246,7 +246,7 @@ class ImportTwitterPostsJob extends SocialProviderJob
             ];
         });
 
-        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], ['text', 'url', 'thumbnail', 'content_type']);
+        $this->retryOnDeadlock(fn () => ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], ['text', 'url', 'thumbnail', 'content_type']));
     }
 
     private function importPostInsights(array $items): void
@@ -301,17 +301,17 @@ class ImportTwitterPostsJob extends SocialProviderJob
         }
 
         if ($insightData) {
-            TwitterPostInsight::upsert(
+            $this->retryOnDeadlock(fn () => TwitterPostInsight::upsert(
                 $insightData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type'],
                 ['value', 'updated_at']
-            );
+            ));
 
-            TwitterPostInsightHistory::upsert(
+            $this->retryOnDeadlock(fn () => TwitterPostInsightHistory::upsert(
                 $historyData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type', 'date'],
                 ['value']
-            );
+            ));
         }
     }
 }

@@ -1,5 +1,13 @@
 # Frozen Mixpost release gates
 
+The [independent Story capture](customizations/instagram-story-media.md) adds 28
+required exact-candidate behavior checks and fingerprints for the application
+provider, command, collector, config and migration. A newer Mixpost importer does
+not replace this contract. The updated wrapper rejects older gates without that
+suite. Stage fresh candidate evidence before installing it; retain each prior
+wrapper with its matching gate/image for rollback. MySQL migration rehearsal,
+approved first capture and public-object/Annex readback remain separate checks.
+
 The July upload safeguard was retired on an upstream-adoption assumption. The
 October 10 incident reproduced its unsafe response handling in Pro 7.0.4. Patch
 retirement must now be demonstrated against each exact candidate; the upload

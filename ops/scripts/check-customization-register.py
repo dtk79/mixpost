@@ -15,6 +15,9 @@ def validate(root=ROOT, release_gate=None):
     assert len({entry['source'] for entry in entries}) == len(entries), 'Duplicate register source'
     expected = {entry['source']: entry for entry in manifest['overrides']}
     actual = {entry['source']: entry for entry in entries}
+    sources = {str(path.relative_to(root)) for path in (root / 'ops/production-overrides').rglob('*.php')
+               if 'tests' not in path.relative_to(root / 'ops/production-overrides').parts}
+    assert sources == {source for source in actual if source.endswith('.php')}, 'Unregistered or missing production PHP source'
     assert actual.keys() == expected.keys(), 'Undocumented or stale production override'
     for source, entry in actual.items():
         assert entry['container'] == expected[source]['container'], f'Destination drift: {source}'

@@ -24,7 +24,7 @@ if (($gate['schema'] ?? null) !== 1 || ($gate['status'] ?? null) !== 'passed'
     || !preg_match('/^sha256:[0-9a-f]{64}$/', $gate['imageId'] ?? '')) {
     blocked('unsupported or incomplete upload contract');
 }
-foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' => 12, 'bluesky-publishing' => 18, 'twitter-media-reads' => 17, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17] as $name => $count) {
+foreach (['frontend-network' => 18, 'frontend-queue' => 3, 'backend-recovery' => 12, 'bluesky-publishing' => 18, 'twitter-media-reads' => 17, 'assets-build' => 1, 'media-temp-permissions' => 1, 'local-media-staging' => 17, 'instagram-story-capture' => 28] as $name => $count) {
     $suite = $gate['suites'][$name] ?? [];
     if (($suite['exitCode'] ?? null) !== 0 || ($suite['checks'] ?? 0) < $count
         || !preg_match('/^[0-9a-f]{64}$/', $suite['testSha256'] ?? '')
@@ -53,6 +53,11 @@ $required = array_map(fn($file) => $pro.$file, [
     'src/Http/Base/Resources/MediaResource.php', 'src/Actions/Media/CopyMedia.php', 'package.json', 'package-lock.json', 'vite.config.js',
 ]);
 $required[] = '/var/www/html/composer.lock';
+foreach (['app/Providers/AppServiceProvider.php', 'app/Console/Commands/CaptureInstagramStories.php',
+    'app/Support/InstagramStoryCapture.php', 'config/peachy-stories.php',
+    'database/migrations/2026_11_13_000000_create_peachy_ig_story_media.php'] as $file) {
+    $required[] = '/var/www/html/'.$file;
+}
 $required[] = '/usr/local/bin/peachy-start.sh';
 $required[] = $assets.'manifest.json';
 $files = $gate['files'] ?? [];

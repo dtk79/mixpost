@@ -295,13 +295,21 @@ trait HasPaginatedContent
             return [];
         }
 
+        $retired = $this->retiredInsightTypes();
         $names = [];
 
         foreach ($enumClass::cases() as $case) {
-            $names[$case->value] = $case->name;
+            if (! in_array($case->value, $retired, true)) {
+                $names[$case->value] = $case->name;
+            }
         }
 
         return $names;
+    }
+
+    protected function retiredInsightTypes(): array
+    {
+        return [];
     }
 
     protected function resolveInsightEnumClass(): ?string
@@ -320,7 +328,7 @@ trait HasPaginatedContent
 
         foreach ($enumClass::cases() as $case) {
             if ($case->name === $name) {
-                return $case->value;
+                return in_array($case->value, $this->retiredInsightTypes(), true) ? null : $case->value;
             }
         }
 

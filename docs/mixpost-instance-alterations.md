@@ -1,5 +1,15 @@
 # Mixpost Instance Alterations
 
+## Instagram Story media for Annex (prepared, not deployed)
+
+The independent hourly capture command, additive `peachy_ig_story_media` table,
+application-file delivery mappings and required frozen-candidate Story tests are
+documented in [Instagram Story media](customizations/instagram-story-media.md).
+This preserves images/video covers without modifying Mixpost's imported posts
+or vendor source. Keep this contract on every update. Production deployment and
+the first capture require Dan's explicit approval. The existing Annex reader has
+database-wide SELECT access; no grants were changed.
+
 This document tracks production-specific changes made to the Peachy HQ Mixpost instance that are outside the upstream `inovector/mixpost-pro-team` Docker image.
 
 The production instance runs Mixpost Pro Team from Docker on `mixpost-hetzner`. Host files under `/root/mixpost` are bind-mounted into the container as read-only overrides. These survive image updates, but they can also shadow upstream fixes, so every Mixpost upgrade should compare this register against the new image source.

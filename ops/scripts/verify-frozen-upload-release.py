@@ -20,6 +20,13 @@ ASSETS = APP + '/public/vendor/mixpost'
 REPO = Path(__file__).resolve().parents[2]
 TESTS = REPO / 'ops/production-overrides/tests'
 WRAPPER = REPO / 'ops/production-overrides/peachy-start.sh'
+APP_SOURCE_FILES = (
+    'app/Providers/AppServiceProvider.php',
+    'app/Console/Commands/CaptureInstagramStories.php',
+    'app/Support/InstagramStoryCapture.php',
+    'config/peachy-stories.php',
+    'database/migrations/2026_11_13_000000_create_peachy_ig_story_media.php',
+)
 SOURCE_FILES = (
     'src/SocialProviders/Twitter/Concerns/ManagesResources.php',
     'src/SocialProviders/Twitter/Jobs/ImportTwitterPostsJob.php',
@@ -45,6 +52,7 @@ SOURCE_FILES = (
     'src/Support/VideoProbe.php', 'src/MediaConversions/MediaVideoThumbConversion.php',
 )
 SUITES = {
+    'instagram-story-capture': ('InstagramStoryCaptureTest.php', 28),
     'frontend-network': ('VideoUploadNetworkErrorsTest.mjs', 18),
     'frontend-queue': ('VideoUploadQueueRecoveryTest.mjs', 3),
     'backend-recovery': ('ChunkedUploadRecoveryTest.php', 12),
@@ -338,6 +346,23 @@ def verify(image, output, baseline, candidate_overrides=None):
                 raise RuntimeError('Expected all 17 X media read checks')
             suites['twitter-media-reads'] = {'exitCode': 0, 'checks': 17, 'testSha256': sha(test), 'logSha256': sha(log)}
             print('Rebuilding the complete frontend and comparing image assets...', flush=True)
+            print('Checking independent Instagram Story capture...', flush=True)
+            test = TESTS / 'InstagramStoryCaptureTest.php'
+            log = output / 'instagram-story-capture.log'
+            result = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                          '--tmpfs', '/tmp:rw', '--entrypoint', 'php', *bindings,
+                          '--mount', f'type=bind,src={test},dst=/tmp/story-test.php,readonly',
+                          image_id, '/tmp/story-test.php'], log=log)
+            if sum(line.startswith('PASS ') for line in result.splitlines()) != 28:
+                raise RuntimeError('Expected all 28 Instagram Story capture checks')
+            suites['instagram-story-capture'] = {'exitCode': 0, 'checks': 28,
+                'testSha256': sha(test), 'logSha256': sha(log)}
+            for name in APP_SOURCE_FILES:
+                if APP + '/' + name in fingerprints:
+                    continue
+                snapshot = work / ('app-source-' + name.replace('/', '-'))
+                run(['docker', 'cp', f'{temporary_container}:{APP}/{name}', str(snapshot)])
+                fingerprints[APP + '/' + name] = sha(snapshot)
             files, build_attempts, inputs = rebuild_and_compare(package, published, env, output)
             log = output / 'assets-build.log'
             readability_log = output / 'assets-readability.log'

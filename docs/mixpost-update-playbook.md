@@ -6,6 +6,13 @@ The [customization hub](customizations/README.md), [modification register](custo
 
 ## Release contract
 
+Preserve the application-level [Instagram Story capture](customizations/instagram-story-media.md)
+files, migration/config and hourly command on every update. The exact-candidate
+validator and mounted startup guard require its 28 behavior checks and application
+fingerprints. Stage the new matching gate before installing a changed wrapper;
+retain the old wrapper/gate together for rollback. Rehearse the additive table
+on isolated restored MySQL and verify Annex's existing SELECT-only read access.
+
 A release is the **vendor base digest + exact Pro version/source + composer.lock + customization Git commit + mount manifest + database checkpoint**. The vendor image downloads packages at startup: an image digest alone is not an application version or a reliable rollback. Build a frozen image with `ops/upgrades/build-frozen-image.sh`; its startup uses the installed code and never resolves packages or restores an application from shared storage.
 
 The authoritative PHP application override map is `ops/production-overrides/deployment-manifest.json`. Startup (`peachy-start.sh`) and PHP upload limits (`uploads.ini`, both CLI and FPM) are also versioned; their mounts are infrastructure paths outside the legacy Infra manifest format. Preserve the storage volume, environment, proxy routing, networks and service credentials. Never mount a Vite manifest or individual hashed client asset. Since 7.0.2, the X analytics Vue overlays are built with the target Pro package and included in the frozen image; do not restore the former `/root/mixpost/x-analytics-dist` directory mount.

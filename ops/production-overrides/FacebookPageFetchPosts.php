@@ -40,8 +40,7 @@ class FacebookPageFetchPosts extends FacebookPageInsightsAPI
             'reactions.summary(total_count).limit(0)',
             'comments.summary(total_count).limit(0).as(comments)',
             'shares',
-            // Meta rejects post_video_views_unique and consequently the entire posts request.
-            'insights.metric(post_media_view,post_reactions_like_total,post_reactions_love_total,post_reactions_wow_total,post_reactions_haha_total,post_reactions_sorry_total,post_reactions_anger_total,post_clicks,post_video_views,post_video_avg_time_watched).limit(0)',
+            'insights.metric(post_media_view,post_total_media_view_unique,post_reactions_like_total,post_reactions_love_total,post_reactions_wow_total,post_reactions_haha_total,post_reactions_sorry_total,post_reactions_anger_total,post_clicks,post_video_views,post_video_avg_time_watched).period(lifetime).limit(0)',
         ];
     }
 }

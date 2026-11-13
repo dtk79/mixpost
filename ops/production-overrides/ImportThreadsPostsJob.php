@@ -60,12 +60,12 @@ class ImportThreadsPostsJob extends SocialProviderJob
             ];
         });
 
-        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
+        $this->retryOnDeadlock(fn () => ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
             'content_type', 'data', 'created_at',
-        ]);
+        ]));
     }
 
     private function dispatchThumbnailDownload(array $items, array $downloadedThumbnails): void

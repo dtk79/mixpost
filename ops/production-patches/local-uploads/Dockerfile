@@ -20,4 +20,8 @@ COPY AccountPublishPost.php /var/www/html/vendor/inovector/mixpost-pro-team/src/
 COPY AccountPublishPostJob.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Jobs/AccountPublishPostJob.php
 COPY Schedule.php /var/www/html/vendor/inovector/mixpost-pro-team/src/Schedule.php
 COPY AppServiceProvider.php /var/www/html/app/Providers/AppServiceProvider.php
+COPY CaptureInstagramStories.php /var/www/html/app/Console/Commands/CaptureInstagramStories.php
+COPY InstagramStoryCapture.php /var/www/html/app/Support/InstagramStoryCapture.php
+COPY peachy-stories.php /var/www/html/config/peachy-stories.php
+COPY 2026_11_13_000000_create_peachy_ig_story_media.php /var/www/html/database/migrations/2026_11_13_000000_create_peachy_ig_story_media.php
 LABEL com.ducatix.mixpost.local-uploads=true

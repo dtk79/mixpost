@@ -30,6 +30,12 @@
 
 ## Required candidate checks
 
+- Preserve the independent hourly [Instagram Story capture](instagram-story-media.md)
+  command, application migration/config and Annex table/path contract. Require
+  its 28 exact-candidate checks plus restored-MySQL migration/account-isolation
+  cases. After an approved cutover, run capture immediately and verify Annex's
+  existing SELECT-only connection and saved public objects.
+
 - Run `python3 ops/scripts/check-customization-register.py` and the ordinary CI
   checks. A register pass establishes documentation/mapping completeness only.
 - Run the frozen validator against the exact final image and final overrides.

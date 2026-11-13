@@ -324,6 +324,30 @@
       "host": "BlueskyManagesPost.php",
       "container": "/var/www/html/vendor/inovector/mixpost-pro-team/src/SocialProviders/Bluesky/Concerns/ManagesPost.php",
       "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/CaptureInstagramStories.php",
+      "host": "CaptureInstagramStories.php",
+      "container": "/var/www/html/app/Console/Commands/CaptureInstagramStories.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/InstagramStoryCapture.php",
+      "host": "InstagramStoryCapture.php",
+      "container": "/var/www/html/app/Support/InstagramStoryCapture.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/peachy-stories.php",
+      "host": "peachy-stories.php",
+      "container": "/var/www/html/config/peachy-stories.php",
+      "delivery": "frozen-image"
+    },
+    {
+      "source": "ops/production-overrides/2026_11_13_000000_create_peachy_ig_story_media.php",
+      "host": "2026_11_13_000000_create_peachy_ig_story_media.php",
+      "container": "/var/www/html/database/migrations/2026_11_13_000000_create_peachy_ig_story_media.php",
+      "delivery": "frozen-image"
     }
   ],
   "compatibility": {

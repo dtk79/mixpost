@@ -134,7 +134,7 @@
       "container": "/var/www/html/app/Providers/AppServiceProvider.php",
       "status": "required",
       "documentation": "docs/mixpost-instance-alterations.md",
-      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover",
+      "acceptance": "Exact-candidate regression and isolated rehearsal; verify documented runtime behavior after cutover; hourly peachy:capture-instagram-stories command registration and overlap protection",
       "retirement": "Equivalent failure/recovery behavior must pass on pristine upstream, compiled assets, rehearsal and runtime; retain the behavior contract"
     },
     {
@@ -516,6 +516,42 @@
       "documentation": "docs/bluesky-publishing-resilience.md",
       "acceptance": "All 18 BlueskyPublishingResilienceTest.php checks against the exact candidate, including relative thumbnails, optional preview failures, and unswallowed record errors; preserve existing provider behavior in isolated rehearsal",
       "retirement": "Pristine upstream must pass the same mention/preview/partial-thread contracts; preserve the suite and candidate source fingerprints after retirement"
+    },
+    {
+      "source": "ops/production-overrides/CaptureInstagramStories.php",
+      "container": "/var/www/html/app/Console/Commands/CaptureInstagramStories.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/instagram-story-media.md",
+      "acceptance": "All 28 InstagramStoryCaptureTest.php checks against exact candidate; isolated restored-data migration, account-isolation and scheduler checks; approved first-run readback and public object verification",
+      "retirement": "Retain Annex table/path contract and captured objects; replace only with tested equivalent independent capture behavior. Do not infer equivalence from upstream Story imports or release notes."
+    },
+    {
+      "source": "ops/production-overrides/InstagramStoryCapture.php",
+      "container": "/var/www/html/app/Support/InstagramStoryCapture.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/instagram-story-media.md",
+      "acceptance": "All 28 InstagramStoryCaptureTest.php checks against exact candidate; isolated restored-data migration, account-isolation and scheduler checks; approved first-run readback and public object verification",
+      "retirement": "Retain Annex table/path contract and captured objects; replace only with tested equivalent independent capture behavior. Do not infer equivalence from upstream Story imports or release notes."
+    },
+    {
+      "source": "ops/production-overrides/peachy-stories.php",
+      "container": "/var/www/html/config/peachy-stories.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/instagram-story-media.md",
+      "acceptance": "All 28 InstagramStoryCaptureTest.php checks against exact candidate; isolated restored-data migration, account-isolation and scheduler checks; approved first-run readback and public object verification",
+      "retirement": "Retain Annex table/path contract and captured objects; replace only with tested equivalent independent capture behavior. Do not infer equivalence from upstream Story imports or release notes."
+    },
+    {
+      "source": "ops/production-overrides/2026_11_13_000000_create_peachy_ig_story_media.php",
+      "container": "/var/www/html/database/migrations/2026_11_13_000000_create_peachy_ig_story_media.php",
+      "delivery": "frozen-image",
+      "status": "required",
+      "documentation": "docs/customizations/instagram-story-media.md",
+      "acceptance": "All 28 InstagramStoryCaptureTest.php checks against exact candidate; isolated restored-data migration, account-isolation and scheduler checks; approved first-run readback and public object verification",
+      "retirement": "Retain Annex table/path contract and captured objects; replace only with tested equivalent independent capture behavior. Do not infer equivalence from upstream Story imports or release notes."
     }
   ],
   "imagePatchFiles": [

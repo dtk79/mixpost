@@ -34,6 +34,9 @@ class PreservationRegisterTest(unittest.TestCase):
         with self.assertRaises(AssertionError): register.validate(self.root)
     def test_omitted_override(self):
         self.mutate(lambda value: value['overrides'].pop()); self.reject()
+    def test_unregistered_new_php_source(self):
+        (self.root / 'ops/production-overrides/UnregisteredCommand.php').write_text('<?php')
+        self.reject()
     def test_changed_destination(self):
         self.mutate(lambda value: value['overrides'][0].update(container='/wrong')); self.reject()
     def test_wrong_delivery(self):

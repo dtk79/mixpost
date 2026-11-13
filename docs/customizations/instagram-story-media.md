@@ -57,7 +57,9 @@ implementation with fake HTTP, fake storage and a restricted in-memory capture
 table. It starts no application processes and accesses no real database or
 bucket. The separate SQLite integration suite verifies the real migration,
 uniqueness, scheduler and multi-account command with actual Eloquent models.
-Run the same database cases against the isolated restored MySQL rehearsal.
+Run `InstagramStoryCaptureMySqlTest.php` in the isolated restored MySQL rehearsal;
+it exercises the real command/provider connection, table uniqueness, tenant
+ownership, repeat/expired capture and schema, then rolls back all fixture rows.
 
 Register CI rejects missing mappings, build copies, documentation or unregistered
 production PHP files. Release notes or a future upstream thumbnail fix cannot

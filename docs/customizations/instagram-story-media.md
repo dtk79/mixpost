@@ -1,16 +1,27 @@
 # Durable Instagram Story media for Annex
 
-Status: implementation prepared for review; **not deployed**. Production writes,
-the first capture, migration and cutover require Dan's explicit approval.
+Status: release validated; Dan explicitly authorized merge, deployment and the
+first capture on November 13, 2026. The live `frozen-release.json` Story-release
+record and private evidence below are authoritative for cutover and capture.
 
-Implementation validation: 28 focused checks pass using Pro 7.5.1 source and in
-a disposable, network-disabled container with the current frozen image's exact
-dependencies and staged new code. Eight SQLite integration checks, 58 existing
-preservation/release/patch checks and the health-route regression pass. The
-health runner reports the repository's existing deprecated PHPUnit XML schema.
-These results do not claim a built final candidate, full asset validation,
-restored-MySQL rehearsal, cutover, real object capture/readback or authenticated
-browser proof. Those remain required before/after the approved deployment.
+Candidate `peachy/mixpost-pro:7.5.1-ig-stories-20261113`, immutable ID
+`sha256:0ddd17529272f5ac216b533b3b89729a7b44a268acc1eaa6bc71da18ee9dab8f`,
+passes all 115 required frozen behavior/build checks, including the 28 Story
+checks, and matches all 66 registered sources and the startup wrapper. Its
+complete frontend was rebuilt and matched the published assets byte for byte.
+The isolated restored-MySQL rehearsal passes 31 suites, including 13 Story
+database checks, with all 91 original business-table data fingerprints unchanged
+after migration and fixture cleanup. Original table structures also match.
+No production volumes, external provider/storage access, cron or Horizon were
+used in that rehearsal. Private evidence is retained under
+`/root/mixpost/backups/ig-stories-20261113/`; the initial full dump is 313,511,470
+bytes. A fresh drained checkpoint remains required immediately before cutover.
+
+Eight SQLite integration checks, 58 preservation/release/patch checks and the
+health-route regression also pass. The health runner reports the repository's
+existing deprecated PHPUnit XML schema. Cutover, actual captures, anonymous
+public-object readback and authenticated browser proof are recorded separately;
+the rehearsal alone does not establish those live outcomes.
 
 Release preparation reconciled eight existing source mirrors with their actual
 Pro 7.5.1 production files: the Threads/Facebook/Instagram/X importers, pagination

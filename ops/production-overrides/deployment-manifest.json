@@ -352,10 +352,10 @@
   ],
   "compatibility": {
     "package": "inovector/mixpost-pro-team",
-    "version": "7.0.4",
-    "source": "ed541fd0b1b77b839065edf40508143ab9b27ff1",
-    "baseImage": "peachy/mixpost-pro:7.0.4-upload-recovery-20261010",
-    "baseImageId": "sha256:345d1dfe21b4f539da7b6ebf058a5307aebe200f22088bbc7f5d56e519bd6b53",
-    "note": "Verified frozen recovery parent; local-upload overlay requires its own exact-candidate gate and isolated rehearsal."
+    "version": "7.5.1",
+    "source": "d8796e6ee4e5bc12e116e64215b1968bf7e1b0d8",
+    "baseImage": "peachy/mixpost-pro:7.5.1-candidate-v2-20261112",
+    "baseImageId": "sha256:f6e447ddf6e57440bfd32ffda5c86680fe82f4d6b033be05c47c53c37baa618f",
+    "note": "Existing Pro customizations reconciled to the running 7.5.1 source. Story application overlay 0ddd17529272f5ac216b533b3b89729a7b44a268acc1eaa6bc71da18ee9dab8f passed exact-candidate validation, restored MySQL rehearsal and approved live acceptance; see docs/customizations/instagram-story-media.md and the live frozen-release record."
   }
 }

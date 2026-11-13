@@ -1,8 +1,10 @@
 # Durable Instagram Story media for Annex
 
-Status: release validated; Dan explicitly authorized merge, deployment and the
-first capture on November 13, 2026. The live `frozen-release.json` Story-release
-record and private evidence below are authoritative for cutover and capture.
+Status: **deployed and first capture verified** on November 13, 2026, following
+Dan's explicit approval. PR #10 merged as
+`d34150c1960e704e357fe1375c182bf81fdfe68e`. The live `frozen-release.json`
+`instagramStoryMediaRelease` record and private evidence below are authoritative
+for cutover and capture.
 
 Candidate `peachy/mixpost-pro:7.5.1-ig-stories-20261113`, immutable ID
 `sha256:0ddd17529272f5ac216b533b3b89729a7b44a268acc1eaa6bc71da18ee9dab8f`,
@@ -15,13 +17,58 @@ after migration and fixture cleanup. Original table structures also match.
 No production volumes, external provider/storage access, cron or Horizon were
 used in that rehearsal. Private evidence is retained under
 `/root/mixpost/backups/ig-stories-20261113/`; the initial full dump is 313,511,470
-bytes. A fresh drained checkpoint remains required immediately before cutover.
+bytes. The actual drained cutover checkpoint is 313,511,815 bytes and is retained
+at `cutover/drained/database.sql` under that evidence root.
 
 Eight SQLite integration checks, 58 preservation/release/patch checks and the
 health-route regression also pass. The health runner reports the repository's
 existing deprecated PHPUnit XML schema. Cutover, actual captures, anonymous
 public-object readback and authenticated browser proof are recorded separately;
 the rehearsal alone does not establish those live outcomes.
+
+## November 13 production result
+
+The approved app-only cutover completed at 10:30 AM PST. All 91 original
+business-table data/schema fingerprints matched before reopening. MySQL/Redis
+IDs, all 53 mounts, both Compose files, environment, existing volumes and network
+IDs were preserved. Only the existing application provider and startup wrapper
+bind-file contents changed. The saved previous image/wrapper/gate passed its
+isolated rollback guard; the additive Story table/files are retained on rollback.
+
+The first capture immediately after activation saved four images/covers and one
+playable video. Public anonymous HTTPS readback matched the authenticated object
+bytes for all five files; all four Stories join to their existing imported posts.
+Annex's unchanged SELECT-only connection read the new table successfully.
+
+| Account | Story rows | Images/covers | Playable videos | Incomplete videos |
+| --- | ---: | ---: | ---: | ---: |
+| Trailer Trash Boys (109) | 2 | 2 | 0 | 1 |
+| Ducati Collabs (112) | 1 | 1 | 0 | 1 |
+| Patrick Bewley / patricgram (95) | 1 | 1 | 1 | 0 |
+| Rich Merritt (85) | 0 | 0 | 0 | 0 |
+| ducatistudiosmedia (100) | 0 | 0 | 0 | 0 |
+| Trenton Ducati (102) | 0 | 0 | 0 | 0 |
+| Dan Tastic (111) | 0 | 0 | 0 | 0 |
+
+Meta omitted `media_url` for one TTB video and the Ducati Collabs video; both
+covers are saved. Their last errors are `missing_media_url;missing_video_url`,
+so the first command exits 1 to report partial capture. No token or permission
+failure occurred. The other four accounts returned no live Stories.
+
+Live health/login returned 200, all 315 active assets were available and the
+served app bytes matched the tested image. Horizon/cron and the hourly background
+capture event are running. The two controlled storage-recovery probes verified
+their contents and cleanup without Media insertion. Authenticated video upload,
+interruption, retry and playback passed; original uploaded bytes matched SHA-256
+and the synthetic Media row, its three objects and upload session were removed.
+Browser network conditions and the original Accounts view were restored. Main
+CI's release guard, PHP/Laravel matrix and asset build passed.
+
+`cutover/final-verification.json` separates source, CI, rehearsal, activation,
+first capture, Annex reader, public object, service, browser and rollback proof.
+A process-status probe required Docker's PID column; maintenance stayed active
+until the corrected process, startup-guard and original-data checks passed. No
+social post/comment was sent and no Annex application code was changed.
 
 Release preparation reconciled eight existing source mirrors with their actual
 Pro 7.5.1 production files: the Threads/Facebook/Instagram/X importers, pagination

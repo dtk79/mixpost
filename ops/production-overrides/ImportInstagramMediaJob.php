@@ -75,12 +75,12 @@ class ImportInstagramMediaJob extends SocialProviderJob
             ];
         });
 
-        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
+        $this->retryOnDeadlock(fn () => ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
             'content_type', 'data', 'created_at',
-        ]);
+        ]));
     }
 
     protected function dispatchThumbnailDownload(array $items, array $downloadedThumbnails): void
@@ -150,17 +150,17 @@ class ImportInstagramMediaJob extends SocialProviderJob
         }
 
         if ($insightData) {
-            InstagramPostInsight::upsert(
+            $this->retryOnDeadlock(fn () => InstagramPostInsight::upsert(
                 $insightData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type'],
                 ['value', 'updated_at']
-            );
+            ));
 
-            InstagramPostInsightHistory::upsert(
+            $this->retryOnDeadlock(fn () => InstagramPostInsightHistory::upsert(
                 $historyData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type', 'date'],
                 ['value']
-            );
+            ));
         }
     }
 

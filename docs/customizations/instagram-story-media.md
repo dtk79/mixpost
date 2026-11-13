@@ -12,6 +12,13 @@ These results do not claim a built final candidate, full asset validation,
 restored-MySQL rehearsal, cutover, real object capture/readback or authenticated
 browser proof. Those remain required before/after the approved deployment.
 
+Release preparation reconciled eight existing source mirrors with their actual
+Pro 7.5.1 production files: the Threads/Facebook/Instagram/X importers, pagination
+concern, chunked-upload initiation and two Facebook fetchers. These retain the
+already deployed behavior; the Story candidate changes only application files
+and the existing application provider/startup guard. No existing production
+vendor customization is replaced with an older repository copy.
+
 ## Why this exists
 
 Mixpost Pro 7.5.1's `getStories()` requests `media_url` and `thumbnail_url`, but

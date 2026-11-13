@@ -34,7 +34,7 @@ class ChunkedUploadInitiate extends FormRequest
                 );
 
                 if ($value > $max) {
-                    $fail(__('mixpost::rules.file_max_size', ['type' => File::type($mimeType), 'max' => FileSize::bytesToMb($max)]));
+                    $fail(__('mixpost::rules.file_max_size', ['type' => File::type($mimeType), 'max' => FileSize::bytesToMb($max)]).' Selected file size: '.(ceil(FileSize::bytesToMb($value) * 10) / 10).' MB.');
                 }
             }],
         ];

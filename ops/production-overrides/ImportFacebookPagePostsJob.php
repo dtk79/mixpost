@@ -111,12 +111,12 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
             ];
         });
 
-        ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
+        $this->retryOnDeadlock(fn () => ImportedPost::upsert($data, ['workspace_id', 'account_id', 'provider_post_id'], [
             'text', 'url',
             // Keep the cached path atomically, even if a download completes during this import.
             'thumbnail' => DB::raw("IF(LEFT(thumbnail, 9) = 'imported/', thumbnail, VALUES(thumbnail))"),
             'content_type', 'data', 'created_at',
-        ]);
+        ]));
     }
 
     private function importPostInsights(array $items): void
@@ -164,7 +164,8 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
             foreach ($insights as $insight) {
                 $type = FacebookPostInsightType::fromApiName($insight['name'] ?? '');
 
-                if (! $type) {
+                // A metric served for several periods also comes back per day, and that value must not replace its total.
+                if (! $type || ($insight['period'] ?? 'lifetime') !== 'lifetime') {
                     continue;
                 }
 
@@ -192,17 +193,17 @@ class ImportFacebookPagePostsJob extends SocialProviderJob
         }
 
         if ($insightData) {
-            FacebookPostInsight::upsert(
+            $this->retryOnDeadlock(fn () => FacebookPostInsight::upsert(
                 $insightData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type'],
                 ['value', 'updated_at']
-            );
+            ));
 
-            FacebookPostInsightHistory::upsert(
+            $this->retryOnDeadlock(fn () => FacebookPostInsightHistory::upsert(
                 $historyData,
                 ['workspace_id', 'account_id', 'provider_post_id', 'type', 'date'],
                 ['value']
-            );
+            ));
         }
     }
 
